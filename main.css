@@ -1,0 +1,131 @@
+/* old link color: #0D7680 */
+/* green link color: 0D7680, rgb: (13, 118, 128) */
+/* red link color: 990f3d */
+body { 
+  margin: 10px;
+  /* delete background color if you want white bg */
+  background-color: rgb(242,223,206);
+ 
+  /* font-family: 'Fira Sans', Helvetica, sans-serif;  */
+  font-family: "Georgia", Georgia, serif; 
+  color: #212121;
+  font-weight: 300;
+  font-size: 16px;
+}
+
+.container{
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+
+
+.highlight {
+    background-color: rgb(255, 241, 224);
+    border-radius: 8px;
+}
+
+.publication {
+    margin-top: 16px;
+    padding: 4px;
+}
+
+.publicationhighlight {
+    margin-top: 16px;
+    padding: 8px;
+}
+
+.commentary {
+	margin-top: 4px;
+	padding: 0px;
+	margin-left: 32px;
+}
+
+
+
+nav{
+  text-align: right;
+  margin:40px 0;
+  border: 2px solid #333;
+  border-left: 0;
+  border-right:0;
+}
+
+ul{
+  padding: 0;
+}
+
+nav li{
+  display: inline;
+  margin: 10px;
+  font-size: 18px;
+}
+
+
+.link {
+  font-weight: 500;
+  color: #990f3d;
+  cursor: pointer;
+}
+
+.link:hover{
+  color: #ab617a;
+  ;
+}
+
+.active-link{
+  color: #013, 118, 128000EE;
+  border-bottom: 3px solid #990f3d;
+}
+
+a{
+  color: #0D7680;
+  text-decoration:none;
+}
+
+.content{
+  display: none;
+}
+
+.active{
+  display: initial;
+}
+
+.contact__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.contact__header img {
+  width: 50%;
+  height: auto;
+}
+a:hover {
+  color: #59b5bd;
+
+/*    text-decoration: underline;*/
+}
+/* for how it looks on a phone */
+@media (max-width: 700px){
+  .contact{
+    text-align: left;
+  }
+  nav{
+    text-align: center;
+  }
+
+  .link{
+       margin: 10px;
+       line-height: 36px;
+  }
+
+  .contact__header {
+    flex-direction: column;
+  }
+
+  .contact__header img {
+    margin-top: 16px;
+  }
+}
+/* hover: F39C12, link: 0000EE
