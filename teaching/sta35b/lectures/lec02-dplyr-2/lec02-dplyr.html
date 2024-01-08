@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Introduction and Review of R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec02-dplyr_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec02-dplyr_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec02-dplyr_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Introduction and Review of R
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+
+
+
+
+## Reminder about packages
+
+Packages are things we load using `library()`.
+
+We'll primarily use the `tidyverse` library, but occasionally we'll use other packages.
+
+If you haven't installed a package `PACKAGENAME` before, you'll get an error.
+
+To install a package, `install.packages(PACKAGENAME)`.
+
+---
+
+## dataframes/tibbles 
+The main objects we'll care about in R are dataframes and tibbles - you should be familiar with these. 
+
+ &lt;!-- Tibbles are a special type of data frame that have nicer properties - we'll use these for all of the course. --&gt;
+
+
+
+```r
+library(nycflights13) # loads the `flights` tibble into environment
+flights
+```
+
+```
+# A tibble: 336,776 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1      517            515         2      830            819
+ 2  2013     1     1      533            529         4      850            830
+ 3  2013     1     1      542            540         2      923            850
+ 4  2013     1     1      544            545        -1     1004           1022
+ 5  2013     1     1      554            600        -6      812            837
+ 6  2013     1     1      554            558        -4      740            728
+ 7  2013     1     1      555            600        -5      913            854
+ 8  2013     1     1      557            600        -3      709            723
+ 9  2013     1     1      557            600        -3      838            846
+10  2013     1     1      558            600        -2      753            745
+# ℹ 336,766 more rows
+# ℹ 11 more variables: arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;, flight &lt;int&gt;,
+#   tailnum &lt;chr&gt;, origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;,
+#   hour &lt;dbl&gt;, minute &lt;dbl&gt;, time_hour &lt;dttm&gt;
+```
+
+---
+
+## dataframes/tibbles
+Useful functions for inspecting dataframes: `head()` and `str()`
+
+```r
+head(flights)
+```
+
+```
+# A tibble: 6 × 19
+   year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+  &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+1  2013     1     1      517            515         2      830            819
+2  2013     1     1      533            529         4      850            830
+3  2013     1     1      542            540         2      923            850
+4  2013     1     1      544            545        -1     1004           1022
+5  2013     1     1      554            600        -6      812            837
+6  2013     1     1      554            558        -4      740            728
+# ℹ 11 more variables: arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;, flight &lt;int&gt;,
+#   tailnum &lt;chr&gt;, origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;,
+#   hour &lt;dbl&gt;, minute &lt;dbl&gt;, time_hour &lt;dttm&gt;
+```
+
+
+---
+
+## dataframes/tibbles
+Useful functions for inspecting dataframes: `head()` and `str()`
+
+```r
+str(flights)
+```
+
+```
+tibble [336,776 × 19] (S3: tbl_df/tbl/data.frame)
+ $ year          : int [1:336776] 2013 2013 2013 2013 2013 2013 2013 2013 2013 2013 ...
+ $ month         : int [1:336776] 1 1 1 1 1 1 1 1 1 1 ...
+ $ day           : int [1:336776] 1 1 1 1 1 1 1 1 1 1 ...
+ $ dep_time      : int [1:336776] 517 533 542 544 554 554 555 557 557 558 ...
+ $ sched_dep_time: int [1:336776] 515 529 540 545 600 558 600 600 600 600 ...
+ $ dep_delay     : num [1:336776] 2 4 2 -1 -6 -4 -5 -3 -3 -2 ...
+ $ arr_time      : int [1:336776] 830 850 923 1004 812 740 913 709 838 753 ...
+...
+```
+
+---
+
+## dataframes/tibbles
+To return the data from a column in a dataframe/tibble, use `df$COLUMN` (returns vector)
+
+```r
+flights$distance
+```
+
+```
+    [1] 1400 1416 1089 1576  762  719 1065  229  944  733 1028 1005 2475 2565
+   [15] 1389  187 2227 1076  762 1023 1020  502 1085  760 1085  719 2586 1074
+   [29] 1598  746 2133 1096 1416 1008 1020 2153 1598 2454  733  185  529  212
+   [43] 1389  950  187 1023  529 1065  301 1620 2434 2248 1182 1035 1990 2586
+   [57] 1096  733  944 1147  997 1076  762 2475 1096 1069  502 1068 1608 2475
+...
+```
+`df[,"COLUMN"]` (returns tibble)
+
+```r
+flights[,"distance"]
+```
+
+```
+# A tibble: 336,776 × 1
+   distance
+      &lt;dbl&gt;
+ 1     1400
+ 2     1416
+...
+```
+
+
+---
+## Piping: `%&gt;%` and `|&gt;`
+The operators `%&gt;%` (and equivalently, `|&gt;`) allow for you to write operations sequentially.
+
+```r
+mean(flights$distance)
+```
+
+```
+[1] 1039.913
+```
+Same as:
+
+```r
+flights$distance %&gt;%
+  mean
+```
+
+```
+[1] 1039.913
+```
+We will see more complex examples of this shortly. 
+
+---
+## The `select()` function
+Returns a tibble with the columns specified, in order specified. 
+Do not need quotation marks.
+
+```r
+(colnames(flights))
+```
+
+```
+ [1] "year"           "month"          "day"            "dep_time"      
+ [5] "sched_dep_time" "dep_delay"      "arr_time"       "sched_arr_time"
+ [9] "arr_delay"      "carrier"        "flight"         "tailnum"       
+[13] "origin"         "dest"           "air_time"       "distance"      
+[17] "hour"           "minute"         "time_hour"     
+```
+
+```r
+after_select &lt;- flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance)
+(colnames(after_select))
+```
+
+```
+[1] "time_hour" "origin"    "dest"      "air_time"  "distance" 
+```
+
+Helper functions for `select()`:
+
+*    `starts_with("abc")`: matches names that begin with “abc”.
+*    `ends_with("xyz")`: matches names that end with “xyz”.
+*    `contains("ijk")`: matches names that contain “ijk”.
+*    `num_range("x", 1:3)`: matches x1, x2 and x3.
+
+---
+
+## The `select()` function
+
+```r
+colnames(flights)
+```
+
+```
+ [1] "year"           "month"          "day"            "dep_time"      
+ [5] "sched_dep_time" "dep_delay"      "arr_time"       "sched_arr_time"
+ [9] "arr_delay"      "carrier"        "flight"         "tailnum"       
+[13] "origin"         "dest"           "air_time"       "distance"      
+[17] "hour"           "minute"         "time_hour"     
+```
+
+```r
+after_select &lt;- flights %&gt;%
+  select(time_hour, origin, dest, contains("sched"))
+colnames(after_select)
+```
+
+```
+[1] "time_hour"      "origin"         "dest"           "sched_dep_time"
+[5] "sched_arr_time"
+```
+
+
+
+---
+## The `filter()` function
+
+
+```r
+# data = data to filter
+# expr&lt;#&gt; = expression used to filter data, typically using ==, &gt;, etc
+filter(&lt;data&gt;, &lt;expr1&gt;)
+filter(&lt;data&gt;, &lt;expr1&gt;, &lt;expr2&gt;, &lt;expr3&gt;)
+```
+
+Example: flights on February 15
+
+```r
+filter(flights, month == 2, day == 15)
+```
+
+```
+# A tibble: 954 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     2    15        3           2358         5      503            438
+ 2  2013     2    15        6           2115       171       48           2214
+ 3  2013     2    15        6           2250        76      117              5
+ 4  2013     2    15       22           2230       112      510            312
+ 5  2013     2    15       36           2352        44      607            437
+...
+```
+
+
+---
+## The `filter()` function 
+
+```r
+# data = data to filter
+# expr = expression used to filter data, typically using ==, &gt;, etc
+filter(&lt;data&gt;, &lt;expr&gt;)
+```
+
+Expressions can be built up using comparison operators and logical operators.
+* `&amp;` is "and"
+* `|` is "or"
+* `!` is "not"
+* `%in%` is a membership checker (is an object inside of a vector)
+* `&gt;`, `&lt;` mean greater than, less than
+* `&gt;=`, `&lt;=` mean greater than or equal to, less than or requal to
+* `==` means "is equal"
+* `!=` means "is not equal"
+
+---
+
+## Examples of `filter()`
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(distance &lt; 120)
+```
+
+```
+# A tibble: 2,076 × 5
+   time_hour           origin dest  air_time distance
+   &lt;dttm&gt;              &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+ 1 2013-01-01 09:00:00 LGA    PHL         32       96
+ 2 2013-01-01 13:00:00 EWR    BDL         25      116
+ 3 2013-01-01 16:00:00 JFK    PHL         35       94
+...
+```
+
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(distance &lt; 120, origin == 'EWR')
+```
+
+```
+# A tibble: 493 × 5
+   time_hour           origin dest  air_time distance
+   &lt;dttm&gt;              &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+ 1 2013-01-01 13:00:00 EWR    BDL         25      116
+ 2 2013-01-01 22:00:00 EWR    BDL         24      116
+...
+```
+
+---
+## Spot the error?
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(origin == SFO)
+```
+
+---
+
+## Spot the error?
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(origin == 'SFO')
+```
+
+---
+## Equivalent ways to filter on multiple conditions
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(distance &lt; 120, origin == "EWR")
+```
+
+```
+# A tibble: 493 × 5
+   time_hour           origin dest  air_time distance
+   &lt;dttm&gt;              &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+ 1 2013-01-01 13:00:00 EWR    BDL         25      116
+ 2 2013-01-01 22:00:00 EWR    BDL         24      116
+...
+```
+
+
+
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(distance &lt; 120 &amp; origin == "EWR")
+```
+
+
+```r
+flights %&gt;%
+  select(time_hour, origin, dest, air_time, distance) %&gt;%
+  filter(distance &lt; 120) %&gt;%
+  filter(origin == "EWR")
+```
+
+
+---
+
+## `mutate()`
+The function `mutate()` adds new columns to the data frame using functions of extant columns.
+
+Example:
+
+```r
+small_flights &lt;- flights %&gt;%
+  select(origin, dest, air_time, distance, air_time)
+small_flights %&gt;%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours, 
+         km_per_hour = 1.61 * mi_per_hour)
+```
+
+```
+# A tibble: 336,776 × 7
+   origin dest  air_time distance hours mi_per_hour km_per_hour
+   &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+ 1 EWR    IAH        227     1400 3.78         370.        596.
+ 2 LGA    IAH        227     1416 3.78         374.        603.
+ 3 JFK    MIA        160     1089 2.67         408.        657.
+ 4 JFK    BQN        183     1576 3.05         517.        832.
+...
+```
+
+Notice how `mi_per_hour` uses `hours`, which was created within the same `mutate()` call. 
+
+
+---
+
+## Summary statistics and missing data
+Common summary statistics of interest in data:
+* Mean (`mean()`)
+* Min/max (`min()`, `max()`)
+* Median (`median()`)
+* Standard deviation / variance (`sd()`, `var()`)
+
+R denotes missing data using `NA`.  Typically, if you compute a function of a vector with `NA`s, it will return `NA`, unless you put `na.rm=TRUE`.
+
+```r
+x &lt;- c(-1, 0, 1, NA)
+(mean(x))
+```
+
+```
+[1] NA
+```
+
+```r
+(mean(x, na.rm=TRUE))
+```
+
+```
+[1] 0
+```
+
+---
+## `summarise()`
+If you want to compute summary statistics of dataframe, use `summarise()`.
+
+
+```r
+# data = data you want to create a new variable from
+# new var name = the name your new variable will be
+# calc exp = the calculation you want to perform
+summarise(&lt;data&gt;, &lt;new var name&gt; = &lt;calc exp&gt;)
+```
+
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours) %&gt;%
+  summarise(flight_time = mean(mi_per_hour))
+```
+
+```
+# A tibble: 1 × 1
+  flight_time
+        &lt;dbl&gt;
+1          NA
+```
+
+---
+## `summarize()`
+If you want to compute summary statistics of dataframe, use `summarise()`.
+
+
+```r
+# data = data you want to create a new variable from
+# new var name = the name your new variable will be
+# calc exp = the calculation you want to perform
+summarize(&lt;data&gt;, &lt;new var name&gt; = &lt;calc exp&gt;)
+```
+
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours) %&gt;%
+  summarize(flight_time = mean(mi_per_hour, na.rm=TRUE))
+```
+
+```
+# A tibble: 1 × 1
+  flight_time
+        &lt;dbl&gt;
+1        394.
+```
+
+
+---
+## `group_by()` and `summarise()`
+If you would like to compute summary statistics per category, use `group_by()` first.
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  group_by(origin) %&gt;%
+  summarize(median_distance = median(distance, na.rm=TRUE),
+            max_air_time = max(air_time, na.rm=TRUE))
+```
+
+```
+# A tibble: 3 × 3
+  origin median_distance max_air_time
+  &lt;chr&gt;            &lt;dbl&gt;        &lt;dbl&gt;
+1 EWR                872          695
+2 JFK               1069          691
+3 LGA                762          331
+```
+
+---
+## Complex calculations
+.delay[ 
+
+Average flight time, in hours, per origin airport for flights &gt; 500 miles long?
+
+]
+.delay[
+
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  mutate(air_time_hrs = air_time / 60) %&gt;%
+  filter(distance &gt; 500) %&gt;%
+  group_by(origin) %&gt;%
+  summarize(avg_flight_time_hrs = mean(air_time_hrs, na.rm=TRUE))
+```
+
+```
+# A tibble: 3 × 2
+  origin avg_flight_time_hrs
+  &lt;chr&gt;                &lt;dbl&gt;
+1 EWR                   2.99
+2 JFK                   3.76
+3 LGA                   2.27
+```
+
+]
+
+---
+## Complex calculations
+Average flight time, in minutes, per origin airport, when flight is &gt; 500 miles long vs. &lt;= 500 miles long?
+
+We need to `group_by` two variables: origin airport, and whether or not flight is &gt; 500 or &lt;= 500 miles.
+
+We need to create the latter variable.
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  mutate(air_time_hrs = air_time / 60,
+         distance_greater_500mi = distance &gt; 500)
+```
+
+```
+# A tibble: 336,776 × 6
+   origin dest  air_time distance air_time_hrs distance_greater_500mi
+   &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;        &lt;dbl&gt; &lt;lgl&gt;                 
+ 1 EWR    IAH        227     1400        3.78  TRUE                  
+ 2 LGA    IAH        227     1416        3.78  TRUE                  
+ 3 JFK    MIA        160     1089        2.67  TRUE                  
+ 4 JFK    BQN        183     1576        3.05  TRUE                  
+...
+```
+
+---
+## Complex calculations
+Average flight time, in minutes, per origin airport, when flight is &gt; 500 miles long vs. &lt;= 500 miles long?
+
+
+```r
+flights %&gt;%
+  select(origin, dest, air_time, distance) %&gt;%
+  mutate(air_time_hrs = air_time / 60,
+         distance_greater_500mi = distance &gt; 500) %&gt;%
+  group_by(origin, distance_greater_500mi) %&gt;%
+  summarize(avg_flight_time_hrs = mean(air_time_hrs, na.rm=TRUE))
+```
+
+```
+# A tibble: 6 × 3
+# Groups:   origin [3]
+  origin distance_greater_500mi avg_flight_time_hrs
+  &lt;chr&gt;  &lt;lgl&gt;                                &lt;dbl&gt;
+1 EWR    FALSE                                0.900
+2 EWR    TRUE                                 2.99 
+3 JFK    FALSE                                0.849
+4 JFK    TRUE                                 3.76 
+5 LGA    FALSE                                0.916
+6 LGA    TRUE                                 2.27 
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

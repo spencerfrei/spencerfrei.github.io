@@ -1,0 +1,361 @@
+---
+title: "Introduction and Review of R"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+```
+
+
+## Reminder about packages
+
+Packages are things we load using `library()`.
+
+We'll primarily use the `tidyverse` library, but occasionally we'll use other packages.
+
+If you haven't installed a package `PACKAGENAME` before, you'll get an error.
+
+To install a package, `install.packages(PACKAGENAME)`.
+
+---
+
+## dataframes/tibbles 
+The main objects we'll care about in R are dataframes and tibbles - you should be familiar with these. 
+
+ <!-- Tibbles are a special type of data frame that have nicer properties - we'll use these for all of the course. -->
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(nycflights13) # loads the `flights` tibble into environment
+flights
+```
+
+---
+
+## dataframes/tibbles
+Useful functions for inspecting dataframes: `head()` and `str()`
+```{r}
+head(flights)
+```
+
+
+---
+
+## dataframes/tibbles
+Useful functions for inspecting dataframes: `head()` and `str()`
+```{r, output.lines=8}
+str(flights)
+```
+
+---
+
+## dataframes/tibbles
+To return the data from a column in a dataframe/tibble, use `df$COLUMN` (returns vector)
+```{r, output.lines=5}
+flights$distance
+```
+`df[,"COLUMN"]` (returns tibble)
+```{r, output.lines=5}
+flights[,"distance"]
+```
+
+
+---
+## Piping: `%>%` and `|>`
+The operators `%>%` (and equivalently, `|>`) allow for you to write operations sequentially.
+```{r}
+mean(flights$distance)
+```
+Same as:
+```{r}
+flights$distance %>%
+  mean
+```
+We will see more complex examples of this shortly. 
+
+---
+## The `select()` function
+Returns a tibble with the columns specified, in order specified. 
+Do not need quotation marks.
+```{r, output.lines = 6}
+(colnames(flights))
+after_select <- flights %>%
+  select(time_hour, origin, dest, air_time, distance)
+(colnames(after_select))
+```
+
+Helper functions for `select()`:
+
+*    `starts_with("abc")`: matches names that begin with “abc”.
+*    `ends_with("xyz")`: matches names that end with “xyz”.
+*    `contains("ijk")`: matches names that contain “ijk”.
+*    `num_range("x", 1:3)`: matches x1, x2 and x3.
+
+---
+
+## The `select()` function
+```{r}
+colnames(flights)
+after_select <- flights %>%
+  select(time_hour, origin, dest, contains("sched"))
+colnames(after_select)
+```
+
+
+
+---
+## The `filter()` function
+
+```{r, eval=FALSE}
+# data = data to filter
+# expr<#> = expression used to filter data, typically using ==, >, etc
+filter(<data>, <expr1>)
+filter(<data>, <expr1>, <expr2>, <expr3>)
+```
+
+Example: flights on February 15
+```{r, echo = TRUE, comment = NA, output.lines=8}
+filter(flights, month == 2, day == 15)
+```
+
+
+---
+## The `filter()` function 
+```{r, eval=FALSE}
+# data = data to filter
+# expr = expression used to filter data, typically using ==, >, etc
+filter(<data>, <expr>)
+```
+
+Expressions can be built up using comparison operators and logical operators.
+* `&` is "and"
+* `|` is "or"
+* `!` is "not"
+* `%in%` is a membership checker (is an object inside of a vector)
+* `>`, `<` mean greater than, less than
+* `>=`, `<=` mean greater than or equal to, less than or requal to
+* `==` means "is equal"
+* `!=` means "is not equal"
+
+---
+
+## Examples of `filter()`
+```{r, output.lines=6}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(distance < 120)
+```
+
+```{r, output.lines=5}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(distance < 120, origin == 'EWR')
+```
+
+---
+## Spot the error?
+```{r, output.lines=6, eval = FALSE}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(origin == SFO)
+```
+
+---
+
+## Spot the error?
+```{r, output.lines=6, eval = FALSE}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(origin == 'SFO')
+```
+
+---
+## Equivalent ways to filter on multiple conditions
+```{r, output.lines=5}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(distance < 120, origin == "EWR")
+```
+
+
+
+```{r, output.lines=5, eval = FALSE}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(distance < 120 & origin == "EWR")
+```
+
+```{r, output.lines=5, eval = FALSE}
+flights %>%
+  select(time_hour, origin, dest, air_time, distance) %>%
+  filter(distance < 120) %>%
+  filter(origin == "EWR")
+```
+
+
+---
+
+## `mutate()`
+The function `mutate()` adds new columns to the data frame using functions of extant columns.
+
+Example:
+```{r, output.lines = 7}
+small_flights <- flights %>%
+  select(origin, dest, air_time, distance, air_time)
+small_flights %>%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours, 
+         km_per_hour = 1.61 * mi_per_hour)
+```
+
+Notice how `mi_per_hour` uses `hours`, which was created within the same `mutate()` call. 
+
+
+---
+
+## Summary statistics and missing data
+Common summary statistics of interest in data:
+* Mean (`mean()`)
+* Min/max (`min()`, `max()`)
+* Median (`median()`)
+* Standard deviation / variance (`sd()`, `var()`)
+
+R denotes missing data using `NA`.  Typically, if you compute a function of a vector with `NA`s, it will return `NA`, unless you put `na.rm=TRUE`.
+```{r}
+x <- c(-1, 0, 1, NA)
+(mean(x))
+(mean(x, na.rm=TRUE))
+```
+
+---
+## `summarise()`
+If you want to compute summary statistics of dataframe, use `summarise()`.
+
+```{r, eval=FALSE}
+# data = data you want to create a new variable from
+# new var name = the name your new variable will be
+# calc exp = the calculation you want to perform
+summarise(<data>, <new var name> = <calc exp>)
+```
+
+```{r, output.lines=5}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours) %>%
+  summarise(flight_time = mean(mi_per_hour))
+```
+
+---
+## `summarize()`
+If you want to compute summary statistics of dataframe, use `summarise()`.
+
+```{r, eval=FALSE}
+# data = data you want to create a new variable from
+# new var name = the name your new variable will be
+# calc exp = the calculation you want to perform
+summarize(<data>, <new var name> = <calc exp>)
+```
+
+```{r, output.lines=5}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  mutate(hours = air_time / 60,
+         mi_per_hour = distance / hours) %>%
+  summarize(flight_time = mean(mi_per_hour, na.rm=TRUE))
+```
+
+
+---
+## `group_by()` and `summarise()`
+If you would like to compute summary statistics per category, use `group_by()` first.
+```{r, output.lines=7}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  group_by(origin) %>%
+  summarize(median_distance = median(distance, na.rm=TRUE),
+            max_air_time = max(air_time, na.rm=TRUE))
+```
+
+---
+## Complex calculations
+.delay[ 
+
+Average flight time, in hours, per origin airport for flights > 500 miles long?
+
+]
+.delay[
+
+```{r, output.lines=7}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  mutate(air_time_hrs = air_time / 60) %>%
+  filter(distance > 500) %>%
+  group_by(origin) %>%
+  summarize(avg_flight_time_hrs = mean(air_time_hrs, na.rm=TRUE))
+```
+
+]
+
+---
+## Complex calculations
+Average flight time, in minutes, per origin airport, when flight is > 500 miles long vs. <= 500 miles long?
+
+We need to `group_by` two variables: origin airport, and whether or not flight is > 500 or <= 500 miles.
+
+We need to create the latter variable.
+```{r, output.lines=7, warning=FALSE}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  mutate(air_time_hrs = air_time / 60,
+         distance_greater_500mi = distance > 500)
+```
+
+---
+## Complex calculations
+Average flight time, in minutes, per origin airport, when flight is > 500 miles long vs. <= 500 miles long?
+
+```{r, output.lines=12, message=FALSE}
+flights %>%
+  select(origin, dest, air_time, distance) %>%
+  mutate(air_time_hrs = air_time / 60,
+         distance_greater_500mi = distance > 500) %>%
+  group_by(origin, distance_greater_500mi) %>%
+  summarize(avg_flight_time_hrs = mean(air_time_hrs, na.rm=TRUE))
+```

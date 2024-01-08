@@ -40,9 +40,9 @@ Yu and Kumbier, PNAS'19
 
 ## Course content 
 
+.pull-left[
 1. **Advanced R**  
-  - Tidy data
-  - Transforming vectors, numbers, strings, factors, dates, times
+  - dplyr, transforming vectors, numbers, strings, factors, dates, times
   - ggplot visualizations
   - Functions
 
@@ -50,17 +50,24 @@ Yu and Kumbier, PNAS'19
   - Linear regression
   - Analysis of variance
   - Permutation tests
+]
+
+.pull-right[
 
 Prerequisite(s): one of the following two options:
 
-  - STA 013 (C- or better) or STA 013Y (C- or better) or ECS 032A (C- or better)
- - STA 035A (C- or better) or STA 032 (C- or better) or STA 100 (C- or better)
+- STA 013 (C- or better) or STA 013Y (C- or better) or ECS 032A (C- or better)
+- STA 035A (C- or better) or STA 032 (C- or better) or STA 100 (C- or better)
+ 
+ NOTE: If you only took Stat013, this will be a difficult course!
 
 Corequisite (i.e., can be concurrent):
 
    - MAT 016B or MAT 017B or MAT 021B.
 
 These requirements are strict.
+
+]
 
 ---
 
@@ -70,7 +77,7 @@ These requirements are strict.
 - Tuesday **lab** (run by Mengjie Shie)
 
 - **Office hours**
-  - Mengjie Shie: TBD
+  - Mengjie Shi: Tuesdays, 2pm-4pm, room TBD
   - Spencer Frei: Wednesdays, 3pm-4pm MSB 4220
 
 - **Course website**: http://spencerfrei.github.io/teaching/sta35b/index.html 
