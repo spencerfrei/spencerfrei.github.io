@@ -1,5 +1,5 @@
 ---
-title: "Introduction and Review of R"
+title: "dplyr and tidy data"
 subtitle: "<br><br> STA35B: Statistical Data Science 2"
 author: "Spencer Frei"
 output:
@@ -13,8 +13,8 @@ output:
 ---
 
 ```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
-library(dplyr)
 library(ggplot2)
+library(tidyverse)
 library(unvotes)
 library(knitr)
 
@@ -315,6 +315,7 @@ flights %>%
 
 ---
 ## Complex calculations
+
 .delay[ 
 
 Average flight time, in hours, per origin airport for flights > 500 miles long?
@@ -359,3 +360,401 @@ flights %>%
   group_by(origin, distance_greater_500mi) %>%
   summarize(avg_flight_time_hrs = mean(air_time_hrs, na.rm=TRUE))
 ```
+
+
+---
+
+### Tidy data
+
+Multiple equivalent ways of organizing data into a dataframe. 
+```{r, eval=FALSE, comment=NA}
+table1
+#> # A tibble: 6 × 4
+#>   country      year  cases population
+#>   <chr>       <dbl>  <dbl>      <dbl>
+#> 1 Afghanistan  1999    745   19987071
+#> 2 Afghanistan  2000   2666   20595360
+#> 3 Brazil       1999  37737  172006362
+#> 4 Brazil       2000  80488  174504898
+#> 5 China        1999 212258 1272915272
+#> 6 China        2000 213766 1280428583
+
+table2
+#> # A tibble: 12 × 4
+#>   country      year type           count
+#>   <chr>       <dbl> <chr>          <dbl>
+#> 1 Afghanistan  1999 cases            745
+#> 2 Afghanistan  1999 population  19987071
+#> 3 Afghanistan  2000 cases           2666
+#> 4 Afghanistan  2000 population  20595360
+#> 5 Brazil       1999 cases          37737
+#> 6 Brazil       1999 population 172006362
+#> # ℹ 6 more rows
+
+```
+table1 is **tidy** - easier to work with using `tidyverse`. 
+
+---
+### Tidy data
+
+*    Each variable is a column; each column is a variable.
+*    Each observation is a row; each row is an observation.
+*    Each value is a cell; each cell is a single value.
+
+![Tidy data](tidy.png)
+
+Why tidy data?  
+* Consistency - uniform format makes collaboration easier
+* Vectorization - R commands often operate on vectors of data, best for each column to be a vector of data
+
+
+---
+### **Tidying** data
+
+Unfortunately, most real-world datasets you encounter is NOT tidy.
+
+In fact, a significant portion of "data scientist work" consists in tidying data ("cleaning data").
+
+The next two weeks will primarily be about how to tidy/rearrange data so that you can do data analysis and visualization properly. 
+
+
+```{r, eval=FALSE}
+install.packages("billboard")
+```
+```{r, output.lines=10}
+library(billboard)
+billboard
+```
+
+---
+### Lengthening data with `pivot_longer()`
+```{r, output.lines=6}
+billboard
+```
+
+Billboard dataset: 
+* Each observation is a song
+* First three columns are variable describing the song: `artist`, `track`, `date.entered`
+* Then 76 columns (`wk1`, `wk2`, ..., `wk76`) saying rank of the song in each week.
+* The column names (`week`) are actually a *variable*, while the cell values are another variable (the `rank`)
+* To make it tidy, each observation (`artist-track-date.entered-week-rank`) should be a row, so need to be longer dataframe to make tidy.
+
+---
+
+### Lengthening data with `pivot_longer()`
+```{r, output.lines=7}
+billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  )
+```
+* `cols` specifies which columns need to be pivoted (= are NOT variables)
+* `names_to` names the variable stored in the column names ("week")
+* `values_to` names the variable stored in cell values ("rank")
+* "week" and "rank" do not appear as column names in billboard, so need quotes
+
+
+---
+
+### Lengthening data with `pivot_longer()`
+
+```{r, output.lines=7}
+billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  )
+```
+Data is now tidy, but not ideal for data analysis.  Why?
+
+* `week` should ideally be a number, not a character
+* We can use `readr::parse_numbers()` that extracts first number from string to fix.
+
+
+---
+
+### Lengthening data with `pivot_longer()`
+
+```{r, output.lines=7}
+billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  ) %>%
+  mutate(week = parse_number(week))
+```
+
+
+---
+
+### Understanding pivoting
+
+
+.pull-left[
+
+Let's consider toy dataset: three people (A,B,C) with two blood pressure (BP) measurements each.
+```{r, echo=FALSE}
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+```
+```{r}
+df
+```
+
+]
+
+--
+.pull-right[
+
+
+For new dataset, want each observation (id, bp) to have its own row:
+```{r}
+df %>%
+  pivot_longer(
+    cols = c(bp1, bp2),
+    names_to = "measurement",
+    values_to = "value"
+  )
+```
+
+]
+
+
+---
+
+<!--### Understanding pivoting-->
+.pull-left[
+```{r, eval=FALSE}
+df %>%
+  pivot_longer(
+    cols = c(bp1, bp2),
+    names_to = "measurement",
+    values_to = "value"
+  )
+```
+* `cols`: which columns to be pivoted
+* `names_to`: names var stored in the col names 
+* `values_to` names the var stored in cell values
+
+![Columns that are already vars need to be repeated](variables.png)
+<span style="font-size:smaller;">If col is already a var, needs to repeat for each pivoted col.</span>
+
+]
+
+
+--
+
+
+.pull-right[
+
+![Col names of pivoted columns become values in a new column](column-names.png)
+<span style="font-size:smaller;">Pivoted column names become values in a new variable, with name given by `names_to`.
+They need to be repeated for each row in the original dataset. </span>
+
+
+--
+
+
+![Cell values become new variable, with name given by values_to](cell-values.png)
+Cell values are values in a new variable, with name `values_to`, unwound row by row.
+]
+
+---
+
+### Widening data
+We'll now use `pivot_wider()` to widen data which is (too) long.
+```{r, output.lines=7}
+(cms_patient_experience <- tidyr::cms_patient_experience)
+```
+The basic unit studied is an organization, but it's spread across six rows for different measurements.
+
+---
+
+### Widening data
+
+```{r, output.lines=7}
+cms_patient_experience %>%
+  pivot_wider(
+    id_cols = starts_with("org"), # org_pac_id and org_nm are identifiers
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+```
+
+---
+
+### Understanding `pivot_wider()`
+
+.pull-left[
+Dataset where two patients (A, B), with between 2 and 3 BP measurements.
+```{r, echo=FALSE}
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+```
+```{r}
+df
+```
+
+
+]
+
+--
+
+.pull-right[
+
+```{r}
+df %>%
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
+```
+
+]
+
+Since there is no measurement for bp3 for B, R puts in `NA`.
+
+
+---
+
+### Going from long to wide and back again
+
+
+.pull-left[
+```{r, echo=FALSE}
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+```
+```{r}
+df
+```
+```{r}
+(wide_df <- df %>%
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  ) )
+```
+
+
+]
+
+--
+
+.pull-right[
+```{r}
+
+(long_df <- wide_df %>%
+    pivot_longer(
+      cols = c(bp1, bp2, bp3),
+      names_to = "measurement",
+      values_to = "value"))
+
+```
+Note that we now have an additional row to account for the `NA`. 
+]
+
+---
+
+### Tidy check
+
+.pull-left[
+Make the table wider.
+```{r, echo = FALSE}
+df <- tibble(
+  City = c("CityA", "CityA", "CityA", "CityA", "CityB", "CityB", "CityB", "CityB"),
+  Date = c("2024-01-01", "2024-01-01", "2024-01-02", "2024-01-02", "2024-01-01", "2024-01-01", "2024-01-02", "2024-01-02"),
+  Measurement = c("Temperature", "Humidity", "Temperature", "Humidity", "Temperature", "Humidity", "Temperature", "Humidity"),
+  Value = c(20, 80, 22, 82, 18, 85, 19, 88)
+)
+```
+```{r}
+df
+```
+Not tidy, since each variable is not a column, e.g. temperature/humidity.
+
+]
+
+.pull-right[
+```{r}
+df %>%
+  pivot_wider(
+    names_from = Measurement,
+    values_from = Value
+  )
+```
+
+]
+
+
+
+---
+
+.pull-left[
+Make the table longer by having a column called Subject, values Math/Science.
+
+
+```{r, echo = FALSE}
+scores <- tibble(
+  Student = c("Alice", "Bob", "Charlie", "Alice", "Bob", "Charlie"),
+  Subject = c("Math", "Math", "Math", "Science", "Science", "Science"),
+  Score = c(85, 92, 88, 90, 78, 95)
+) %>%
+  pivot_wider(
+    names_from = Subject,
+    values_from = Score
+  )
+
+```
+```{r}
+scores
+```
+
+Is the following code correct?
+```{r, eval = FALSE}
+scores %>%
+  pivot_longer(
+    cols = c(Math, Science),
+    names_to = Subject,
+    values_to = Score
+  )
+```
+]
+
+--
+
+.pull-right[
+
+No, since `scores` tries to refer to `Subject` and `Score` which are not columns. 
+
+```{r}
+scores %>%
+  pivot_longer(
+    cols = c(Math, Science),
+    names_to = "Subject",
+    values_to = "Score"
+  )
+```
+
+
+]

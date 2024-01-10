@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Introduction and Review of R</title>
+    <title>dplyr and tidy data</title>
     <meta charset="utf-8" />
     <meta name="author" content="Spencer Frei" />
     <script src="lec02-dplyr_files/header-attrs-2.25/header-attrs.js"></script>
@@ -13,7 +13,7 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Introduction and Review of R
+# dplyr and tidy data
 ]
 .subtitle[
 ## <br><br> STA35B: Statistical Data Science 2
@@ -515,6 +515,7 @@ flights %&gt;%
 
 ---
 ## Complex calculations
+
 .delay[ 
 
 Average flight time, in hours, per origin airport for flights &gt; 500 miles long?
@@ -595,6 +596,575 @@ flights %&gt;%
 5 LGA    FALSE                                0.916
 6 LGA    TRUE                                 2.27 
 ```
+
+
+---
+
+### Tidy data
+
+Multiple equivalent ways of organizing data into a dataframe. 
+
+```r
+table1
+#&gt; # A tibble: 6 × 4
+#&gt;   country      year  cases population
+#&gt;   &lt;chr&gt;       &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt;
+#&gt; 1 Afghanistan  1999    745   19987071
+#&gt; 2 Afghanistan  2000   2666   20595360
+#&gt; 3 Brazil       1999  37737  172006362
+#&gt; 4 Brazil       2000  80488  174504898
+#&gt; 5 China        1999 212258 1272915272
+#&gt; 6 China        2000 213766 1280428583
+
+table2
+#&gt; # A tibble: 12 × 4
+#&gt;   country      year type           count
+#&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt;
+#&gt; 1 Afghanistan  1999 cases            745
+#&gt; 2 Afghanistan  1999 population  19987071
+#&gt; 3 Afghanistan  2000 cases           2666
+#&gt; 4 Afghanistan  2000 population  20595360
+#&gt; 5 Brazil       1999 cases          37737
+#&gt; 6 Brazil       1999 population 172006362
+#&gt; # ℹ 6 more rows
+```
+table1 is **tidy** - easier to work with using `tidyverse`. 
+
+---
+### Tidy data
+
+*    Each variable is a column; each column is a variable.
+*    Each observation is a row; each row is an observation.
+*    Each value is a cell; each cell is a single value.
+
+![Tidy data](tidy.png)
+
+Why tidy data?  
+* Consistency - uniform format makes collaboration easier
+* Vectorization - R commands often operate on vectors of data, best for each column to be a vector of data
+
+
+---
+### **Tidying** data
+
+Unfortunately, most real-world datasets you encounter is NOT tidy.
+
+In fact, a significant portion of "data scientist work" consists in tidying data ("cleaning data").
+
+The next two weeks will primarily be about how to tidy/rearrange data so that you can do data analysis and visualization properly. 
+
+
+
+```r
+install.packages("billboard")
+```
+
+```r
+library(billboard)
+billboard
+```
+
+```
+# A tibble: 317 × 79
+   artist     track date.entered   wk1   wk2   wk3   wk4   wk5   wk6   wk7   wk8
+   &lt;chr&gt;      &lt;chr&gt; &lt;date&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+ 1 2 Pac      Baby… 2000-02-26      87    82    72    77    87    94    99    NA
+ 2 2Ge+her    The … 2000-09-02      91    87    92    NA    NA    NA    NA    NA
+ 3 3 Doors D… Kryp… 2000-04-08      81    70    68    67    66    57    54    53
+ 4 3 Doors D… Loser 2000-10-21      76    76    72    69    67    65    55    59
+ 5 504 Boyz   Wobb… 2000-04-15      57    34    25    17    17    31    36    49
+ 6 98^0       Give… 2000-08-19      51    39    34    26    26    19     2     2
+ 7 A*Teens    Danc… 2000-07-08      97    97    96    95   100    NA    NA    NA
+...
+```
+
+---
+### Lengthening data with `pivot_longer()`
+
+```r
+billboard
+```
+
+```
+# A tibble: 317 × 79
+   artist     track date.entered   wk1   wk2   wk3   wk4   wk5   wk6   wk7   wk8
+   &lt;chr&gt;      &lt;chr&gt; &lt;date&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+ 1 2 Pac      Baby… 2000-02-26      87    82    72    77    87    94    99    NA
+ 2 2Ge+her    The … 2000-09-02      91    87    92    NA    NA    NA    NA    NA
+ 3 3 Doors D… Kryp… 2000-04-08      81    70    68    67    66    57    54    53
+...
+```
+
+Billboard dataset: 
+* Each observation is a song
+* First three columns are variable describing the song: `artist`, `track`, `date.entered`
+* Then 76 columns (`wk1`, `wk2`, ..., `wk76`) saying rank of the song in each week.
+* The column names (`week`) are actually a *variable*, while the cell values are another variable (the `rank`)
+* To make it tidy, each observation (`artist-track-date.entered-week-rank`) should be a row, so need to be longer dataframe to make tidy.
+
+---
+
+### Lengthening data with `pivot_longer()`
+
+```r
+billboard %&gt;%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  )
+```
+
+```
+# A tibble: 24,092 × 5
+   artist track                   date.entered week   rank
+   &lt;chr&gt;  &lt;chr&gt;                   &lt;date&gt;       &lt;chr&gt; &lt;dbl&gt;
+ 1 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk1      87
+ 2 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk2      82
+ 3 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk3      72
+ 4 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk4      77
+...
+```
+* `cols` specifies which columns need to be pivoted (= are NOT variables)
+* `names_to` names the variable stored in the column names ("week")
+* `values_to` names the variable stored in cell values ("rank")
+* "week" and "rank" do not appear as column names in billboard, so need quotes
+
+
+---
+
+### Lengthening data with `pivot_longer()`
+
+
+```r
+billboard %&gt;%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  )
+```
+
+```
+# A tibble: 24,092 × 5
+   artist track                   date.entered week   rank
+   &lt;chr&gt;  &lt;chr&gt;                   &lt;date&gt;       &lt;chr&gt; &lt;dbl&gt;
+ 1 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk1      87
+ 2 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk2      82
+ 3 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk3      72
+ 4 2 Pac  Baby Don't Cry (Keep... 2000-02-26   wk4      77
+...
+```
+Data is now tidy, but not ideal for data analysis.  Why?
+
+* `week` should ideally be a number, not a character
+* We can use `readr::parse_numbers()` that extracts first number from string to fix.
+
+
+---
+
+### Lengthening data with `pivot_longer()`
+
+
+```r
+billboard %&gt;%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  ) %&gt;%
+  mutate(week = parse_number(week))
+```
+
+```
+# A tibble: 24,092 × 5
+   artist track                   date.entered  week  rank
+   &lt;chr&gt;  &lt;chr&gt;                   &lt;date&gt;       &lt;dbl&gt; &lt;dbl&gt;
+ 1 2 Pac  Baby Don't Cry (Keep... 2000-02-26       1    87
+ 2 2 Pac  Baby Don't Cry (Keep... 2000-02-26       2    82
+ 3 2 Pac  Baby Don't Cry (Keep... 2000-02-26       3    72
+ 4 2 Pac  Baby Don't Cry (Keep... 2000-02-26       4    77
+...
+```
+
+
+---
+
+### Understanding pivoting
+
+
+.pull-left[
+
+Let's consider toy dataset: three people (A,B,C) with two blood pressure (BP) measurements each.
+
+
+```r
+df
+```
+
+```
+# A tibble: 3 × 3
+  id      bp1   bp2
+  &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 A       100   120
+2 B       140   115
+3 C       120   125
+```
+
+]
+
+--
+.pull-right[
+
+
+For new dataset, want each observation (id, bp) to have its own row:
+
+```r
+df %&gt;%
+  pivot_longer(
+    cols = c(bp1, bp2),
+    names_to = "measurement",
+    values_to = "value"
+  )
+```
+
+```
+# A tibble: 6 × 3
+  id    measurement value
+  &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+1 A     bp1           100
+2 A     bp2           120
+3 B     bp1           140
+4 B     bp2           115
+5 C     bp1           120
+6 C     bp2           125
+```
+
+]
+
+
+---
+
+&lt;!--### Understanding pivoting--&gt;
+.pull-left[
+
+```r
+df %&gt;%
+  pivot_longer(
+    cols = c(bp1, bp2),
+    names_to = "measurement",
+    values_to = "value"
+  )
+```
+* `cols`: which columns to be pivoted
+* `names_to`: names var stored in the col names 
+* `values_to` names the var stored in cell values
+
+![Columns that are already vars need to be repeated](variables.png)
+&lt;span style="font-size:smaller;"&gt;If col is already a var, needs to repeat for each pivoted col.&lt;/span&gt;
+
+]
+
+
+--
+
+
+.pull-right[
+
+![Col names of pivoted columns become values in a new column](column-names.png)
+&lt;span style="font-size:smaller;"&gt;Pivoted column names become values in a new variable, with name given by `names_to`.
+They need to be repeated for each row in the original dataset. &lt;/span&gt;
+
+
+--
+
+
+![Cell values become new variable, with name given by values_to](cell-values.png)
+Cell values are values in a new variable, with name `values_to`, unwound row by row.
+]
+
+---
+
+### Widening data
+We'll now use `pivot_wider()` to widen data which is (too) long.
+
+```r
+(cms_patient_experience &lt;- tidyr::cms_patient_experience)
+```
+
+```
+# A tibble: 500 × 5
+   org_pac_id org_nm                           measure_cd measure_title prf_rate
+   &lt;chr&gt;      &lt;chr&gt;                            &lt;chr&gt;      &lt;chr&gt;            &lt;dbl&gt;
+ 1 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       63
+ 2 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       87
+ 3 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       86
+ 4 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       57
+...
+```
+The basic unit studied is an organization, but it's spread across six rows for different measurements.
+
+---
+
+### Widening data
+
+
+```r
+cms_patient_experience %&gt;%
+  pivot_wider(
+    id_cols = starts_with("org"), # org_pac_id and org_nm are identifiers
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+```
+
+```
+# A tibble: 95 × 8
+   org_pac_id org_nm CAHPS_GRP_1 CAHPS_GRP_2 CAHPS_GRP_3 CAHPS_GRP_5 CAHPS_GRP_8
+   &lt;chr&gt;      &lt;chr&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+ 1 0446157747 USC C…          63          87          86          57          85
+ 2 0446162697 ASSOC…          59          85          83          63          88
+ 3 0547164295 BEAVE…          49          NA          75          44          73
+ 4 0749333730 CAPE …          67          84          85          65          82
+...
+```
+
+---
+
+### Understanding `pivot_wider()`
+
+.pull-left[
+Dataset where two patients (A, B), with between 2 and 3 BP measurements.
+
+
+```r
+df
+```
+
+```
+# A tibble: 5 × 3
+  id    measurement value
+  &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+1 A     bp1           100
+2 B     bp1           140
+3 B     bp2           115
+4 A     bp2           120
+5 A     bp3           105
+```
+
+
+]
+
+--
+
+.pull-right[
+
+
+```r
+df %&gt;%
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
+```
+
+```
+# A tibble: 2 × 4
+  id      bp1   bp2   bp3
+  &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 A       100   120   105
+2 B       140   115    NA
+```
+
+]
+
+Since there is no measurement for bp3 for B, R puts in `NA`.
+
+
+---
+
+### Going from long to wide and back again
+
+
+.pull-left[
+
+
+```r
+df
+```
+
+```
+# A tibble: 5 × 3
+  id    measurement value
+  &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+1 A     bp1           100
+2 B     bp1           140
+3 B     bp2           115
+4 A     bp2           120
+5 A     bp3           105
+```
+
+```r
+(wide_df &lt;- df %&gt;%
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  ) )
+```
+
+```
+# A tibble: 2 × 4
+  id      bp1   bp2   bp3
+  &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 A       100   120   105
+2 B       140   115    NA
+```
+
+
+]
+
+--
+
+.pull-right[
+
+```r
+(long_df &lt;- wide_df %&gt;%
+    pivot_longer(
+      cols = c(bp1, bp2, bp3),
+      names_to = "measurement",
+      values_to = "value"))
+```
+
+```
+# A tibble: 6 × 3
+  id    measurement value
+  &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+1 A     bp1           100
+2 A     bp2           120
+3 A     bp3           105
+4 B     bp1           140
+5 B     bp2           115
+6 B     bp3            NA
+```
+Note that we now have an additional row to account for the `NA`. 
+]
+
+---
+
+### Tidy check
+
+.pull-left[
+Make the table wider.
+
+
+```r
+df
+```
+
+```
+# A tibble: 8 × 4
+  City  Date       Measurement Value
+  &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;       &lt;dbl&gt;
+1 CityA 2024-01-01 Temperature    20
+2 CityA 2024-01-01 Humidity       80
+3 CityA 2024-01-02 Temperature    22
+4 CityA 2024-01-02 Humidity       82
+5 CityB 2024-01-01 Temperature    18
+6 CityB 2024-01-01 Humidity       85
+7 CityB 2024-01-02 Temperature    19
+8 CityB 2024-01-02 Humidity       88
+```
+Not tidy, since each variable is not a column, e.g. temperature/humidity.
+
+]
+
+.pull-right[
+
+```r
+df %&gt;%
+  pivot_wider(
+    names_from = Measurement,
+    values_from = Value
+  )
+```
+
+```
+# A tibble: 4 × 4
+  City  Date       Temperature Humidity
+  &lt;chr&gt; &lt;chr&gt;            &lt;dbl&gt;    &lt;dbl&gt;
+1 CityA 2024-01-01          20       80
+2 CityA 2024-01-02          22       82
+3 CityB 2024-01-01          18       85
+4 CityB 2024-01-02          19       88
+```
+
+]
+
+
+
+---
+
+.pull-left[
+Make the table longer by having a column called Subject, values Math/Science.
+
+
+
+
+```r
+scores
+```
+
+```
+# A tibble: 3 × 3
+  Student  Math Science
+  &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+1 Alice      85      90
+2 Bob        92      78
+3 Charlie    88      95
+```
+
+Is the following code correct?
+
+```r
+scores %&gt;%
+  pivot_longer(
+    cols = c(Math, Science),
+    names_to = Subject,
+    values_to = Score
+  )
+```
+]
+
+--
+
+.pull-right[
+
+No, since `scores` tries to refer to `Subject` and `Score` which are not columns. 
+
+
+```r
+scores %&gt;%
+  pivot_longer(
+    cols = c(Math, Science),
+    names_to = "Subject",
+    values_to = "Score"
+  )
+```
+
+```
+# A tibble: 6 × 3
+  Student Subject Score
+  &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;
+1 Alice   Math       85
+2 Alice   Science    90
+3 Bob     Math       92
+4 Bob     Science    78
+5 Charlie Math       88
+6 Charlie Science    95
+```
+
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
