@@ -175,7 +175,8 @@ flights$distance %&gt;%
 We will see more complex examples of this shortly. 
 
 ---
-## The `select()` function
+### The `select()` function
+
 Returns a tibble with the columns specified, in order specified. 
 Do not need quotation marks.
 
@@ -200,6 +201,7 @@ after_select &lt;- flights %&gt;%
 ```
 [1] "time_hour" "origin"    "dest"      "air_time"  "distance" 
 ```
+
 
 Helper functions for `select()`:
 
@@ -647,7 +649,7 @@ Why tidy data?
 ---
 ### **Tidying** data
 
-Unfortunately, most real-world datasets you encounter is NOT tidy.
+Unfortunately, most real-world datasets you encounter are NOT tidy.
 
 In fact, a significant portion of "data scientist work" consists in tidying data ("cleaning data").
 
@@ -656,11 +658,10 @@ The next two weeks will primarily be about how to tidy/rearrange data so that yo
 
 
 ```r
-install.packages("billboard")
+library(tidyverse) # loads in tidyr::billboard into namespace 
 ```
 
 ```r
-library(billboard)
 billboard
 ```
 
@@ -889,17 +890,17 @@ Cell values are values in a new variable, with name `values_to`, unwound row by 
 We'll now use `pivot_wider()` to widen data which is (too) long.
 
 ```r
-(cms_patient_experience &lt;- tidyr::cms_patient_experience)
+(cms_patient_experience &lt;- tidyr::cms_patient_experience %&gt;% select(-measure_title))
 ```
 
 ```
-# A tibble: 500 × 5
-   org_pac_id org_nm                           measure_cd measure_title prf_rate
-   &lt;chr&gt;      &lt;chr&gt;                            &lt;chr&gt;      &lt;chr&gt;            &lt;dbl&gt;
- 1 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       63
- 2 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       87
- 3 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       86
- 4 0446157747 USC CARE MEDICAL GROUP INC       CAHPS_GRP… CAHPS for MI…       57
+# A tibble: 500 × 4
+   org_pac_id org_nm                               measure_cd   prf_rate
+   &lt;chr&gt;      &lt;chr&gt;                                &lt;chr&gt;           &lt;dbl&gt;
+ 1 0446157747 USC CARE MEDICAL GROUP INC           CAHPS_GRP_1        63
+ 2 0446157747 USC CARE MEDICAL GROUP INC           CAHPS_GRP_2        87
+ 3 0446157747 USC CARE MEDICAL GROUP INC           CAHPS_GRP_3        86
+ 4 0446157747 USC CARE MEDICAL GROUP INC           CAHPS_GRP_5        57
 ...
 ```
 The basic unit studied is an organization, but it's spread across six rows for different measurements.

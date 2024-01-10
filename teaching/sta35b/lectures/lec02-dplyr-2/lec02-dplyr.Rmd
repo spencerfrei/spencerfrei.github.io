@@ -110,7 +110,8 @@ flights$distance %>%
 We will see more complex examples of this shortly. 
 
 ---
-## The `select()` function
+### The `select()` function
+
 Returns a tibble with the columns specified, in order specified. 
 Do not need quotation marks.
 ```{r, output.lines = 6}
@@ -119,6 +120,7 @@ after_select <- flights %>%
   select(time_hour, origin, dest, air_time, distance)
 (colnames(after_select))
 ```
+
 
 Helper functions for `select()`:
 
@@ -411,7 +413,7 @@ Why tidy data?
 ---
 ### **Tidying** data
 
-Unfortunately, most real-world datasets you encounter is NOT tidy.
+Unfortunately, most real-world datasets you encounter are NOT tidy.
 
 In fact, a significant portion of "data scientist work" consists in tidying data ("cleaning data").
 
@@ -419,10 +421,9 @@ The next two weeks will primarily be about how to tidy/rearrange data so that yo
 
 
 ```{r, eval=FALSE}
-install.packages("billboard")
+library(tidyverse) # loads in tidyr::billboard into namespace 
 ```
 ```{r, output.lines=10}
-library(billboard)
 billboard
 ```
 
@@ -572,7 +573,7 @@ Cell values are values in a new variable, with name `values_to`, unwound row by 
 ### Widening data
 We'll now use `pivot_wider()` to widen data which is (too) long.
 ```{r, output.lines=7}
-(cms_patient_experience <- tidyr::cms_patient_experience)
+(cms_patient_experience <- tidyr::cms_patient_experience %>% select(-measure_title))
 ```
 The basic unit studied is an organization, but it's spread across six rows for different measurements.
 
