@@ -381,6 +381,59 @@ flights %&gt;%
 
 ---
 
+## `count()`
+
+.pull-left[ 
+If you want to count occurrences of different pairs/"tuples" of values across columns:
+
+```r
+dataframe %&gt;%
+  count(column1, column2)
+```
+e.g. for flights, want to count how many flights by origin:
+
+```r
+flights %&gt;%
+  count(origin)
+```
+
+```
+# A tibble: 3 × 2
+  origin      n
+  &lt;chr&gt;   &lt;int&gt;
+1 EWR    120835
+2 JFK    111279
+3 LGA    104662
+```
+
+]
+
+--
+
+.pull-right[
+Or how many origin-destination pairs:
+
+```r
+flights %&gt;%
+  count(origin, dest, sort = TRUE)
+```
+
+```
+# A tibble: 224 × 3
+   origin dest      n
+   &lt;chr&gt;  &lt;chr&gt; &lt;int&gt;
+ 1 JFK    LAX   11262
+ 2 LGA    ATL   10263
+ 3 LGA    ORD    8857
+ 4 JFK    SFO    8204
+ 5 LGA    CLT    6168
+ 6 EWR    ORD    6100
+...
+```
+]
+
+---
+
 ## `mutate()`
 The function `mutate()` adds new columns to the data frame using functions of extant columns.
 

@@ -233,6 +233,34 @@ flights %>%
 
 ---
 
+## `count()`
+
+.pull-left[ 
+If you want to count occurrences of different pairs/"tuples" of values across columns:
+```{r,eval=FALSE}
+dataframe %>%
+  count(column1, column2)
+```
+e.g. for flights, want to count how many flights by origin:
+```{r, output.lines=7}
+flights %>%
+  count(origin)
+```
+
+]
+
+--
+
+.pull-right[
+Or how many origin-destination pairs:
+```{r, output.lines=9}
+flights %>%
+  count(origin, dest, sort = TRUE)
+```
+]
+
+---
+
 ## `mutate()`
 The function `mutate()` adds new columns to the data frame using functions of extant columns.
 
