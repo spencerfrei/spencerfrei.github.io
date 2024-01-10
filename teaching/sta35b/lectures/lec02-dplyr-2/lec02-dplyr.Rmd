@@ -618,6 +618,7 @@ cms_patient_experience %>%
   )
 ```
 
+If you don't supply `id_cols`, R assumes that all columns EXCEPT for `names_from` and `values_from` are id_cols. 
 ---
 
 ### Understanding `pivot_wider()`
@@ -656,6 +657,8 @@ df %>%
 ]
 
 Since there is no measurement for bp3 for B, R puts in `NA`.
+
+Since `id_cols` is empty, R assumes that all columns EXCEPT for `names_from` and `values_from` are id_cols. 
 
 
 ---
@@ -721,6 +724,8 @@ df <- tibble(
 df
 ```
 Not tidy, since each variable is not a column, e.g. temperature/humidity.
+
+"Tidyness" can be a bit ambiguous, but if a column has different units (e.g., degrees vs. % humidity), likely not tidy. 
 
 ]
 
