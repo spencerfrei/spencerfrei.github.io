@@ -1,0 +1,359 @@
+---
+title: "Transformations of vectors I"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+```
+Main data types we use in R:
+* Logical/boolean (`TRUE`, `FALSE`)
+* Numeric (13.8)
+* Character/string ("hello")
+* Missing (`NA`)
+
+For logical vectors, every element takes one of 3 values: `TRUE`, `FALSE`, `NA`
+
+We'll investigate how to manipulate and transform data to get logicals, and how to use logicals.
+
+```{r, output.lines=7}
+library(tidyverse)
+library(nycflights13)
+flights
+```
+
+
+
+---
+
+
+### Logical comparators
+
+.pull-left[
+Three basic logical operators that we will use over and over:
+* AND (denoted `&` in R): operation between two logicals
+* OR (denoted `|` in R): operation between two logicals
+* NOT (denoted `!` in R): operation on a single logical.
+
+Truth table for AND:
+
+| A     | B     | `A AND B` |
+|-------|-------|---------|
+| `TRUE`  | `TRUE`  | `TRUE`    |
+| `TRUE`  | `FALSE` | `FALSE`   |
+| `FALSE` | `TRUE`  | `FALSE`   |
+| `FALSE` | `FALSE` | `FALSE`   |
+
+]
+
+.pull-right[
+
+Truth table for OR:
+
+| A     | B     | A OR B |
+|-------|-------|---------|
+| `TRUE`  | `TRUE`  | `TRUE`    |
+| `TRUE`  | `FALSE` | `TRUE`   |
+| `FALSE` | `TRUE`  | `TRUE`   |
+| `FALSE` | `FALSE` | `FALSE`   |
+
+Truth table for NOT:
+
+| A     | NOT A |
+|-------|-------|
+| `TRUE`  | `FALSE` |
+| `FALSE` | `TRUE`  |
+
+]
+
+
+
+---
+
+### Comparisons
+Common way to create a logical vector: numeric comparison with `<`, `!=`, etc.
+
+We have implicitly been using this when doing filtering.
+
+```{r, output.lines=2}
+flights$dep_time > 600
+```
+
+Using a comparator between two vectors of logicals returns pairwise comparisons.
+
+```{r}
+x <- c(TRUE, FALSE, TRUE)
+y <- c(FALSE, FALSE, TRUE)
+(x & y) # x AND y
+(x | y) # x OR y
+```
+
+---
+
+### Comparisons
+So when we use multiple comparisons in `filter()`, we are building a new vector of logicals.
+
+We only keep those rows where the vector is `TRUE`.
+```{r, output.lines=6}
+flights %>%
+  filter(dep_time > 600 & dep_time < 2000 & abs(arr_delay) < 20)
+```
+
+
+---
+
+## Comparisons
+Filter and mutate can be used in conjunction
+```{r, output.lines=6}
+flights %>%
+  mutate(
+    daytime = dep_time > 600 & dep_time < 2000,
+    approx_ontime = abs(arr_delay) < 20,
+  ) %>%
+  filter(daytime & approx_ontime)
+```
+
+
+---
+
+## Floating point comparisons
+.pull-left[
+Using `==` with floating points can cause problems.
+This is because numbers are represented with finite "precision", i.e. only up to 2^{-32} or 2^{-64}.
+
+```{r}
+x <- c( (1/49) * 49, sqrt(2)^2)
+x == c(1,2)
+```
+
+What's going on?  Let's look at more precise representation in R using `print(x, digits=)`:
+
+```{r}
+print(x, digits=10)
+```
+
+```{r}
+print(x, digits=20)
+```
+]
+
+--
+.pull-right[
+`dplyr::near()` helps with this, ignores small differences
+```{r}
+near(x, c(1,2))
+```
+]
+
+---
+
+## Missing values
+.pull-left[ 
+Almost any operation involving an `NA` returns `NA`.
+```{r}
+(NA > 5)
+(10 == NA)
+```
+
+]
+
+.pull-right[
+What about `NA==NA`?
+```{r}
+NA==NA
+```
+Why?  Think of this example
+
+```{r}
+# Suppose we don't know Spencer's age
+age_spencer <- NA
+
+# And we also don't know Zelda's age
+age_zelda <- NA
+
+# Then we shouldn't know whether Spencer and
+# Zelda are the same age
+age_spencer == age_zelda
+```
+
+]
+
+---
+
+### Missing values
+A useful function for dealing with `NA`: `is.na()`
+
+`is.na(x)` works with any type of vector and returns TRUE for missing values and FALSE for everything else:
+
+```{r}
+( is.na(c(TRUE, NA, FALSE)) )
+( is.na(c(1, NA, 3)) )
+( is.na(c("a", NA, "b")) ) 
+```
+
+
+---
+### Missing values
+Since `is.na()` returns logicals, can be used in `filter()`:
+
+```{r, output.lines=5}
+flights %>%
+  filter(is.na(dep_time))
+```
+
+Can be used to help identify where `NA` come from. e.g., why are there air_time `NA`s?
+
+```{r, output.lines=5}
+flights %>%
+  select(time_hour, flight, dep_time, arr_time, air_time) %>%
+  filter(is.na(air_time) & !is.na(arr_time) & !is.na(dep_time)) 
+```
+
+---
+
+### Missing values
+Let's examine how `dep_time`, `dep_delay`, and `sched_dep_time` are related.
+
+```{r}
+flights %>% 
+  mutate(missing_dep_time = is.na(dep_time),
+         missing_dep_delay = is.na(dep_delay),
+         missing_sched_dep_time = is.na(sched_dep_time)) %>% 
+  count(missing_dep_time, missing_dep_delay, missing_sched_dep_time)
+```
+
+* The only instances where `dep_delay` is missing have `dep_time` missing.
+
+---
+
+### Missing values 
+
+* Is it the case that `dep_delay` = `dep_time` - `sched_dep_time`?
+
+```{r}
+flights %>% 
+  mutate(dep_delay_manual = dep_time - sched_dep_time,
+         manual_matches_given = near(dep_delay_manual, dep_delay)) %>%
+  count(manual_matches_given)
+```
+
+Quite weird, since we are getting a lot right but also getting a lot wrong.
+
+---
+
+### Missing values
+
+Let's inspect further.  What do those observations where manual doesn't match given look like? 
+```{r,output.lines=8}
+flights %>% 
+  mutate(manual_delay = dep_time - sched_dep_time,
+         manual_matches_given = near(manual_delay, dep_delay)) %>%
+  filter(!manual_matches_given) %>%
+  select(time_hour, flight, dep_time, sched_dep_time, dep_delay, manual_delay)
+```
+
+The problem comes from the fact that `R` is treating `dep_time` and `sched_dep_time` as integers, not time!  
+
+Our calculation doesn't account for the fact that 5:54 is only 6 minutes away from 6:00, rather than 46.
+
+We will later see how to properly treat dates and times. 
+
+
+---
+
+### Boolean algebra 
+
+.pull-left[
+
+* Recall the basic Boolean algebra comparators, AND and OR
+* There is a third one, XOR, which we won't use that often
+* Can combine AND/OR with NOT and cover any combination of a pair of Booleans
+]
+
+.pull-right[ 
+![Visualization of Boolean algebra](transform.png)
+
+]
+
+---
+
+### Boolean algebra and missing values
+* Booleans and missing values interact in logical, but possibly counterintuitive ways.
+```{r}
+
+df <- tibble(x = c(TRUE, FALSE, NA))
+
+df %>% 
+  mutate(
+    and_NA = x & NA,
+    or_NA = x | NA
+  )
+```
+
+* NA OR TRUE returns true, since it is TRUE regardless of NA being FALSE or TRUE.
+* NA AND TRUE returns NA since it depends on value of NA.
+* NA OR FALSE returns NA since it depends on value of NA.
+* NA AND FALSE returns FALSE since NA value doesn't affect result, always false.
+
+---
+
+### Order of operations
+
+.pull-left[ 
+Consider finding all flights departing between November and December in the tibble.
+
+```{r,eval=FALSE}
+flights %>%
+  filter(month == 11 | month == 12)
+```
+This results in the correct calculation.
+
+However, the following calculation does not: 
+]
+
+.pull-right[
+```{r,output.lines=7}
+flights %>%
+  filter(month == 11 | 12)
+```
+Why?
+* R first evaluates `month==11`, creates a logical vector `vec`.
+* R then compares `vec | 12`
+* When comparing a number to any logical, every nonzero number is considered TRUE.
+* So `vec | 12` returns a vector with TRUE for every element
+
+]

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Transformations of vectors I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec03-transformations-logical-vectors_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec03-transformations-logical-vectors_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec03-transformations-logical-vectors_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Transformations of vectors I
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+Main data types we use in R:
+* Logical/boolean (`TRUE`, `FALSE`)
+* Numeric (13.8)
+* Character/string ("hello")
+* Missing (`NA`)
+
+For logical vectors, every element takes one of 3 values: `TRUE`, `FALSE`, `NA`
+
+We'll investigate how to manipulate and transform data to get logicals, and how to use logicals.
+
+
+```r
+library(tidyverse)
+library(nycflights13)
+flights
+```
+
+```
+# A tibble: 336,776 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1      517            515         2      830            819
+ 2  2013     1     1      533            529         4      850            830
+ 3  2013     1     1      542            540         2      923            850
+ 4  2013     1     1      544            545        -1     1004           1022
+...
+```
+
+
+
+---
+
+
+### Logical comparators
+
+.pull-left[
+Three basic logical operators that we will use over and over:
+* AND (denoted `&amp;` in R): operation between two logicals
+* OR (denoted `|` in R): operation between two logicals
+* NOT (denoted `!` in R): operation on a single logical.
+
+Truth table for AND:
+
+| A     | B     | `A AND B` |
+|-------|-------|---------|
+| `TRUE`  | `TRUE`  | `TRUE`    |
+| `TRUE`  | `FALSE` | `FALSE`   |
+| `FALSE` | `TRUE`  | `FALSE`   |
+| `FALSE` | `FALSE` | `FALSE`   |
+
+]
+
+.pull-right[
+
+Truth table for OR:
+
+| A     | B     | A OR B |
+|-------|-------|---------|
+| `TRUE`  | `TRUE`  | `TRUE`    |
+| `TRUE`  | `FALSE` | `TRUE`   |
+| `FALSE` | `TRUE`  | `TRUE`   |
+| `FALSE` | `FALSE` | `FALSE`   |
+
+Truth table for NOT:
+
+| A     | NOT A |
+|-------|-------|
+| `TRUE`  | `FALSE` |
+| `FALSE` | `TRUE`  |
+
+]
+
+
+
+---
+
+### Comparisons
+Common way to create a logical vector: numeric comparison with `&lt;`, `!=`, etc.
+
+We have implicitly been using this when doing filtering.
+
+
+```r
+flights$dep_time &gt; 600
+```
+
+```
+    [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+   [13] FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE
+...
+```
+
+Using a comparator between two vectors of logicals returns pairwise comparisons.
+
+
+```r
+x &lt;- c(TRUE, FALSE, TRUE)
+y &lt;- c(FALSE, FALSE, TRUE)
+(x &amp; y) # x AND y
+```
+
+```
+[1] FALSE FALSE  TRUE
+```
+
+```r
+(x | y) # x OR y
+```
+
+```
+[1]  TRUE FALSE  TRUE
+```
+
+---
+
+### Comparisons
+So when we use multiple comparisons in `filter()`, we are building a new vector of logicals.
+
+We only keep those rows where the vector is `TRUE`.
+
+```r
+flights %&gt;%
+  filter(dep_time &gt; 600 &amp; dep_time &lt; 2000 &amp; abs(arr_delay) &lt; 20)
+```
+
+```
+# A tibble: 172,286 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1      601            600         1      844            850
+ 2  2013     1     1      602            610        -8      812            820
+ 3  2013     1     1      602            605        -3      821            805
+...
+```
+
+
+---
+
+## Comparisons
+Filter and mutate can be used in conjunction
+
+```r
+flights %&gt;%
+  mutate(
+    daytime = dep_time &gt; 600 &amp; dep_time &lt; 2000,
+    approx_ontime = abs(arr_delay) &lt; 20,
+  ) %&gt;%
+  filter(daytime &amp; approx_ontime)
+```
+
+```
+# A tibble: 172,286 × 21
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1      601            600         1      844            850
+ 2  2013     1     1      602            610        -8      812            820
+ 3  2013     1     1      602            605        -3      821            805
+...
+```
+
+
+---
+
+## Floating point comparisons
+.pull-left[
+Using `==` with floating points can cause problems.
+This is because numbers are represented with finite "precision", i.e. only up to 2^{-32} or 2^{-64}.
+
+
+```r
+x &lt;- c( (1/49) * 49, sqrt(2)^2)
+x == c(1,2)
+```
+
+```
+[1] FALSE FALSE
+```
+
+What's going on?  Let's look at more precise representation in R using `print(x, digits=)`:
+
+
+```r
+print(x, digits=10)
+```
+
+```
+[1] 1 2
+```
+
+
+```r
+print(x, digits=20)
+```
+
+```
+[1] 0.99999999999999988898 2.00000000000000044409
+```
+]
+
+--
+.pull-right[
+`dplyr::near()` helps with this, ignores small differences
+
+```r
+near(x, c(1,2))
+```
+
+```
+[1] TRUE TRUE
+```
+]
+
+---
+
+## Missing values
+.pull-left[ 
+Almost any operation involving an `NA` returns `NA`.
+
+```r
+(NA &gt; 5)
+```
+
+```
+[1] NA
+```
+
+```r
+(10 == NA)
+```
+
+```
+[1] NA
+```
+
+]
+
+.pull-right[
+What about `NA==NA`?
+
+```r
+NA==NA
+```
+
+```
+[1] NA
+```
+Why?  Think of this example
+
+
+```r
+# Suppose we don't know Spencer's age
+age_spencer &lt;- NA
+
+# And we also don't know Zelda's age
+age_zelda &lt;- NA
+
+# Then we shouldn't know whether Spencer and
+# Zelda are the same age
+age_spencer == age_zelda
+```
+
+```
+[1] NA
+```
+
+]
+
+---
+
+### Missing values
+A useful function for dealing with `NA`: `is.na()`
+
+`is.na(x)` works with any type of vector and returns TRUE for missing values and FALSE for everything else:
+
+
+```r
+( is.na(c(TRUE, NA, FALSE)) )
+```
+
+```
+[1] FALSE  TRUE FALSE
+```
+
+```r
+( is.na(c(1, NA, 3)) )
+```
+
+```
+[1] FALSE  TRUE FALSE
+```
+
+```r
+( is.na(c("a", NA, "b")) ) 
+```
+
+```
+[1] FALSE  TRUE FALSE
+```
+
+
+---
+### Missing values
+Since `is.na()` returns logicals, can be used in `filter()`:
+
+
+```r
+flights %&gt;%
+  filter(is.na(dep_time))
+```
+
+```
+# A tibble: 8,255 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1       NA           1630        NA       NA           1815
+ 2  2013     1     1       NA           1935        NA       NA           2240
+...
+```
+
+Can be used to help identify where `NA` come from. e.g., why are there air_time `NA`s?
+
+
+```r
+flights %&gt;%
+  select(time_hour, flight, dep_time, arr_time, air_time) %&gt;%
+  filter(is.na(air_time) &amp; !is.na(arr_time) &amp; !is.na(dep_time)) 
+```
+
+```
+# A tibble: 717 × 5
+   time_hour           flight dep_time arr_time air_time
+   &lt;dttm&gt;               &lt;int&gt;    &lt;int&gt;    &lt;int&gt;    &lt;dbl&gt;
+ 1 2013-01-01 15:00:00   4525     1525     1934       NA
+ 2 2013-01-01 14:00:00   3806     1528     2002       NA
+...
+```
+
+---
+
+### Missing values
+Let's examine how `dep_time`, `dep_delay`, and `sched_dep_time` are related.
+
+
+```r
+flights %&gt;% 
+  mutate(missing_dep_time = is.na(dep_time),
+         missing_dep_delay = is.na(dep_delay),
+         missing_sched_dep_time = is.na(sched_dep_time)) %&gt;% 
+  count(missing_dep_time, missing_dep_delay, missing_sched_dep_time)
+```
+
+```
+# A tibble: 2 × 4
+  missing_dep_time missing_dep_delay missing_sched_dep_time      n
+  &lt;lgl&gt;            &lt;lgl&gt;             &lt;lgl&gt;                   &lt;int&gt;
+1 FALSE            FALSE             FALSE                  328521
+2 TRUE             TRUE              FALSE                    8255
+```
+
+* The only instances where `dep_delay` is missing have `dep_time` missing.
+
+---
+
+### Missing values 
+
+* Is it the case that `dep_delay` = `dep_time` - `sched_dep_time`?
+
+
+```r
+flights %&gt;% 
+  mutate(dep_delay_manual = dep_time - sched_dep_time,
+         manual_matches_given = near(dep_delay_manual, dep_delay)) %&gt;%
+  count(manual_matches_given)
+```
+
+```
+# A tibble: 3 × 2
+  manual_matches_given      n
+  &lt;lgl&gt;                 &lt;int&gt;
+1 FALSE                 99777
+2 TRUE                 228744
+3 NA                     8255
+```
+
+Quite weird, since we are getting a lot right but also getting a lot wrong.
+
+---
+
+### Missing values
+
+Let's inspect further.  What do those observations where manual doesn't match given look like? 
+
+```r
+flights %&gt;% 
+  mutate(manual_delay = dep_time - sched_dep_time,
+         manual_matches_given = near(manual_delay, dep_delay)) %&gt;%
+  filter(!manual_matches_given) %&gt;%
+  select(time_hour, flight, dep_time, sched_dep_time, dep_delay, manual_delay)
+```
+
+```
+# A tibble: 99,777 × 6
+   time_hour           flight dep_time sched_dep_time dep_delay manual_delay
+   &lt;dttm&gt;               &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;        &lt;int&gt;
+ 1 2013-01-01 06:00:00    461      554            600        -6          -46
+ 2 2013-01-01 06:00:00    507      555            600        -5          -45
+ 3 2013-01-01 06:00:00   5708      557            600        -3          -43
+ 4 2013-01-01 06:00:00     79      557            600        -3          -43
+ 5 2013-01-01 06:00:00    301      558            600        -2          -42
+...
+```
+
+The problem comes from the fact that `R` is treating `dep_time` and `sched_dep_time` as integers, not time!  
+
+Our calculation doesn't account for the fact that 5:54 is only 6 minutes away from 6:00, rather than 46.
+
+We will later see how to properly treat dates and times. 
+
+
+---
+
+### Boolean algebra 
+
+.pull-left[
+
+* Recall the basic Boolean algebra comparators, AND and OR
+* There is a third one, XOR, which we won't use that often
+* Can combine AND/OR with NOT and cover any combination of a pair of Booleans
+]
+
+.pull-right[ 
+![Visualization of Boolean algebra](transform.png)
+
+]
+
+---
+
+### Boolean algebra and missing values
+* Booleans and missing values interact in logical, but possibly counterintuitive ways.
+
+```r
+df &lt;- tibble(x = c(TRUE, FALSE, NA))
+
+df %&gt;% 
+  mutate(
+    and_NA = x &amp; NA,
+    or_NA = x | NA
+  )
+```
+
+```
+# A tibble: 3 × 3
+  x     and_NA or_NA
+  &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;
+1 TRUE  NA     TRUE 
+2 FALSE FALSE  NA   
+3 NA    NA     NA   
+```
+
+* NA OR TRUE returns true, since it is TRUE regardless of NA being FALSE or TRUE.
+* NA AND TRUE returns NA since it depends on value of NA.
+* NA OR FALSE returns NA since it depends on value of NA.
+* NA AND FALSE returns FALSE since NA value doesn't affect result, always false.
+
+---
+
+### Order of operations
+
+.pull-left[ 
+Consider finding all flights departing between November and December in the tibble.
+
+
+```r
+flights %&gt;%
+  filter(month == 11 | month == 12)
+```
+This results in the correct calculation.
+
+However, the following calculation does not: 
+]
+
+.pull-right[
+
+```r
+flights %&gt;%
+  filter(month == 11 | 12)
+```
+
+```
+# A tibble: 336,776 × 19
+    year month   day dep_time sched_dep_time dep_delay arr_time sched_arr_time
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;    &lt;int&gt;          &lt;int&gt;     &lt;dbl&gt;    &lt;int&gt;          &lt;int&gt;
+ 1  2013     1     1      517            515         2      830            819
+ 2  2013     1     1      533            529         4      850            830
+ 3  2013     1     1      542            540         2      923            850
+ 4  2013     1     1      544            545        -1     1004           1022
+...
+```
+Why?
+* R first evaluates `month==11`, creates a logical vector `vec`.
+* R then compares `vec | 12`
+* When comparing a number to any logical, every nonzero number is considered TRUE.
+* So `vec | 12` returns a vector with TRUE for every element
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
