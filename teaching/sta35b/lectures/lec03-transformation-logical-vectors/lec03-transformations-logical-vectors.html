@@ -531,6 +531,484 @@ Why?
 * So `vec | 12` returns a vector with TRUE for every element
 
 ]
+
+
+---
+
+
+### `%in%`
+Instead of worrying about `|` and `==` in order, just use `%in%`.
+
+
+```r
+1:10 %in% c(1, 5, 10)
+```
+
+```
+ [1]  TRUE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE  TRUE
+```
+So to find all flights from November and December:
+
+```r
+flights %&gt;%
+  filter(month %in% c(11, 12))
+```
+
+
+
+
+* `%in%` obeys different rules for `NA` vs. `==`, since `NA %in% NA` is TRUE:
+
+```r
+(c(1,2,NA) == NA)
+```
+
+```
+[1] NA NA NA
+```
+
+```r
+(c(1,2,NA) %in% NA)
+```
+
+```
+[1] FALSE FALSE  TRUE
+```
+
+
+---
+
+### Logical summaries
+
+.pull-left[
+Two main functions for logical summaries: `any()` and `all()`.
+* `any(x)` returns TRUE if there any TRUEs in `x`
+* `all(x)` returns TRUE only if all values in `x` are TRUE
+
+For instance, was there a day where every flight was delayed on departure by less than an hour?  Or a day where there were any flights delayed on arrival by &gt;= 5 hours?
+]
+
+.pull-right[
+
+```r
+flights %&gt;%
+  group_by(year, month, day) %&gt;%
+  summarize(
+    all_delayed = all(dep_delay &lt;= 60, na.rm=TRUE),
+    any_long_delay = any(arr_delay &gt;= 300, na.rm=TRUE)
+  )
+```
+
+```
+`summarise()` has grouped output by 'year', 'month'. You can override using the
+`.groups` argument.
+```
+
+```
+# A tibble: 365 × 5
+# Groups:   year, month [12]
+    year month   day all_delayed any_long_delay
+   &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;lgl&gt;       &lt;lgl&gt;         
+ 1  2013     1     1 FALSE       TRUE          
+ 2  2013     1     2 FALSE       TRUE          
+ 3  2013     1     3 FALSE       FALSE         
+ 4  2013     1     4 FALSE       FALSE         
+...
+```
+
+]
+
+---
+
+### Logical summaries
+* When coerced into a numeric, TRUE = 1 and FALSE = 0
+* If you want to find percentages/proportions that are TRUE/FALSE, this is very useful, e.g. `mean()`, `sum()`
+* Example: proportion of flights delayed &gt; 1 hour on departure, and number of flights delayed on arrival by &gt; 5 hours:
+
+
+```r
+flights %&gt;% 
+  group_by(year, month, day) %&gt;%
+  summarise(
+    prop_delayed_1hour = mean(dep_delay &gt; 60, na.rm=TRUE),
+    num_long_delay = sum(arr_delay &gt; 300, na.rm=TRUE)
+  )
+```
+
+```
+`summarise()` has grouped output by 'year', 'month'. You can override using the
+`.groups` argument.
+```
+
+```
+# A tibble: 365 × 5
+# Groups:   year, month [12]
+    year month   day prop_delayed_1hour num_long_delay
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;              &lt;dbl&gt;          &lt;int&gt;
+ 1  2013     1     1             0.0609              3
+ 2  2013     1     2             0.0856              3
+ 3  2013     1     3             0.0586              0
+ 4  2013     1     4             0.0473              0
+...
+```
+
+---
+
+
+### Logical summaries
+* When coerced into a numeric, TRUE = 1 and FALSE = 0
+* If you want to find percentages/proportions that are TRUE/FALSE, this is very useful, e.g. `mean()`, `sum()`
+* Example: proportion of flights delayed &gt; 1 hour on departure, and number of flights delayed on arrival by &gt; 5 hours:
+
+
+```r
+flights %&gt;% 
+  group_by(year, month, day) %&gt;%
+  summarise(
+    prop_delayed_1hour = mean(dep_delay &gt; 60, na.rm=TRUE),
+    num_long_delay = sum(arr_delay &gt; 300, na.rm=TRUE),
+    .groups = 'drop'
+  )
+```
+
+```
+# A tibble: 365 × 5
+    year month   day prop_delayed_1hour num_long_delay
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;              &lt;dbl&gt;          &lt;int&gt;
+ 1  2013     1     1             0.0609              3
+ 2  2013     1     2             0.0856              3
+ 3  2013     1     3             0.0586              0
+ 4  2013     1     4             0.0473              0
+ 5  2013     1     5             0.0363              1
+...
+```
+
+---
+
+### Logical subsetting
+.pull-left[ 
+* Logical vectors can also be used for subsetting
+* Subset operator: `[]` 
+* e.g. computing average delay for flights with actual (&gt;=0 minutes) delays, we would typically do:
+
+```r
+flights |&gt; 
+  filter(arr_delay &gt; 0) |&gt; 
+  group_by(year, month, day) |&gt; 
+  summarize(
+    behind = mean(arr_delay),
+    n = n(),
+    .groups = 'drop'
+  )
+```
+
+```
+# A tibble: 365 × 5
+    year month   day behind     n
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;int&gt;
+ 1  2013     1     1   32.5   461
+ 2  2013     1     2   32.0   535
+ 3  2013     1     3   27.7   460
+ 4  2013     1     4   28.3   297
+...
+```
+]
+
+.pull-right[
+
+Another way is to use subsetting:
+
+```r
+flights |&gt; 
+  group_by(year, month, day) |&gt; 
+  summarize(
+    behind = mean(arr_delay[arr_delay &gt; 0], na.rm=TRUE),
+    early = mean(arr_delay[arr_delay &lt; 0], na.rm=TRUE),
+    n = n(),
+    .groups = 'drop'
+  )
+```
+
+```
+# A tibble: 365 × 6
+    year month   day behind early     n
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+ 1  2013     1     1   32.5 -12.5   842
+ 2  2013     1     2   32.0 -14.3   943
+ 3  2013     1     3   27.7 -18.2   914
+ 4  2013     1     4   28.3 -17.0   915
+...
+```
+]
+In first calc, `n()` gives number of delayed flights while second gives total number of flights, not ideal.
+
+---
+
+### Conditional transformations: `if_else()`
+* `if_else(CONDITION, TRUE_VAL, FALSE_VAL, MISSING_VAL)` is useful when:
+  * When condition is TRUE, it's one value.  When FALSE, it's another value.
+  
+
+```r
+x &lt;- c(-2, -1, 1, 2, NA)
+if_else(x &gt; 0, "+pos", "-neg")
+```
+
+```
+[1] "-neg" "-neg" "+pos" "+pos" NA    
+```
+The fourth arg of `if_else()` specifies what to fill `NA`'s with:
+
+```r
+if_else(x &gt; 0, "+pos", "-neg", "?????")
+```
+
+```
+[1] "-neg"  "-neg"  "+pos"  "+pos"  "?????"
+```
+
+We can also use vectors as an argument for what to do when true/false.
+
+
+```r
+if_else(x &lt; 0, -x, x)
+```
+
+```
+[1]  2  1  1  2 NA
+```
+
+---
+### Conditional transformations: `if_else()`
+We can use general vectors inside of `if_else()`:
+
+```r
+x1 &lt;- c(NA, 1, 2, NA)
+y1 &lt;- c(3, NA, 4, 6)
+if_else(is.na(x1), y1, x1)
+```
+
+```
+[1] 3 1 2 6
+```
+
+If you have many different conditions for which you want to specify values, e.g.
+* If number is between `a` and `b` then do...
+* If number is between `b` and `c` then do...
+* If number is between `c` and `d` then do...
+Your best tool is `case_when()`.
+
+---
+
+### Conditional transformations: `case_when()`
+Inspired by SQL's `CASE` statement.  Has a very weird syntax:
+* `condition ~ output`
+* `condition` is a logical vector
+* when is is `TRUE`, `output` is used.
+Weird, but pretty readable:
+
+```r
+x &lt;- c(-3:3, NA)
+case_when(
+  x == 0   ~ "0",
+  x &lt; 0    ~ "-ve", 
+  x &gt; 0    ~ "+ve",
+  is.na(x) ~ "???"
+)
+```
+
+```
+[1] "-ve" "-ve" "-ve" "0"   "+ve" "+ve" "+ve" "???"
+```
+
+---
+
+### Conditional transformations: `case_when()`
+
+.pull-left[ 
+If no cases match, then returns NA:
+
+
+```r
+x &lt;- c(-3:3, NA)
+case_when(
+  x &lt; 0 ~ "-ve",
+  x &gt; 0 ~ "+ve"
+)
+```
+
+```
+[1] "-ve" "-ve" "-ve" NA    "+ve" "+ve" "+ve" NA   
+```
+
+The argument `.default` allows for you to create a default/catch-all value:
+
+```r
+x &lt;- c(-3:3, NA)
+case_when(
+  x &lt; 0 ~ "-ve",
+  x &gt; 0 ~ "+ve",
+  .default = "???"
+)
+```
+
+```
+[1] "-ve" "-ve" "-ve" "???" "+ve" "+ve" "+ve" "???"
+```
+
+]
+
+.pull-right[
+If there are multiple conditions which match, only the first is used -- be careful!
+
+```r
+case_when(
+  x &gt; 0 ~ "+ve",
+  x &gt; 2 ~ "big"
+)
+```
+
+```
+[1] NA    NA    NA    NA    "+ve" "+ve" "+ve" NA   
+```
+
+]
+
+
+---
+
+### `case_when()`
+.pull-left[ 
+Here's a more complex example of `case_when()`: providing human-readable labels to flight delays.
+
+```r
+(df1 &lt;- flights |&gt; 
+  mutate(
+    status = case_when(
+      is.na(arr_delay)      ~ "cancelled",
+      arr_delay &lt; -30       ~ "very early",
+      arr_delay &lt; -15       ~ "early",
+      abs(arr_delay) &lt;= 15  ~ "on time",
+      arr_delay &lt; 60        ~ "late",
+      arr_delay &lt; Inf       ~ "very late",
+    ),
+    .keep = "used" # only returns those columns used in calc
+  ) )
+```
+
+```
+# A tibble: 336,776 × 2
+   arr_delay status 
+       &lt;dbl&gt; &lt;chr&gt;  
+ 1        11 on time
+ 2        20 late   
+...
+```
+]
+
+.pull-right[
+Some things to note:
+* We can refer to variables inside the dataframe inside case_when, just as in most other dplyr functions 
+* The first conditional that is true is what gets assigned
+  * So when `arr_delay &lt; -30`, the remaining conditionals do not get checked
+
+]
+---
+### `case_when()`
+.pull-left[
+Two equivalent ways of using `case_when` for this problem:
+
+```r
+df1 &lt;- flights |&gt; 
+  mutate(
+    status = case_when(
+      is.na(arr_delay)      ~ "cancelled",
+      arr_delay &lt; -30       ~ "very early",
+      arr_delay &lt; -15       ~ "early",
+      abs(arr_delay) &lt;= 15  ~ "on time",
+      arr_delay &lt; 60        ~ "late",
+      arr_delay &lt; Inf       ~ "very late",
+    ),
+    .keep = "used" # only returns those columns used in calc
+  ) 
+```
+]
+
+.pull-right[
+
+```r
+df2 &lt;- flights |&gt; 
+  mutate(
+    status = case_when(
+      is.na(arr_delay)      ~ "cancelled",
+      arr_delay &lt; -30       ~ "very early",
+      arr_delay &lt; -15       ~ "early",
+      abs(arr_delay) &lt;= 15  ~ "on time",
+      arr_delay &lt; 60        ~ "late",
+	    .default = "very late"
+    ),
+    .keep = "used" # only returns those columns used in calc
+  )  
+all.equal(df1, df2)
+```
+
+```
+[1] TRUE
+```
+Recall that `.default` says how all `NA` and non-specified conditions are handled.  Since we have already used that `NA` implies canceled, this does the same thing. 
+]
+
+---
+
+### Compatible types
+
+* Both `if_else()` and `case_when()` require the outputs to be of consistent types.  If not, you'll get errors, e.g.
+
+
+```r
+if_else(TRUE, "a", 1)
+#&gt; Error in `if_else()`:
+#&gt; ! Can't combine `true` &lt;character&gt; and `false` &lt;double&gt;.
+
+case_when(
+  x &lt; -1 ~ TRUE,
+  x &gt; 0 ~ now()
+)
+#&gt; Error in `case_when()`:
+#&gt; ! Can't combine `..1 (right)` &lt;logical&gt; and `..2 (right)` &lt;datetime&lt;local&gt;&gt;
+```
+Most types are incompatible in order to catch errors.  Types which are compatible:
+* Numeric and logical (treats TRUE=1, FALSE=0)
+* Dates and "date-times" - we will discuss these types later
+* `NA` is compatible with everything
+* Strings and factors are compatible - will discuss later
+
+
+---
+
+### Example: labelling numbers as even or odd
+* Even number = divisible by two.
+* In R, operator `%%` (read "modulo") does "modular arithmetic": `a %% b` returns the remainder when dividing `a` by `b`, e.g.
+  * `17 %% 12 = 5`
+  * `34 %% 6 = 4`
+  * A number `n` is even if and only if `n %% 2 == 0`; otherwise, odd.
+* We can use `if_else` to label numbers between 0 and 20 as even or odd
+
+
+```r
+x &lt;- 0:20
+if_else(x %% 2 == 0, 'even', 'odd')
+```
+
+```
+ [1] "even" "odd"  "even" "odd"  "even" "odd"  "even" "odd"  "even" "odd" 
+[11] "even" "odd"  "even" "odd"  "even" "odd"  "even" "odd"  "even" "odd" 
+[21] "even"
+```
+
+---
+
+### Example: 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
