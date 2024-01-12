@@ -464,7 +464,7 @@ flights |>
 .pull-right[
 
 Another way is to use subsetting:
-```{r, output.lines=7}
+```{r, output.lines=6}
 flights |> 
   group_by(year, month, day) |> 
   summarize(
@@ -474,8 +474,11 @@ flights |>
     .groups = 'drop'
   )
 ```
-]
+
 In first calc, `n()` gives number of delayed flights while second gives total number of flights, not ideal.
+
+]
+
 
 ---
 
@@ -546,7 +549,7 @@ case_when(
 )
 ```
 
-The argument `.default` allows for you to create a default/catch-all value:
+The argument `.default` specifies what to do if there is no condition satisfied, or if value is NA. 
 ```{r}
 x <- c(-3:3, NA)
 case_when(
