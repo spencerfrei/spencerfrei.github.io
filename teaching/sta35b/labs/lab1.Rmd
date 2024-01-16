@@ -1,0 +1,48 @@
+---
+title: 'Lab 1'
+author: ''
+output:
+  pdf_document
+---
+
+When using this template, feel free to add your R chunks (i.e. using `` `r "\u0060\u0060\u0060{r} code-here \u0060\u0060\u0060"` ``) below each question. 
+
+
+Refer to the 'flights' dataset.
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(nycflights13)
+library(tidyverse)
+```
+
+
+### Question 1 (4 pts)
+
+For each of the carriers UA, AA, DL,
+
+(1) Count how many flights they fly in total, and name the variable as 'num_flights'.
+
+(2) Calculate the departure delay percentage, and name the variable as 'dep_delay_percentage'.
+
+### Question 2 (8 points)
+
+(1) Extract columns 'origin' and 'dep_delay'.
+
+(2) Add a column 'dep_delay_hrs' = dep_delay/60.
+
+(3) For each 'origin', calculate the average departure delay time in hours, and name the variable as 'avg_dep_delay_hrs'.
+
+(4) For each 'origin', calculate the departure delay percentage, and name the variable as 'dep_delay_percentage'.
+
+### Question 3 (2 pts)
+
+Use `if_else()`, add a new column 'dep_delay_new' which is a duplicate of 'dep_delay' but fills the missing data in 'dep_delay' with the mean value of 'dep_delay'. 
+
+### Question 4 (1 pt)
+
+Calculate the departure delay percentage by month, and name the variable as 'dep_delay_percentage'.
