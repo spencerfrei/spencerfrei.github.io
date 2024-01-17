@@ -1,0 +1,438 @@
+---
+title: "Transformations of Numbers"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+```
+
+
+Today we'll focus on transforming numbers. 
+
+```{r, output.lines=7}
+library(tidyverse)
+library(nycflights13)
+flights
+```
+
+
+
+---
+
+### Parsing strings to get numbers 
+
+`readr` package in the tidyverse has two useful functions:
+* `parse_double()` - is useful when you have numbers written as strings.
+* `parse_number()` - ignores all non-numeric text to parse strings.
+```{r}
+parse_double(c("1.2", "5.6", "1e3"))
+```
+```{r}
+parse_number(c("$1,234", "USD 53,256", "59%"))
+```
+If you try to use `parse_double()` with non-numeric-identifying strings, will throw an error.
+
+
+---
+
+### Arithmetic and "recycling rules"
+* We've already seen how to create new rows, e.g. `flights %>% mutate(air_time = air_time / 60)`.
+* `air_time` has 336,776 numbers while 60 has only one, so we divide every element of `air_time` by 60.
+* We've also seen that if you have two vectors of same length, operations are done elementwise:
+```{r}
+x <- c(1, 2, 3, 4)
+y <- c(2, 3, 4, 5)
+x / y
+```
+* What happens when the number of elements is not 1 or the exact matching number?
+* R does what is called **recycling**, or **repeating**: it will create a new vector which repeats until reaches vector length.  Will throw warning if not an even multiple. 
+```{r}
+x * c(1,2)
+```
+```{r}
+x * c(1, 2, 3)
+```
+
+---
+
+### Recycling rules
+
+
+* The recycling rules apply for all logical comparison operators (`==`, `<`, etc) and arithmetic operators (`+`, `^` etc)
+* Be very careful when doing logical comnparisons / arithmetic using two vectors!
+```{r, output.lines=5}
+flights %>%
+  filter(month == c(1,2))
+```
+* `month==c(1,2)` returns a logical vector where:
+  * TRUE if either the row number is odd and the month is 1, OR row number is even and month 2
+  * FALSE if either the row number is odd and the month is NOT 1, OR row number is even and month is NOT 2
+* Better to use `month %in% c(1,2)` here!
+
+---
+
+### Pairwise minimums and maximums
+
+.pull-left[ 
+* `pmin()` and `pmax()` return pairwise min / max of 2 or more variables
+```{r, echo=FALSE}
+df <- tribble(
+~x, ~y,~z,
+1,  3, 5,
+5,  2, 7,
+7, NA, 1,
+)
+```
+
+
+```{r}
+(df)
+df %>% 
+  mutate(min = pmin(x, y, z, na.rm=TRUE),
+         max = pmax(x, y, z, na.rm=TRUE))
+
+```
+
+
+]
+--
+
+.pull-right[ 
+Different behavior than using `min()`, `max()`, which takes in >=2 args and returns a single value:
+```{r}
+df %>%
+  mutate(bad_min = min(x, y, z, na.rm=TRUE),
+         bad_max = max(x, y, z, na.rm=TRUE))
+```
+
+]
+
+---
+
+### Modular arithmetic
+
+.pull-left[ 
+* Modular arithmetic is similar to "clock arithmetic", except you always start from 0 instead of 1
+* `%/%`: integer division; `%%`: the remainder after integer division.
+
+```{r}
+(1:10 %/% 3)
+1:10 %% 3
+```
+]
+
+.pull-right[
+Useful for calculating things related to time, e.g. create new columns with hour and minute from `sched_dep_time`:
+```{r,output.lines=7}
+flights %>% 
+  mutate(hour = sched_dep_time %/% 100,
+         minute = sched_dep_time %% 100,
+         .keep = 'used') 
+```
+
+]
+---
+
+### Modular arithmetic
+We can then do things like calculate the percent of delayed flights per hour.
+```{r, output.lines=15}
+flights %>% 
+  mutate(hour = sched_dep_time %/% 100) %>%
+  group_by(hour) %>%
+  summarize(percent_cancelled = 100*mean(is.na(dep_time)),
+            n = n())
+```
+
+---
+
+### Rounding
+.pull-left[ 
+* `round()` allows for you to round to either nearest integer, or to certain number of decimal places (using the `digits=` argument)
+```{r}
+round(123.456)
+```
+* `round()` deals with ties by "rounding to the nearest **even** integer:
+```{r}
+round(c(1.5, 2.5))
+```
+This way half of all 0.5's are rounded up, half are down. 
+]
+.pull-right[ 
+
+* `round(x, digits=n)` either rounds to `n` digits past the decimal place, or to the nearest `10^n` if `n < 0`.
+```{r}
+( round(123.456, 2) )
+( round(123.456, 1) )
+( round(123.456, -1) )
+( round(123.456, -2) )
+```
+
+
+]
+
+---
+
+### Cumulative and rolling aggregates
+* R provides many functions for computing rolling aggregates (sums, products, minimums, etc.)
+* `cumsum()`, `cumprod()`, `cummin()`, `cummmax()`, `dplyr::cummean()`
+```{r}
+x <- 1:10
+(cumsum(x))
+(cummean(x))
+```
+
+
+---
+
+### Rounding
+.pull-left[
+* Two similar arguments: `floor()` and `ceiling()`
+* `floor(x)` rounds to greatest integer <= x, while `ceiling(x)` rounds to least integer >= x.
+```{r}
+(floor(123.456))
+(ceiling(123.456))
+```
+
+]
+
+---
+### Ranks
+.pull-left[ 
+* `dplyr::min_rank()` takes a vector of numbers and returns the rank of each element, with lowest = 1st.
+* Ties broken in obvious way: 1st, 2nd, 2nd, 4th if second and third element equal. 
+```{r}
+x <- c(1, 2, 2, 3, NA, 4)
+min_rank(x)
+```
+
+To have large values ranked first, apply `min_rank()` to `desc(x)`:
+```{r}
+min_rank(desc(x))
+```
+
+]
+--
+.pull-right[
+There are many variants of `min_rank()` inside dplyr universe:
+```{r}
+df <- tibble( x = x)
+df %>%
+  mutate(row_num = row_number(x),
+         percent_rank = percent_rank(x),
+         cumulative_dist = cume_dist(x)
+)
+```
+* `cume_dist()`: proportion of values <= x. 
+]
+
+
+---
+
+### Ranks
+* Which 10 flight routes have the longest average delays? 
+* Remember: negative delay = early
+```{r}
+flights %>%
+  group_by(origin, dest) %>%
+  summarize(avg_delay = mean(arr_delay, na.rm=TRUE),
+            .groups = 'drop') %>%
+  mutate(rank = min_rank(desc(avg_delay))) %>%
+  arrange(by = rank) %>%
+  filter(rank <= 10)
+```
+
+
+---
+### Offsets
+.pull-left[ 
+* `dplyr::lead()` and `dplyr::lag()` return the value just before / after "current" val.
+* Returns vector of same length, padded with `NA` if cannot compute.
+```{r}
+x <- c(2, 5, 11, 11, 19, 35)
+(lag(x))
+(lead(x))
+```
+
+* `x - lag(x)` gives difference between current and previous value.
+```{r}
+x - lag(x)
+```
+
+
+]
+--
+.pull-right[
+
+* `x == lag(x)` tells whether or not current value changes.
+```{r}
+x == lag(x)
+```
+
+* `lag(x, default = y)` fills in the `NA` with `y`.
+```{r}
+lag(x, default = -1)
+```
+```{r}
+lag(x, default = first(x))
+```
+
+]
+
+---
+
+
+### Consecutive identifiers
+.pull-left[ 
+* Suppose we have a website, and we are given times that a user has visited the website:
+```{r}
+events <- tibble(time = c(0, 1, 2, 3, 5, 10, 12, 15, 17, 19, 20, 27))
+```
+* Suppose we want to create an ID called "session", where a new session starts if it has been > 5 minutes since last visit.
+* We can compute the time elapsed between visits using `lag()`, and let first visit be treated as 0 minutes since last visit.
+```{r}
+events <- events %>% 
+  mutate(
+    diff = time - lag(time, default = first(time)),
+    five_mins_since = diff >= 5
+  )
+```
+
+]
+
+.pull-right[
+* The "session" ID will start at 0 and increase by 1 every time it `five_mins_since` hits a TRUE.
+* To do this, we can use `cumsum()`:
+```{r}
+events %>%
+  mutate(session = cumsum(five_mins_since))
+```
+
+]
+
+---
+### Minimum, maximum, quantiles 
+.pull-left[ 
+* As mentioned before, `min(x)` and `max(x)` return single smallest/largest vals within vector `x`.
+* `quantile(vector, threshold)` is a generalization of median:
+  * `quantile(x, 0.25)` returns value of `x` that is >= 25% of values within `x`
+  * `quantile(x, 0.5)` returns median
+  * `quantile(x, 0.95)` returns value of `x` that is >= 95% of values within `x`.
+* Quantiles are less susceptible to extreme values, which affect the mean more
+  * Consider `c(1,2, 3, 2, 5,2,3,1,4,2,3, 10000000)`
+
+]
+
+.pull-right[
+* Let's calculate what the maximum delay and the 95th quantile of delays for flights per day.
+```{r, output.lines=7}
+flights %>% 
+  group_by(year, month, day) %>%
+  summarise(
+    maxim = max(dep_delay, na.rm=TRUE),
+    q95 = quantile(dep_delay, 0.95, na.rm=TRUE),
+    .groups = 'drop'
+  )
+```
+
+]
+
+---
+
+### Spread
+.pull-left[ 
+* Standard measures of spread:
+  * Standard deviation `sd()`: you should already be familiar with this,
+  $$sd(x) = \frac{1}{\mathsf{length}(x)} \sum_{i=1}^{\mathsf{length}(x)} (x[i] - \mathsf{mean}(x))^2$$
+  * Interquartile range `IQR(x) = quantile(x, 0.75) - quantile(x, 0.25)`: contains middle 50% of data
+  
+]
+.pull-right[
+* Similar to median vs. mean, IQR is less sensitive to big outliers.
+* If the data were a Standard Normal (no outliers), 50% of the data lies within 0.6745 stddev's of the mean. 
+```{r, output.lines=6}
+flights %>% 
+  group_by(year, month, day) %>%
+  summarise(
+    stddev = sd(dep_delay, na.rm=TRUE),
+    stddev_50p_range = 0.6745*stddev,
+    iqr = IQR(dep_delay, na.rm=TRUE),
+    .groups = 'drop'
+  )
+```
+]
+
+---
+### Spread
+.pull-left[
+* Which destinations show the greatest variation in air speed? Multiple possible metrics.
+  * Middle 90% by quantiles vs. within 2 standard deviations.
+  * Absolute maximum vs absolute minimum.
+* We need to be sure to only look at destinations with > 1 observation, otherwise can't compute stddev. 
+]
+
+.pull-right[
+```{r, output.lines=9}
+flights %>%
+  mutate(air_speed_mph = distance / (air_time / 60)) %>%
+  group_by(dest) %>%
+  filter(n() > 1) %>%
+  summarize(
+    speed_middle90 = quantile(air_speed_mph, 0.95, na.rm=TRUE) - quantile(air_speed_mph, 0.05, na.rm=TRUE),
+    speed_2stddev = 2*sd(air_speed_mph, na.rm=TRUE),
+    speed_max_diff = max(air_speed_mph, na.rm=TRUE) - min(air_speed_mph, na.rm=TRUE) 
+  ) %>% arrange(by = desc(speed_middle90))
+```
+
+]
+
+---
+
+### Positions
+* Final type of summary for numerics that are useful: `first(x)` (seen already!), `last(x)`, `nth(x, n)`.
+* E.g. first, fifth, and last departure per day:
+```{r, output.lines = 7}
+flights %>%
+  group_by(year, month, day) %>%
+  summarize( 
+    first_dep = first(dep_time, na_rm = TRUE),
+    fifth_dep = nth(dep_time, 5, na_rm = TRUE),
+    last_dep = last(dep_time, na_rm = TRUE)
+  )
+```
+
+
