@@ -377,7 +377,7 @@ flights %>%
 .pull-left[ 
 * Standard measures of spread:
   * Standard deviation `sd()`: you should already be familiar with this,
-  $$sd(x) = \frac{1}{\mathsf{length}(x)} \sum_{i=1}^{\mathsf{length}(x)} (x[i] - \mathsf{mean}(x))^2$$
+  $$sd(x) = \frac{1}{\mathsf{length}(x)-1} \sum_{i=1}^{\mathsf{length}(x)} (x[i] - \mathsf{mean}(x))^2$$
   * Interquartile range `IQR(x) = quantile(x, 0.75) - quantile(x, 0.25)`: contains middle 50% of data
   
 ]
