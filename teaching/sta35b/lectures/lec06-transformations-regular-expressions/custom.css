@@ -1,0 +1,9 @@
+slides > slide p,
+slides > slide h1,
+slides > slide h2,
+slides > slide h3,
+slides > slide h4,
+slides > slide h5,
+slides > slide h6 {
+    color: black;
+}

@@ -1,0 +1,89 @@
+---
+title: "Regular Expressions"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+```
+
+Data we will look at:
+* `babynames` (use `install.packages("babynames")): year/sex/name/number/proportion vars
+* `stringr::fruit`: 80 fruits
+* `stringr::words`: 980 common English words
+* `stringr::sentences`: 720 short sentences
+
+We will use `str_view(string, pattern = NULL)` a lot.  `pattern` will parse regular expressions (regex)
+```{r, eval = FALSE}
+str_view(fruit, "berry")
+#>  [6] │ bil<berry>
+#>  [7] │ black<berry>
+#> [10] │ blue<berry>
+#> [11] │ boysen<berry>
+#> [19] │ cloud<berry>
+#> [21] │ cran<berry>
+#> ... and 8 more
+```
+
+
+
+---
+
+
+
+
+### Literal characters, metacharacters
+* Letters and numbers which match exactly are **literal characters**
+* Punctuation characters typically have special regex meanings (`.`, `+`, `*`, etc), and are called **metacharacters**
+* The metacharacter `.` will match any character, so "a." matches any string which contains "a" followed by another character.
+```{r, eval=FALSE}
+str_view(c("a", "ab", "ae", "bd", "ea", "eab"), "a.")
+#> [2] │ <ab>
+#> [3] │ <ae>
+#> [6] │ e<ab>
+```
+* Or all fruits which have an "a", then 3 letters, then an "e":
+```{r, eval=FALSE}
+str_view(fruit, "a...e")
+#>  [1] │ <apple>
+#>  [7] │ bl<ackbe>rry
+#> [48] │ mand<arine>
+#> [51] │ nect<arine>
+#> [62] │ pine<apple>
+#> [64] │ pomegr<anate>
+#> ... and 2 more
+```

@@ -1,0 +1,400 @@
+%\documentclass[hang,flushmargin,t,aspectratio=169]{beamer}
+%\documentclass[11pt,xcolor=x11names]{beamer}
+\documentclass[11pt,xcolor=x11names,aspectratio=169]{beamer}
+
+
+% \usepackage{fontspec}
+% \setmainfont{Avenir Next Regular}
+
+\usepackage[document]{ragged2e}
+\usepackage{bbm}
+\usepackage{enumerate}
+% \usepackage[shortlabels]{enumitem}
+\usepackage[OT1]{fontenc}
+\usepackage{amsmath,amssymb}
+%\usepackage{bm}
+%\usepackage[usenames]{color}F
+\usepackage{amsthm}
+\usepackage{booktabs}
+%\usepackage[dvips]{graphicx}
+%\usepackage{bm}
+\usepackage{svg}
+\usepackage{caption}
+\usepackage{tikz}
+\captionsetup[figure]{labelformat=empty}%
+
+\usepackage[absolute,overlay]{textpos}
+\usefonttheme[onlymath]{serif}
+
+\usepackage{xcolor}
+\usepackage{nicefrac}
+\usepackage{mathrsfs}
+\usepackage{multirow}
+
+\usepackage[style=chicago-authordate,natbib=true,backend=biber,maxcitenames=2]{biblatex}
+\usepackage{tcolorbox}
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{bibliography item}[text]
+\mode<presentation> {
+\usetheme{Boadilla}
+}
+
+
+% \newcommand{\customfootlinetext}{}
+\def\customfootlinetext{}
+%
+% Define the footline template
+\setbeamertemplate{footline}{%
+    \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex]{footline}%
+        \usebeamercolor[fg]{footline}
+        \hspace*{2ex} \customfootlinetext % Adjust alignment as needed
+    \end{beamercolorbox}%
+    }
+}
+
+% Define the footline color
+\setbeamercolor{footline}{fg=white, bg=gray}
+
+
+\newcommand{\stablerank}{\mathsf{StableRank}}
+\usepackage{subcaption}
+% count without \pause counting new slides 
+
+\definecolor{berkeleyblue}{HTML}{003262}
+\definecolor{uclablue}{RGB}{0.0, 0.42, 0.78}
+\definecolor{ftpink}{RGB}{242, 223, 206}
+\definecolor{ftbeige}{RGB}{255, 241, 224}
+\definecolor{ftwhite}{RGB}{255, 249, 245}
+\definecolor{ftgreen}{RGB}{13, 118, 128}
+\definecolor{ftred}{HTML}{990F3D}
+
+%\colorlet{purplebg}{LavenderBlush1!50}
+%\colorlet{purplerule}{Plum4}
+\definecolor{purplebg}{HTML}{ebe6f5}
+\definecolor{purplerule}{HTML}{9370DB}
+\newcommand{\purplealert}[1]{\fcolorbox{purplerule}{purplebg}{#1}}
+\definecolor{bluerule}{HTML}{15A8D1}
+\definecolor{bluebg}{HTML}{F2FCFF}
+\newcommand{\bluealert}[1]{\fcolorbox{bluerule}{bluebg}{#1}}
+
+\definecolor{orangerule}{HTML}{FFAA00}
+\definecolor{orangebg}{HTML}{FFF1D4}
+\newcommand{\orangealert}[1]{\fcolorbox{orangerule}{orangebg}{#1}}
+
+\definecolor{greenrule}{HTML}{21B500}
+\definecolor{greenbg}{HTML}{ECFFE8}
+\newcommand{\greenalert}[1]{\fcolorbox{greenrule}{greenbg}{#1}}
+
+\definecolor{grayrule}{HTML}{778275}
+\definecolor{graybg}{HTML}{F7F7F7}
+\definecolor{graybgg}{HTML}{CFCFCF}
+\definecolor{graybggg}{HTML}{FFFFFF}
+\newcommand{\grayalert}[1]{\fcolorbox{grayrule}{graybg}{#1}}
+
+
+
+\definecolor{redrule}{HTML}{990F3D}
+\definecolor{redbg}{HTML}{FFD2D1}
+\newcommand{\redalert}[1]{\fcolorbox{redrule}{redbg}{#1}}
+%\definecolor{greenrule}{HTML}{0D7680}
+%\definecolor{greenbg}{HTML}{DEFCFF}
+
+%\usecolortheme[named=berkeleyblue]{structure}
+% \usecolortheme[named=uclablue]{structure}
+%\usecolortheme[named=ftgreen]{structure}
+\definecolor{darkgreen}{rgb}{0.0, 0.5, 0.0}
+%\definecolor{darkgreen}{HTML}{00A598}
+\setbeamertemplate{itemize items}[default]
+\setbeamertemplate{enumerate items}[default]
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{color}
+
+
+\setbeamertemplate{frametitle}{
+{
+    \nointerlineskip
+    \begin{beamercolorbox}[sep=0.5cm,ht=2.5em,wd=\paperwidth]{frametitle}
+        \vbox{}%\vskip-2ex%
+        \strut\insertframetitle\strut
+       %\vskip-0.8ex%
+    \end{beamercolorbox}}
+% 
+}
+
+\definecolor{fannygreen}{HTML}{045a68}
+% \setbeamercolor{frametitle}{bg=ftpink, fg=ftred}
+\setbeamercolor{frametitle}{bg=white,fg=fannygreen}
+\setbeamercolor{background canvas}{bg=white}
+\setbeamertemplate{itemize items}[circle] %ball, circle, square
+
+%\setbeamertemplate{itemizeitem}{\scriptsize$\diamond$}
+% set the itemize subitem symbol as a triangle
+%\setbeamertemplate{itemize subitem}{\scriptsize$\blacktriangleright$}
+% set the itemize subsubitem symbol as a circle with a dot
+%\setbeamertemplate{itemize subsubitem}{\scriptsize$\odot$}
+
+\setbeamercolor{palette primary}{bg=ftpink,fg=ftgreen}
+\setbeamercolor{palette secondary}{bg=ftpink,fg=ftgreen}
+\setbeamercolor{palette tertiary}{bg=ftpink,fg=ftgreen}
+\setbeamercolor{palette quaternary}{bg=ftpink,fg=ftgreen}
+\setbeamercolor{structure}{fg=ftgreen} % itemize, enumerate, etc
+\setbeamercolor{section in toc}{fg=ftgreen}
+
+% \definecolor{blockcolor}{HTML}{434445}
+\definecolor{blockcolor}{HTML}{434445}
+\setbeamercolor{block}{fg=blockcolor}
+\setbeamercolor{block title}{bg=ftpink,fg=ftgreen}
+% \setbeamercolor{block body alerted}{fg=blockcolor}
+% \setbeamercolor{block body alerted}{fg=footlinetextcolor}
+\setbeamercolor{block body alerted}{fg=black}
+\setbeamercolor{block title alerted}{bg=ftpink,fg=ftgreen}
+% \logo{\includegraphics[height=1.0cm]{figures/UCLA_badge.png}\vspace{232pt}}
+% \logo{\includegraphics[height=1.5cm]{UCLA_badge.png}\vspace*{215pt}}
+%\setbeamerfont{frametitle}{size=\LARGE}
+% \addtobeamertemplate{frametitle}{\vspace*{0.7em}}{\vspace*{0.7em}}
+\makeatletter
+%\setbeamertemplate{footline}%[page number]
+\defbeamertemplate{footline}{centered page number}
+{%
+  \hspace*{\fill}%
+  \usebeamercolor[fg]{page number in head/foot}%
+  \usebeamerfont{page number in head/foot}%
+  \insertpagenumber\,/\,\insertpresentationendpage%
+  \hspace*{\fill}\vskip3pt%
+}
+%\setbeamertemplate{footline}[centered page number]
+\setbeamertemplate{footline}[frame number]{} 
+\makeatother
+\setbeamerfont{author}{size*={12}{1}}
+\setbeamerfont{frametitle}{size*={14}{1}}
+\setbeamerfont{title}{size*={18}{1}}
+
+\apptocmd{\frame}{}{\justifying}{}
+%\setbeamersize{text margin left=1.5em,text margin right=1.5em, sidebar width left=1em, sidebar width right=1em} 
+\setbeamersize{text margin left=1em,text margin right=1em, sidebar width left=0em, sidebar width right=0em} 
+%\usepackage{float}
+
+
+
+\newcommand{\f}{\frac}
+\newcommand{\p}{\partial}
+
+% Number systems %
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\BH}{\matbb{H}}
+\newcommand{\BP}{\mathbb{P}}
+\newcommand{\B}{\calB}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\T}{\mathbb{T}}
+\DeclareMathOperator{\poly}{poly}
+\let\temp\P
+\let\P\BP
+
+% Norms, ceilings, derivatives, etc %
+\renewcommand{\r}{\right}
+\renewcommand{\l}{\left}
+\let\hat\widehat
+\let\check\widecheck
+\newcommand{\eps}{\varepsilon}
+\newcommand{\sgn}{\mathrm{sgn}}
+\newcommand{\pnorm}[2]{\left\|#1\right\|_{#2}}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\snorm}[1]{\|#1\|}
+\newcommand{\sip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\dd}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
+\newcommand{\ddx}[1]{\frac{\mathrm{d}}{\mathrm{d} #1}}
+\newcommand{\grad}{\nabla}
+\newcommand{\ppx}[1]{\frac{\partial}{\partial #1}} 
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\ov}[1]{\overline #1}
+
+
+% Limits, sums, set theory %
+\newcommand{\summ}[2]{\sum_{#1 = 1}^{#2}}
+\newcommand{\summm}[3]{\sum_{#1 = #2}^{#3}}
+\newcommand{\suminf}[1]{\sum_{#1 = 1}^\infty}
+\newcommand{\summinf}[2]{\sum_{#1 = #2}^\infty}
+\newcommand{\prodd}[2]{\prod_{#1 = 1}^{#2}}
+\newcommand{\proddd}[3]{\prod_{#1 = #2}^{#3}}
+\newcommand{\mgeq}{\succeq}
+\newcommand{\mleq}{\preceq}
+\newcommand{\mless}{\prec}
+\newcommand{\mgtr}{\succ}
+
+
+% Caligraphic letters
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calC}{\mathcal{C}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calH}{\mathcal{H}}
+\newcommand{\calF}{\mathcal{F}}
+
+
+% General ML/stats stuff
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand{\err}{\mathrm{err}}
+\newcommand{\wt}[1]{w^{(#1)}}
+\newcommand{\wti}[2]{w^{(#1)}_{#2}}
+\newcommand{\Wt}[1]{W^{(#1)}}
+\newcommand{\wwt}[2]{#1^{(#2)}}
+\newcommand{\vcd}{\mathrm{VC}_{\mathrm{dim}}}
+\newcommand{\ind}{{\mathbbm{1}}}
+\newcommand{\iid}{\stackrel{\rm i.i.d.}{\sim}}
+\newcommand{\opt}{\mathsf{OPT}}
+\newcommand{\optlin}{\mathsf{OPT}_{\mathsf{lin}}}
+\DeclareMathOperator{\Unif}{\mathsf{Unif}}
+
+
+% Project-specific commands
+\newcommand{\wmm}{\hat{w}_{\mathsf{MM}}}
+\newcommand{\wls}{\hat{w}_{\mathsf{LS}}}
+% \newcommand{\pclean}{\tilde{\mathsf{P}}_{\mathsf{cl}}}
+\newcommand{\pclean}{\mathsf{P}_{\mathsf{clean}}}
+\newcommand{\pnoise}{\mathsf{P}_{\mathsf{noise}}}
+\newcommand{\pclust}{\mathsf{P}_{\mathsf{clust}}}
+\newcommand{\sinit}{\omega_{\mathrm{init}}}
+\newcommand{\sinits}{\omega_{\mathrm{init}}}
+\newcommand{\hlt}[1]{\hat{L}^{(#1)}}
+\newcommand{\lpit}[2]{g_{#1}^{(#2)}}
+\newcommand{\nfit}[2]{\nabla f_{#1}^{(#2)}}
+
+
+\newcommand{\unif}{\mathsf{Unif}}
+\newcommand{\normal}{\mathsf{N}}
+
+% \setbeamercovered{transparent}
+
+\usepackage{blindtext}
+\newcommand\blfootnote[1]{%
+\begingroup
+\renewcommand\thefootnote{}\footnote[frame]{#1}%
+\addtocounter{footnote}{-1}%
+\endgroup
+}
+
+\def\query{\mathsf{query}}
+\def\normal{\mathsf{N}}
+
+
+
+\definecolor{footlinecolor}{HTML}{dbd9d9}
+% fanny green: #045a68
+\definecolor{footlinetextcolor}{HTML}{4a4949}
+% \definecolor{footlinetextcolor}{HTML}{045a68}
+
+\newcommand{\footlineextra}[1]{
+    \begin{tikzpicture}[remember picture,overlay]
+        % Draw the gray background rectangle
+        \fill [footlinecolor] (current page.south west) rectangle ++(\paperwidth,0.5cm); % Adjust the height (1cm) as needed
+
+        % Place the text
+        \node [yshift=0ex, anchor=south west, text width=\paperwidth, align=left] 
+        at (current page.south west) {\usebeamerfont{author in head/foot}\hspace{2ex}\footnotesize\color{footlinetextcolor}#1};
+    \end{tikzpicture}
+}
+
+
+\setbeamercolor{page number in head/foot}{fg=fannygreen} % Change 'blue' to your desired color
+
+
+\newcommand{\sfnote}[1]{\textcolor{red}{[Note: #1]}}
+\newcommand{\frei}{\textbf{\underline{F}}}
+
+
+% \def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;} 
+
+\title{\fontsize{14}{14}\selectfont Statistical and Computational Phenomena in Deep Learning}
+\date{}
+\begin{document}
+\begin{frame}[noframenumbering]
+\titlepage % Print the title page as the first slide
+% \vspace{-7em} \center Computer Science Department
+\vspace{-50pt}
+
+	\center{Spencer Frei}
+%	{\scriptsize Spencer Frei, Vidya Muthukumar, Fanny Yang}
+%	 }
+
+% 	\vspace{-10pt}
+% Print the title page as the first slide
+% \vspace{-7em} \center Computer Science Department
+
+\end{frame}
+
+%  Although the optimization objectives for learning neural networks are highly non-convex, gradient-based methods have been wildly successful at learning neural networks in practice. This juxtaposition has led to a number of recent studies on provable guarantees for neural networks trained by gradient descent.  Unfortunately, the techniques in these works are often highly specific to the particular setup in each problem, making it difficult to generalize across different settings.  To address this drawback in the literature, we propose a unified non-convex optimization framework for the analysis of neural network training.  We introduce the notions of proxy convexity and proxy Polyak-Lojasiewicz (PL) inequalities, which are satisfied if the original objective function induces a proxy objective function that is implicitly minimized when using gradient methods. We show that stochastic gradient descent (SGD) on objectives satisfying proxy convexity or the proxy PL inequality leads to efficient guarantees for proxy objective functions. We further show that many existing guarantees for neural networks trained by gradient descent can be unified through proxy convexity and proxy PL inequalities.  This is joint work with Quanquan Gu (UCLA) and will appear at 2021. 
+% \begin{frame}{Frame Title}
+%     \begin{figure}[t]
+% 	\begin{center}
+% 			\includegraphics[width=.9\textwidth,angle=0]{short_presentation/spencerfrei-photo.jpg}
+			
+% 	\end{center}
+% % 	\vspace{-10pt}
+% \end{figure}
+% \end{frame}
+
+
+%---------------------------------------------------------
+%This block of code is for the table of contents after
+%the title pag%---------------------------------------------------------
+
+% \begin{frame}{The Generalization Mystery of Deep Learning}
+% \begin{itemize}
+%     \item Deep learning's success is widely attributed 
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Benign Overfitting without Linearity}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.3\textwidth]{quadratic-linearfit.pdf}
+%     \includegraphics[width=0.3\textwidth]{quadratic-highpolyfit.drawio.pdf}
+%     \includegraphics[width=0.3\textwidth]{quadratic-quadraticfit.pdf}
+% \end{figure}
+%     \begin{block}{Classical Statistical Learning Theory}
+%     \begin{itemize}
+%         \item For given problem, there's a sweet spot of model complexity:
+%         \begin{itemize} 
+%         \pause 
+%             \item Not too small, so we can fit training data (low bias)
+%         \pause              
+%             \item Not too large, so we don't overfit (low variance)
+%         \pause             
+%             \item `Just right': balance of bias and variance
+%         \end{itemize}
+%     \end{itemize}
+% \end{block}
+
+% \end{frame}
+
+% \renewcommand{\customfootlinetext}{This is the text for Slide 1}
+%\def\customfootlinetext{This is the text for Slide 1}
+
+\begin{frame}{Outline}
+
+What does deep learning offer statistics and computational sciences?  \\How can we understand \& improve deep learning using tools from statistics and optimization?
+\end{frame}
+
+
+
+
+\end{document}
+
+
+
+
+
+
+

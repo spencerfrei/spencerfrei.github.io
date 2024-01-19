@@ -1,0 +1,227 @@
+---
+title: "Regular Expressions"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: true
+    transition: faster
+    css: cols.css
+---
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+library(babynames)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+
+```
+
+---
+
+* Data we will look at:
+* `babynames` (use `install.packages("babynames")): year/sex/name/number/proportion vars
+* `stringr::fruit`: 80 fruits
+* `stringr::words`: 980 common English words
+* `stringr::sentences`: 720 short sentences
+
+We will use `str_view(string, pattern = NULL)` a lot.  `pattern` will parse regular expressions (regex)
+```{r, output.lines=7}
+str_view(fruit, "berry")
+```
+
+
+
+---
+
+
+
+
+### Literal characters, metacharacters
+* Letters and numbers which match exactly are **literal characters**
+* Punctuation characters typically have special regex meanings (`.`, `+`, `*`, etc), and are called **metacharacters**
+* The metacharacter `.` will match any character, so "a." matches any string which contains "a" followed by another character.
+```{r}
+str_view(c("a", "ab", "ae", "bd", "ea", "eab"), "a.")
+```
+
+* Or all fruits which have an "a", then 3 letters, then an "e":
+
+```{r, output.lines=4}
+str_view(fruit, "a...e")
+```
+
+---
+
+
+### Quantifiers
+* `?` makes a pattern optional (i.e. it matches 0 or 1 times)
+* `+` lets a pattern repeat (i.e. it matches at least once)
+* `*` lets a pattern be optional or repeat (i.e. it matches any number of times, including 0).
+
+<div class="pull-left">
+```{r}
+# ab? matches an "a", optionally followed by "b".
+str_view(c("a", "ab", "abb"), "ab?")
+
+```
+
+```{r}
+# ab+ matches an "a", followed by at >=1 "b".
+str_view(c("a", "ab", "abb"), "ab+")
+```
+
+</div>
+
+<div class="pull-right">
+```{r}
+# ab* matches an "a", followed by any num of "b"s.
+str_view(c("a", "ab", "abb"), "ab*")
+```
+</div>
+
+
+
+---
+
+### Character classes
+* Defined by `[]`, let you match from a set of characters (similar idea to `%in%`)
+  * `[abcd]` matches anything with "a", "b", "c", or "d"
+  * Can negate/invert by using `^`: `[^abcd]` returns anything **except** "a", "b", "c", "d"
+* e.g. any word containing "x" surrounded by vowels, or "y" surrounded by consonants
+* **alternation** `|` picks between alternative patterns,  e.g. words containing "apple", "melon", or "nut"; repeated vowels
+
+<div class="pull-left">
+```{r}
+str_view(words, "[aeiou]x[aeoiu]")
+```
+```{r}
+str_view(words, "[^aeiou]y[^aeiou]")
+```
+</div>
+
+<div class="pull-right">
+```{r, output.lines=3}
+str_view(fruit, "apple|melon|nut")
+```
+```{r}
+str_view(fruit, "aa|ee|ii|oo|uu")
+```
+</div>
+
+
+---
+
+### `str_detect()`
+* `str_detect(character_vector, pattern)` returns a logical vector, `TRUE` if pattern matches element of vector and `FALSE` otherwise.
+```{r}
+str_detect(c("a", "b", "c"), "[aeiou]")
+```
+
+<div class="pull-left">
+* Since returns logical vectors, can be used with `filter()`, e.g. most popular names containing an "x":
+```{r,output.lines=5}
+babynames
+```
+
+</div>
+<div class="pull-right">
+```{r, output.lines=9}
+babynames |> 
+  filter(str_detect(name, "x")) |> 
+  count(name, wt = n, sort = TRUE)
+```
+
+</div>
+
+---
+
+### `str_detect()`
+* You can also use `str_detect()` in conjunction with `group_by()`, `summarize()` etc.
+  * `sum()` will return number of strings which have pattern
+  * `mean()` ill return proportion of strings which have pattern 
+* E.g. proportion of names per year that have an "x"
+
+
+```{r}
+babynames %>% 
+  group_by(year) %>%
+  summarize(prop_x = mean(str_detect(name, "x"))) %>%
+  arrange(by = desc(prop_x))
+```
+
+---
+
+### Counting matches
+* `str_count()` tells how many matches there are in a string
+```{r}
+x <- c("apple", "banana", "pear")
+str_count(x, "p")
+```
+* Regex matches never overlap - always start after the end of previous match
+```{r}
+str_count("abababa", "aba")
+```
+```{r}
+str_view("abababa", "aba")
+```
+
+---
+
+### Counting vowels and constants in baby names
+* Can use `str_count()` with mutate, i.e. computing number of vowels/consonants in baby names:
+
+<div class="pull-left">
+```{r}
+babynames %>%
+  count(name) %>%
+  mutate(
+    vowels = str_count(name, "[aeiou]"),
+    consonants = str_count(name, "[^aeiou]")
+  )
+```
+</div>
+
+<div class="pull-right">
+* Note that pattern matching is case sensitive, so "A" isn't counted.
+* Ways around this:
+  * Add the upper case vowels to the character class:     
+    `str_count(name, "[aeiouAEIOU]")`
+  * Use `str_to_lower()` to convert the names to lower case:
+    `str_count(str_to_lower(name),   `
+    `"[aeiou]")`
+```{r, output.lines=4}
+babynames %>% count(name) %>%  mutate(
+    name = str_to_lower(name),
+    vowels = str_count(name, "[aeiou]"),
+    consonants = str_count(name, "[^aeiou]"))
+```
+
+</div>

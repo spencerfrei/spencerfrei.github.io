@@ -154,7 +154,7 @@ writeLines(x)
 
 #### `str_c()`
 * Similar to `paste0()` in base R, but friendlier for `dplyr` - obeys Tidyverse rules for recycling and propagating missing vals. 
-* Glues together any number of vectors and returns a character vector
+* Concatenates any number of vectors and returns a character vector
 
 ```r
 ( str_c("x", "y") )
@@ -878,6 +878,45 @@ df |&gt;
 ```
 
 ]
+
+---
+
+### Individual characters in a string
+.pull-left[ 
+* `str_length()`: returns number of characters in the string
+
+```r
+str_length(c("a", "R for data science", NA))
+```
+
+```
+[1]  1 18 NA
+```
+* `str_sub(string, start, end)`: returns **sub**set of the string from char `start` to char `end`.
+
+```r
+x &lt;- c("Apple", "Banana", "Pear")
+str_sub(x, 1, 3)
+```
+
+```
+[1] "App" "Ban" "Pea"
+```
+]
+
+.pull-right[
+* Can also use negative values for `start`, `end`: -1 is last char, -2 second to last, etc.
+
+```r
+str_sub(x, -3, -1)
+```
+
+```
+[1] "ple" "ana" "ear"
+```
+
+]
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
