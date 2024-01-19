@@ -225,3 +225,32 @@ babynames %>% count(name) %>%  mutate(
 ```
 
 </div>
+
+
+---
+
+### Replacing and removing values
+
+* `str_replace()`: replaces first match 
+* `str_replace_all()` replace all matches
+
+```{r}
+x <- c("apple", "pear", "banana")
+(str_replace(x, "[aeiou]", "-"))
+str_replace_all(x, "[aeiou]", "-")
+```
+
+* You can remove patterns if you set replacement with "", or using `str_remove()` / `str_remove_all()`
+
+<div class="pull-left">
+```{r}
+str_remove(x, "[aeiou]")
+```
+</div>
+
+<div class="pull-right">
+```{r}
+str_remove_all(x, "[aeiou]")
+```
+</div>
+

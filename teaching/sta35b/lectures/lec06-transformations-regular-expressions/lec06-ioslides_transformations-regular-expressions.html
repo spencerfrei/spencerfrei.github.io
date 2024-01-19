@@ -3493,7 +3493,39 @@ str_count(x, &quot;p&quot;)</pre>
    name          n vowels consonants
    &lt;chr&gt;     &lt;int&gt;  &lt;int&gt;      &lt;int&gt;
  1 aaban        10      3          2
-...</pre></div></article></slide>
+...</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Replacing and removing values</h3>
+
+<ul>
+<li><code>str_replace()</code>: replaces first match</li>
+<li><code>str_replace_all()</code> replace all matches</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;apple&quot;, &quot;pear&quot;, &quot;banana&quot;)
+(str_replace(x, &quot;[aeiou]&quot;, &quot;-&quot;))</pre>
+
+<pre >[1] &quot;-pple&quot;  &quot;p-ar&quot;   &quot;b-nana&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>str_replace_all(x, &quot;[aeiou]&quot;, &quot;-&quot;)</pre>
+
+<pre >[1] &quot;-ppl-&quot;  &quot;p--r&quot;   &quot;b-n-n-&quot;</pre>
+
+<ul>
+<li>You can remove patterns if you set replacement with ““, or using <code>str_remove()</code> / <code>str_remove_all()</code></li>
+</ul>
+
+<div class="pull-left">
+<pre class = 'prettyprint lang-r'>str_remove(x, &quot;[aeiou]&quot;)</pre>
+
+<pre >[1] &quot;pple&quot;  &quot;par&quot;   &quot;bnana&quot;</pre></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>str_remove_all(x, &quot;[aeiou]&quot;)</pre>
+
+<pre >[1] &quot;ppl&quot; &quot;pr&quot;  &quot;bnn&quot;</pre></div></article></slide>
 
 
   <slide class="backdrop"></slide>

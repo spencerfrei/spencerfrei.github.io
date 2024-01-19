@@ -376,7 +376,7 @@ df5 |>
 
 ---
 
-### Diagonosing widening problems
+### Diagnosing widening problems
 
 * `separate_wider_delim()` requires a fixed & known set of columns
 * If some rows don't have expected number of pieces, problem!
