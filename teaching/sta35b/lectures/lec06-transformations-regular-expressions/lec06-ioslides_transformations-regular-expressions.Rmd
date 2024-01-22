@@ -420,7 +420,12 @@ str_view("a\\b")
 ```{r}
 str_view("a\\b", "\\\\")
 ```
-* Backslashes are a nightmare. 
+
+```{r, eval=FALSE}
+str_replace("mary.elizabeth", "\.", "-")
+# Error: '\.' is an unrecognized escape in character string (<input>:1:33)
+```
+
 </div>
 
 ---
