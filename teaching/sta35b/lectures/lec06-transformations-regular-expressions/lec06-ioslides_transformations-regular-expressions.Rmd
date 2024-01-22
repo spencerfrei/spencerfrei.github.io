@@ -503,7 +503,7 @@ str_view(x, "\\W+")
 
 
 ### Anchors: boundaries of words
-* You can specify the beginning or end of the word using `\b` (i.e. "\\b" when typing a string)
+* You can specify the beginning or end of the word using `\b` 
   * This works by treating all letters and numbers as "word" characters, and everything else as "non-word" characters
 ```{r}
 x <- c("summary(x)", "summarize(df)", "rowsum(x)", "sum(x)")
