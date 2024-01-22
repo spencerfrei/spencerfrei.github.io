@@ -3525,7 +3525,758 @@ str_count(x, &quot;p&quot;)</pre>
 <div class="pull-right">
 <pre class = 'prettyprint lang-r'>str_remove_all(x, &quot;[aeiou]&quot;)</pre>
 
-<pre >[1] &quot;ppl&quot; &quot;pr&quot;  &quot;bnn&quot;</pre></div></article></slide>
+<pre >[1] &quot;ppl&quot; &quot;pr&quot;  &quot;bnn&quot;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Replacing characters and <code>?</code>, <code>*</code>, <code>+</code></h3>
+
+<ul>
+<li>The question mark <code>?</code> matches the preceding element zero OR ONE time, then iterates to rest of string.</li>
+<li>Plus sign <code>+</code> matches AT LEAST once</li>
+<li>The asterisk <code>*</code> matches the preceding element zero OR MORE times, then iterates to rest of string.</li>
+</ul>
+
+<div class="pull-left">
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;apple&quot;, &quot;aardvark&quot;, &quot;happy&quot;, &quot;haaahaha&quot;)
+( str_view(x, &quot;a*&quot;) )</pre>
+
+<pre >[1] │ &lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;l&lt;&gt;e&lt;&gt;
+[2] │ &lt;aa&gt;&lt;&gt;r&lt;&gt;d&lt;&gt;v&lt;a&gt;&lt;&gt;r&lt;&gt;k&lt;&gt;
+[3] │ &lt;&gt;h&lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;y&lt;&gt;
+[4] │ &lt;&gt;h&lt;aaa&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>( str_remove(x, &quot;a*&quot;) )</pre>
+
+<pre >[1] &quot;pple&quot;     &quot;rdvark&quot;   &quot;happy&quot;    &quot;haaahaha&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>str_remove_all(x, &quot;a*&quot;)</pre>
+
+<pre >[1] &quot;pple&quot;  &quot;rdvrk&quot; &quot;hppy&quot;  &quot;hhh&quot;  </pre></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>( str_view(x, &quot;a?&quot;) )</pre>
+
+<pre >[1] │ &lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;l&lt;&gt;e&lt;&gt;
+[2] │ &lt;a&gt;&lt;a&gt;&lt;&gt;r&lt;&gt;d&lt;&gt;v&lt;a&gt;&lt;&gt;r&lt;&gt;k&lt;&gt;
+[3] │ &lt;&gt;h&lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;y&lt;&gt;
+[4] │ &lt;&gt;h&lt;a&gt;&lt;a&gt;&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>( str_remove(x, &quot;a?&quot;) )</pre>
+
+<pre >[1] &quot;pple&quot;     &quot;ardvark&quot;  &quot;happy&quot;    &quot;haaahaha&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>str_remove_all(x, &quot;a?&quot;)</pre>
+
+<pre >[1] &quot;pple&quot;  &quot;rdvrk&quot; &quot;hppy&quot;  &quot;hhh&quot;  </pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Replacing characters and <code>?</code>, <code>*</code>, <code>+</code></h3>
+
+<ul>
+<li>Compare <code>?</code>, <code>+</code>, and <code>*</code></li>
+</ul>
+
+<div class="pull-left">
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;apple&quot;, &quot;aardvark&quot;, &quot;happy&quot;, &quot;haaahaha&quot;)
+(str_view(x, &quot;a?&quot;))</pre>
+
+<pre >[1] │ &lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;l&lt;&gt;e&lt;&gt;
+[2] │ &lt;a&gt;&lt;a&gt;&lt;&gt;r&lt;&gt;d&lt;&gt;v&lt;a&gt;&lt;&gt;r&lt;&gt;k&lt;&gt;
+[3] │ &lt;&gt;h&lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;y&lt;&gt;
+[4] │ &lt;&gt;h&lt;a&gt;&lt;a&gt;&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>(str_view(x, &quot;a+&quot;))</pre>
+
+<pre >[1] │ &lt;a&gt;pple
+[2] │ &lt;aa&gt;rdv&lt;a&gt;rk
+[3] │ h&lt;a&gt;ppy
+[4] │ h&lt;aaa&gt;h&lt;a&gt;h&lt;a&gt;</pre></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>(str_view(x, &quot;a*&quot;))</pre>
+
+<pre >[1] │ &lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;l&lt;&gt;e&lt;&gt;
+[2] │ &lt;aa&gt;&lt;&gt;r&lt;&gt;d&lt;&gt;v&lt;a&gt;&lt;&gt;r&lt;&gt;k&lt;&gt;
+[3] │ &lt;&gt;h&lt;a&gt;&lt;&gt;p&lt;&gt;p&lt;&gt;y&lt;&gt;
+[4] │ &lt;&gt;h&lt;aaa&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;h&lt;a&gt;&lt;&gt;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Ranges of characters</h3>
+
+<ul>
+<li>Suppose you have a vector of strings, and you want to do the following modifications:
+
+<ul>
+<li>If the string has a (lower/upper) letter between &ldquo;a&rdquo; and &ldquo;u&rdquo;, replace it with an &ldquo;x&rdquo;</li>
+</ul></li>
+<li>Instead of spelling out manually what all of these letters are, you can use the character class operator <code>[]</code> together with <code>-</code></li>
+</ul>
+
+<div class="pull-left">
+<p>An example with letters:</p>
+
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;happy&quot;, &quot;ab&quot;, &quot;zap&quot;, &quot;war&quot;)
+( str_view(x, &quot;[a-u]&quot;) )</pre>
+
+<pre >[1] │ &lt;h&gt;&lt;a&gt;&lt;p&gt;&lt;p&gt;y
+[2] │ &lt;a&gt;&lt;b&gt;
+[3] │ z&lt;a&gt;&lt;p&gt;
+[4] │ w&lt;a&gt;&lt;r&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>str_replace_all(x, &quot;[a-u]&quot;, &quot;x&quot;)</pre>
+
+<pre >[1] &quot;xxxxy&quot; &quot;xx&quot;    &quot;zxx&quot;   &quot;wxx&quot;  </pre></div>
+
+<div class="pull-right">
+
+<p>An example with numbers: replace all numbers between 0 and 5 with x’s</p>
+
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;code9202&quot;, &quot;apple2850&quot;, &quot;0352&quot;)
+(str_view(x, &quot;[0-5]&quot;))</pre>
+
+<pre >[1] │ code9&lt;2&gt;&lt;0&gt;&lt;2&gt;
+[2] │ apple&lt;2&gt;8&lt;5&gt;&lt;0&gt;
+[3] │ &lt;0&gt;&lt;3&gt;&lt;5&gt;&lt;2&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>str_replace_all(x, &quot;[0-5]&quot;, &quot;x&quot;)</pre>
+
+<pre >[1] &quot;code9xxx&quot;  &quot;applex8xx&quot; &quot;xxxx&quot;     </pre>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Ranges of characters and <code>?</code>, <code>*</code></h3>
+
+<div class="pull-left">
+<ul>
+<li>Very useful to use ranges in conjunction with <code>?</code>, <code>*</code>, <code>+</code></li>
+<li>E.g. let’s find all words with at least three consecutive vowels</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;[aeiou][aeiou][aeiou]+&quot;)</pre>
+
+<pre > [79] │ b&lt;eau&gt;ty
+[565] │ obv&lt;iou&gt;s
+[644] │ prev&lt;iou&gt;s
+[670] │ q&lt;uie&gt;t
+[741] │ ser&lt;iou&gt;s
+[915] │ var&lt;iou&gt;s</pre>
+
+<ul>
+<li>Useful for parsing strings which are partitioned by letters/numbers</li>
+</ul></div>
+
+<div class="pull-right">
+
+
+<pre class = 'prettyprint lang-r'>name_score &lt;- c(&quot;Mary_92&quot;, &quot;Pat_35&quot;, &quot;Will_85&quot;)
+( str_view(name_score, &quot;[a-zA-Z]+&quot;)) </pre>
+
+<pre >[1] │ &lt;Mary&gt;_92
+[2] │ &lt;Pat&gt;_35
+[3] │ &lt;Will&gt;_85</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(name_score, &quot;[0-9]+&quot;)</pre>
+
+<pre >[1] │ Mary_&lt;92&gt;
+[2] │ Pat_&lt;35&gt;
+[3] │ Will_&lt;85&gt;</pre>
+
+<ul>
+<li>E.g. replace all names with John, scores with 100</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>name_score %&gt;% str_replace(&quot;[a-zA-Z]+&quot;, &quot;John&quot;) %&gt;%
+  str_replace(&quot;[0-9]+&quot;, &quot;100&quot;)</pre>
+
+<pre >[1] &quot;John_100&quot; &quot;John_100&quot; &quot;John_100&quot;</pre>
+
+</article></slide><slide class=""><hgroup><h2><d/vi></h2></hgroup><article  id="section" class="smaller ">
+
+<h3>Extracting variables</h3>
+
+<ul>
+<li><code>separate_wider_regex()</code>: go from long to wide using regex.</li>
+</ul>
+
+<div class="pull-left">
+<pre class = 'prettyprint lang-r'>df &lt;- tribble(
+  ~str,
+  &quot;&lt;Sheryl&gt;-F_34&quot;,
+  &quot;&lt;Kisha&gt;-F_45&quot;, 
+  &quot;&lt;Pat&gt;-X_33&quot;,
+  &quot;&lt;Sharon&gt;-F_38&quot;, 
+  &quot;&lt;Penny&gt;-F_58&quot;,
+  &quot;&lt;Justin&gt;-M_41&quot;, 
+  &quot;&lt;Patricia&gt;-F_84&quot;, 
+)</pre>
+
+<ul>
+<li>To extract data, construct sequence of regex that match each piece.</li>
+<li>If you want contents of that piece to appear in output, give it a name.</li>
+</ul></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>df %&gt;%  separate_wider_regex(
+    str,
+    patterns = c(
+      &quot;&lt;&quot;, 
+      name = &quot;[A-Za-z]+&quot;, 
+      &quot;&gt;-&quot;, 
+      gender = &quot;.&quot;,
+      &quot;_&quot;,
+      age = &quot;[0-9]+&quot;))</pre>
+
+<pre ># A tibble: 7 × 3
+  name     gender age  
+  &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;
+1 Sheryl   F      34   
+2 Kisha    F      45   
+3 Pat      X      33   
+4 Sharon   F      38   
+5 Penny    F      58   
+6 Justin   M      41   
+7 Patricia F      84   </pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Escaping</h3>
+
+<div class="pull-left">
+<ul>
+<li>Since the characters &ldquo;.&rdquo;, &ldquo;?&rdquo;, &ldquo;+&rdquo;, “*” have extra functions in regex, need to use escapes to help parse literal instances of these characters</li>
+<li>In regex, we require a <code>\</code> in front of characters to denote an escape</li>
+<li>But to create a string with an actual <code>\</code> in it, we need to use an escape, so need double <code>\\</code>:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(c(&quot;abc&quot;, &quot;a.c&quot;, &quot;bef&quot;), &quot;a\\.c&quot;)</pre>
+
+<pre >[2] │ &lt;a.c&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(c(&quot;a*rdvark&quot;, &quot;*pple&quot;, &quot;m*n&quot;), &quot;\\*&quot;)</pre>
+
+<pre >[1] │ a&lt;*&gt;rdvark
+[2] │ &lt;*&gt;pple
+[3] │ m&lt;*&gt;n</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>Recall that to represent backslash in a string, need to escape:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(&quot;a\\b&quot;)</pre>
+
+<pre >[1] │ a\b</pre>
+
+<ul>
+<li>To match for a backslash, need to create a string which has an escape in front of a backslash.</li>
+<li>The escape requires double backslash, and the string <code>\</code> also requires double backslash.</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(&quot;a\\b&quot;, &quot;\\\\&quot;)</pre>
+
+<pre >[1] │ a&lt;\&gt;b</pre>
+
+<ul>
+<li>Backslashes are a nightmare.</li>
+</ul></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Anchors</h3>
+
+<div class="pull-left">
+<ul>
+<li>By default: regex will match any part of a string.</li>
+<li>If you only want to match at beginning or end, you need to <strong>anchor</strong>:
+
+<ul>
+<li><code>^</code> indicates &ldquo;starts with&rdquo;</li>
+<li><code>$</code> indicates &ldquo;ends with&rdquo;</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(fruit, &quot;^a&quot;)</pre>
+
+<pre >[1] │ &lt;a&gt;pple
+[2] │ &lt;a&gt;pricot
+[3] │ &lt;a&gt;vocado</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(fruit, &quot;a$&quot;)</pre>
+
+<pre > [4] │ banan&lt;a&gt;
+[15] │ cherimoy&lt;a&gt;
+[30] │ feijo&lt;a&gt;
+[36] │ guav&lt;a&gt;
+[56] │ papay&lt;a&gt;
+[74] │ satsum&lt;a&gt;</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>To force a regex to match only the full string, not subsets, anchor it with both <code>^</code> and <code>$</code>:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(fruit, &quot;apple&quot;)</pre>
+
+<pre > [1] │ &lt;apple&gt;
+[62] │ pine&lt;apple&gt;</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(fruit, &quot;^apple$&quot;)</pre>
+
+<pre >[1] │ &lt;apple&gt;</pre>
+
+<ul>
+<li>Example: replace every fruit name which starts with &ldquo;a&rdquo; with an &ldquo;o&rdquo;</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_replace(fruit, &quot;^a&quot;, &quot;o&quot;)</pre>
+
+<pre > [1] &quot;opple&quot;             &quot;opricot&quot;           &quot;ovocado&quot;          
+ [4] &quot;banana&quot;            &quot;bell pepper&quot;       &quot;bilberry&quot;         
+ [7] &quot;blackberry&quot;        &quot;blackcurrant&quot;      &quot;blood orange&quot;     
+[10] &quot;blueberry&quot;         &quot;boysenberry&quot;       &quot;breadfruit&quot;       
+...</pre></div>
+
+<h3>Character sets</h3>
+
+<div class="pull-left">
+<ul>
+<li><p>We already saw how we can construct sets with <code>[]</code>: e.g. <code>[abc]</code> matches if any character is an &ldquo;a&rdquo;, &ldquo;b&rdquo;, or &ldquo;c&rdquo;</p></li>
+<li><p>We also saw how to use <code>-</code> to denote ranges, e.g. <code>[a-z]</code> lowercase letters, <code>[0-9]</code> numbers</p></li>
+<li><p>A few others:</p>
+
+<ul>
+<li><code>\d</code> matches any digit; <code>\D</code> matches anything that isn’t a digit.</li>
+<li><code>\s</code> matches any whitespace (e.g., space, tab, newline); <code>\S</code> matches anything that isn’t whitespace.</li>
+<li><code>\w</code> matches any &ldquo;word&rdquo; character, i.e. letters and numbers; <code>\W</code> matches any &ldquo;non-word&rdquo; character.</li>
+</ul></li>
+<li><p>Remember: to represent <code>\</code> in a string, need double backslash.</p></li>
+</ul></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>x &lt;- &quot;abcd ABCD 12345 -!@#%.&quot;
+str_view(x, &quot;\\d+&quot;)
+#&gt; [1] │ abcd ABCD &lt;12345&gt; -!@#%.
+str_view(x, &quot;\\D+&quot;)
+#&gt; [1] │ &lt;abcd ABCD &gt;12345&lt; -!@#%.&gt;
+str_view(x, &quot;\\s+&quot;)
+#&gt; [1] │ abcd&lt; &gt;ABCD&lt; &gt;12345&lt; &gt;-!@#%.
+str_view(x, &quot;\\S+&quot;)
+#&gt; [1] │ &lt;abcd&gt; &lt;ABCD&gt; &lt;12345&gt; &lt;-!@#%.&gt;
+str_view(x, &quot;\\w+&quot;)
+#&gt; [1] │ &lt;abcd&gt; &lt;ABCD&gt; &lt;12345&gt; -!@#%.
+str_view(x, &quot;\\W+&quot;)
+#&gt; [1] │ abcd&lt; &gt;ABCD&lt; &gt;12345&lt; -!@#%.&gt;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Anchors: boundaries of words</h3>
+
+<ul>
+<li>You can specify the beginning or end of the word using <code>\b</code> (i.e. &ldquo;\b&rdquo; when typing a string)
+
+<ul>
+<li>This works by treating all letters and numbers as &ldquo;word&rdquo; characters, and everything else as &ldquo;non-word&rdquo; characters</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>x &lt;- c(&quot;summary(x)&quot;, &quot;summarize(df)&quot;, &quot;rowsum(x)&quot;, &quot;sum(x)&quot;)
+str_view(x, &quot;sum&quot;)</pre>
+
+<pre >[1] │ &lt;sum&gt;mary(x)
+[2] │ &lt;sum&gt;marize(df)
+[3] │ row&lt;sum&gt;(x)
+[4] │ &lt;sum&gt;(x)</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(x, &quot;\\bsum\\b&quot;)</pre>
+
+<pre >[4] │ &lt;sum&gt;(x)</pre>
+
+<div class="pull-left">
+</div>
+
+<div class="pull-right">
+<ul>
+<li></li>
+</ul></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Quantifiers</h3>
+
+<div class="pull-left">
+<ul>
+<li><p>We already discussed <code>?</code> (0 or 1 match), <code>+</code> (1+ matches), <code>*</code> (0+ matches)</p>
+
+<ul>
+<li><code>colou?r</code>: matches American and British English</li>
+<li><code>\d+</code>: matches 1+ digits</li>
+<li><code>\s?</code>: matches 0+ whitespaces</li>
+</ul></li>
+<li><p>Can specify exact number of matches using <code>{}</code>:</p>
+
+<ul>
+<li><code>{n}</code> matches exactly n times.</li>
+<li><code>{n,}</code> matches at least n times.</li>
+<li><code>{n,m}</code> matches between n and m times.</li>
+</ul></li>
+</ul></div>
+
+<div class="pull-right">
+<ul>
+<li>Words with &gt;= 3 consecutive vowels?</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;[aeiou]{3,}&quot;)</pre>
+
+<pre > [79] │ b&lt;eau&gt;ty
+[565] │ obv&lt;iou&gt;s
+[644] │ prev&lt;iou&gt;s
+[670] │ q&lt;uie&gt;t
+[741] │ ser&lt;iou&gt;s
+...</pre>
+
+<ul>
+<li>Words with between 4 and 6 consecutive consonants:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;[^aeiou]{4,6}&quot;)</pre>
+
+<pre > [45] │ a&lt;pply&gt;
+[198] │ cou&lt;ntry&gt;
+[424] │ indu&lt;stry&gt;
+[830] │ su&lt;pply&gt;
+[836] │ &lt;syst&gt;em</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Order of operations in regex</h3>
+
+<div class="pull-left">
+<ul>
+<li>Not immediately clear in which order R processes different operators.
+
+<ul>
+<li><code>ab+</code>: is this &ldquo;a&rdquo; and then 1+ &ldquo;b&rdquo;, or is it &ldquo;ab&rdquo; repeated 1+ times? (1st case)</li>
+<li><code>^a|b$</code>: match the string &ldquo;a&rdquo; or the string &ldquo;b&rdquo;, OR: string starting with &ldquo;a&rdquo; or string starting with &ldquo;b&rdquo; (2nd case)</li>
+</ul></li>
+<li>Generally: quantifiers (<code>?+*</code>) have high precedence, alternation <code>|</code> low.</li>
+</ul></div>
+
+<div class="pull-right">
+<ul>
+<li>You can also introduce parenthesis to be more explicit about what you want, similar to normal math.</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;a(b+)&quot;) # same as `ab+`</pre>
+
+<pre >  [2] │ &lt;ab&gt;le
+  [3] │ &lt;ab&gt;out
+  [4] │ &lt;ab&gt;solute
+ [62] │ avail&lt;ab&gt;le
+ [66] │ b&lt;ab&gt;y
+[452] │ l&lt;ab&gt;our
+[648] │ prob&lt;ab&gt;le
+[837] │ t&lt;ab&gt;le</pre>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;(^a)|(b$)&quot;) # same as `^a|b$`</pre>
+
+<pre > [1] │ &lt;a&gt;
+ [2] │ &lt;a&gt;ble
+ [3] │ &lt;a&gt;bout
+ [4] │ &lt;a&gt;bsolute
+ [5] │ &lt;a&gt;ccept
+ [6] │ &lt;a&gt;ccount
+ [7] │ &lt;a&gt;chieve
+ [8] │ &lt;a&gt;cross
+ [9] │ &lt;a&gt;ct
+[10] │ &lt;a&gt;ctive
+[11] │ &lt;a&gt;ctual
+[12] │ &lt;a&gt;dd
+[13] │ &lt;a&gt;ddress
+[14] │ &lt;a&gt;dmit
+[15] │ &lt;a&gt;dvertise
+[16] │ &lt;a&gt;ffect
+[17] │ &lt;a&gt;fford
+[18] │ &lt;a&gt;fter
+[19] │ &lt;a&gt;fternoon
+[20] │ &lt;a&gt;gain
+... and 47 more</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Grouping and capturing with parenthesis</h3>
+
+<div class="pull-left">
+<ul>
+<li>With paranthesis, you can back-reference matches that appeared in parens, using <code>\1</code> for match in first parens, <code>\2</code> for match in second, etc.</li>
+<li>e.g. all fruits which have repeated <strong>pair of letters</strong>.
+
+<ul>
+<li>Pair of letters = &ldquo;(..)&rdquo;; back-ref: &ldquo;\1&rdquo;</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(fruit, &quot;(..)\\1&quot;)</pre>
+
+<pre > [4] │ b&lt;anan&gt;a
+[20] │ &lt;coco&gt;nut
+[22] │ &lt;cucu&gt;mber
+[41] │ &lt;juju&gt;be
+[56] │ &lt;papa&gt;ya
+[73] │ s&lt;alal&gt; berry</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>Words that start and end with same pair of letters:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'># &quot;starts with&quot; a pair: ^(..)
+# &quot;ends with&quot;: need to end regex with \\1$
+# to allow any chars between, put .* in middle
+str_view(words, &quot;^(..).*\\1$&quot;)</pre>
+
+<pre >[152] │ &lt;church&gt;
+[217] │ &lt;decide&gt;
+[617] │ &lt;photograph&gt;
+[699] │ &lt;require&gt;
+[739] │ &lt;sense&gt;</pre>
+
+<ul>
+<li>Words that are repetitions of the same pair of letters:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(c(&quot;haha&quot;, &quot;miumiu&quot;), &quot;^(..)+\\1$&quot;)</pre>
+
+<pre >[1] │ &lt;haha&gt;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>More grouping and capturing</h3>
+
+<div class="pull-left">
+<ul>
+<li>Can also use back references in <code>str_replace()</code>, e.g. switching second and third words in sentences:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>sentences |&gt; 
+  str_replace(
+    &quot;(\\w+) (\\w+) (\\w+)&quot;, 
+    &quot;\\1 \\3 \\2&quot;) |&gt; 
+  str_view()</pre>
+
+<pre > [1] │ The canoe birch slid on the smooth planks.
+ [2] │ Glue sheet the to the dark blue background.
+ [3] │ It&#39;s to easy tell the depth of a well.
+ [4] │ These a days chicken leg is a rare dish.
+ [5] │ Rice often is served in round bowls.
+ [6] │ The of juice lemons makes fine punch.
+ [7] │ The was box thrown beside the parked truck.
+...</pre></div>
+
+<div class="pull-right">
+<ul>
+<li><code>(\\w+)</code>: matches with 1+ &ldquo;word characters&rdquo; (letters, numbers)</li>
+<li>Spacing between <code>(\\w+)</code> ensures we are looking for sequences of the form: word-chars, space, word-chars, space, word-chars</li>
+</ul></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Examples</h3>
+
+<div class="pull-left">
+<ul>
+<li>Words that start with &ldquo;y&rdquo;:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;^y&quot;)</pre>
+
+<pre >[975] │ &lt;y&gt;ear
+[976] │ &lt;y&gt;es
+[977] │ &lt;y&gt;esterday
+[978] │ &lt;y&gt;et
+[979] │ &lt;y&gt;ou
+...</pre>
+
+<ul>
+<li>Words that don’t start with &ldquo;y&rdquo;:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;^[^y]&quot;)</pre>
+
+<pre > [1] │ &lt;a&gt;
+ [2] │ &lt;a&gt;ble
+ [3] │ &lt;a&gt;bout
+ [4] │ &lt;a&gt;bsolute
+ [5] │ &lt;a&gt;ccept
+...</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>Ends with a vowel-vowel-consonant triplet:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;[aeiou]{2}[^aeiou]$&quot;)</pre>
+
+<pre >  [3] │ ab&lt;out&gt;
+ [11] │ act&lt;ual&gt;
+ [19] │ aftern&lt;oon&gt;
+ [20] │ ag&lt;ain&gt;
+ [26] │ &lt;air&gt;
+...</pre>
+
+<ul>
+<li>Has 7 or more letters:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;[a-z]{7,}&quot;)</pre>
+
+<pre > [4] │ &lt;absolute&gt;
+ [6] │ &lt;account&gt;
+ [7] │ &lt;achieve&gt;
+[13] │ &lt;address&gt;
+[15] │ &lt;advertise&gt;
+...</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Boolean operations</h3>
+
+<div class="pull-left">
+<ul>
+<li>We already saw how <code>^</code> inside <code>[]</code> negates the set, i.e. words with no vowels:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;^[^aeiou]+$&quot;)</pre>
+
+<pre >[123] │ &lt;by&gt;
+[249] │ &lt;dry&gt;
+[328] │ &lt;fly&gt;
+[538] │ &lt;mrs&gt;
+[895] │ &lt;try&gt;
+...</pre>
+
+<ul>
+<li>Another way: return vector of booleans indicating presence of vowels, then negate:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words[!str_detect(words, &quot;[aeiou]&quot;)])</pre>
+
+<pre >[1] │ by
+[2] │ dry
+[3] │ fly
+[4] │ mrs
+[5] │ try
+...</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>This is useful since there’s no &ldquo;and&rdquo; operator built into regex.</li>
+<li>e.g., find all words that contain an &ldquo;a&rdquo; and a &ldquo;b&rdquo;: trickier in standard regex,</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words, &quot;a.*b|b.*a&quot;)</pre>
+
+<pre >  [2] │ &lt;ab&gt;le
+  [3] │ &lt;ab&gt;out
+  [4] │ &lt;ab&gt;solute
+ [62] │ &lt;availab&gt;le
+...</pre>
+
+<ul>
+<li>Easier with <code>str_detect()</code> and <code>&amp;</code>:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(words[str_detect(words, &quot;a&quot;) 
+               &amp; str_detect(words, &quot;b&quot;)])</pre>
+
+<pre > [1] │ able
+ [2] │ about
+ [3] │ absolute
+...</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Boolean operations</h3>
+
+<ul>
+<li>What if we wanted to find a word that contains &ldquo;a&rdquo;, &ldquo;e&rdquo;, &ldquo;i&rdquo;, and &ldquo;o&rdquo;?</li>
+<li>If we tried to use standard regex, this would be very complex.</li>
+<li>Much easier using <code>str_detect()</code> and <code>&amp;</code>:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>words[
+  str_detect(words, &quot;a&quot;) &amp;
+  str_detect(words, &quot;e&quot;) &amp;
+  str_detect(words, &quot;i&quot;) &amp;
+  str_detect(words, &quot;o&quot;) 
+]</pre>
+
+<pre >[1] &quot;appropriate&quot; &quot;associate&quot;   &quot;organize&quot;    &quot;relation&quot;   </pre>
+
+<div class="pull-left">
+</div>
+
+<div class="pull-right">
+</div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Creating patterns with code</h3>
+
+<div class="pull-left">
+<ul>
+<li>What if we want all sentences which mention a color?
+
+<ul>
+<li>Combine alternation with word boundaries <code>\b</code>:</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>str_view(sentences, &quot;\\b(red|green|blue)\\b&quot;)</pre>
+
+<pre >  [2] │ Glue the sheet to the dark &lt;blue&gt; background.
+ [26] │ Two &lt;blue&gt; fish swam in the tank.
+ [92] │ A wisp of cloud hung in the &lt;blue&gt; air.
+[148] │ The spot on the blotter was made by &lt;green&gt; ink.
+[160] │ The sofa cushion is &lt;red&gt; and of light weight.
+...</pre>
+
+<ul>
+<li>But if we wanted to update this code to have more colors, would be pretty tedious to construct pattern by hand.</li>
+<li>We can build up larger regex’s using functions we have seen before.</li>
+</ul></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>match_colors &lt;- c(&quot;red&quot;,&quot;green&quot;, &quot;blue&quot;)
+for_regex &lt;- str_c(
+  &quot;\\b(&quot;, 
+  str_flatten(match_colors, &quot;|&quot;), 
+  &quot;)\\b&quot;)
+str_view(sentences, for_regex)</pre>
+
+<pre >  [2] │ Glue the sheet to the dark &lt;blue&gt; background.
+ [26] │ Two &lt;blue&gt; fish swam in the tank.
+ [92] │ A wisp of cloud hung in the &lt;blue&gt; air.
+[148] │ The spot on the blotter was made by &lt;green&gt; ink.
+[160] │ The sofa cushion is &lt;red&gt; and of light weight.
+...</pre>
+
+<ul>
+<li>Then we can easily modify the list of colors by simply modifying <code>match_colors</code>.</li>
+</ul></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Slide</h3>
+
+<div class="pull-left">
+</div>
+
+<div class="pull-right">
+</div></article></slide>
 
 
   <slide class="backdrop"></slide>

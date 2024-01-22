@@ -254,3 +254,497 @@ str_remove_all(x, "[aeiou]")
 ```
 </div>
 
+---
+
+### Replacing characters and `?`, `*`, `+`
+* The question mark `?` matches the preceding element zero OR ONE time, then iterates to rest of string.
+* Plus sign `+` matches AT LEAST once
+* The asterisk `*` matches the preceding element zero OR MORE times, then iterates to rest of string.
+
+<div class="pull-left">
+```{r}
+x <- c("apple", "aardvark", "happy", "haaahaha")
+( str_view(x, "a*") )
+( str_remove(x, "a*") )
+str_remove_all(x, "a*")
+```
+</div>
+
+<div class="pull-right">
+```{r}
+( str_view(x, "a?") )
+( str_remove(x, "a?") )
+str_remove_all(x, "a?")
+```
+
+
+</div>
+
+---
+
+### Replacing characters and `?`, `*`, `+`
+* Compare `?`, `+`, and `*`
+
+<div class="pull-left">
+```{r}
+x <- c("apple", "aardvark", "happy", "haaahaha")
+(str_view(x, "a?"))
+(str_view(x, "a+"))
+```
+
+</div>
+
+<div class="pull-right">
+```{r}
+(str_view(x, "a*"))
+```
+</div>
+
+---
+
+### Ranges of characters
+* Suppose you have a vector of strings, and you want to do the following modifications:
+  * If the string has a (lower/upper) letter between "a" and "u", replace it with an "x"
+* Instead of spelling out manually what all of these letters are, you can use the character class operator `[]` together with `-`
+
+<div class="pull-left">
+
+An example with letters:
+```{r}
+x <- c("happy", "ab", "zap", "war")
+( str_view(x, "[a-u]") )
+str_replace_all(x, "[a-u]", "x")
+```
+
+</div>
+
+<div class="pull-right">
+An example with numbers: replace all numbers between 0 and 5 with x's
+```{r}
+x <- c("code9202", "apple2850", "0352")
+(str_view(x, "[0-5]"))
+str_replace_all(x, "[0-5]", "x")
+```
+
+
+---
+
+### Ranges of characters and `?`, `*`
+
+<div class="pull-left">
+* Very useful to use ranges in conjunction with `?`, `*`, `+`
+* E.g. let's find all words with at least three consecutive vowels
+```{r}
+str_view(words, "[aeiou][aeiou][aeiou]+")
+```
+* Useful for parsing strings which are partitioned by letters/numbers
+</div>
+
+<div class="pull-right">
+```{r}
+name_score <- c("Mary_92", "Pat_35", "Will_85")
+( str_view(name_score, "[a-zA-Z]+")) 
+str_view(name_score, "[0-9]+")
+```
+* E.g. replace all names with John, scores with 100
+```{r}
+name_score %>% str_replace("[a-zA-Z]+", "John") %>%
+  str_replace("[0-9]+", "100")
+```
+
+<d/vi>
+---
+
+### Extracting variables
+* `separate_wider_regex()`: go from long to wide using regex.
+
+<div class="pull-left">
+```{r}
+df <- tribble(
+  ~str,
+  "<Sheryl>-F_34",
+  "<Kisha>-F_45", 
+  "<Pat>-X_33",
+  "<Sharon>-F_38", 
+  "<Penny>-F_58",
+  "<Justin>-M_41", 
+  "<Patricia>-F_84", 
+)
+```
+* To extract data, construct sequence of regex that match each piece.
+* If you want contents of that piece to appear in output, give it a name.
+</div>
+
+<div class="pull-right">
+```{r}
+df %>%  separate_wider_regex(
+    str,
+    patterns = c(
+      "<", 
+      name = "[A-Za-z]+", 
+      ">-", 
+      gender = ".",
+      "_",
+      age = "[0-9]+"))
+```
+</div>
+
+
+---
+
+### Escaping
+
+<div class="pull-left">
+
+* Since the characters ".", "?", "+", "*" have extra functions in regex, need to use escapes to help parse literal instances of these characters
+* In regex, we require a `\` in front of characters to denote an escape
+* But to create a string with an actual `\` in it, we need to use an escape, so need double `\\`:
+```{r}
+str_view(c("abc", "a.c", "bef"), "a\\.c")
+```
+
+```{r}
+str_view(c("a*rdvark", "*pple", "m*n"), "\\*")
+```
+
+</div>
+
+<div class="pull-right">
+* Recall that to represent backslash in a string, need to escape:
+```{r}
+str_view("a\\b")
+```
+* To match for a backslash, need to create a string which has an escape in front of a backslash.
+* The escape requires double backslash, and the string `\` also requires double backslash.
+
+```{r}
+str_view("a\\b", "\\\\")
+```
+* Backslashes are a nightmare. 
+</div>
+
+---
+
+
+### Anchors
+
+<div class="pull-left">
+* By default: regex will match any part of a string.
+* If you only want to match at beginning or end, you need to **anchor**:
+  * `^` indicates "starts with" 
+  * `$` indicates "ends with"
+
+```{r}
+str_view(fruit, "^a")
+
+str_view(fruit, "a$")
+```
+
+</div>
+
+<div class="pull-right">
+* To force a regex to match only the full string, not subsets, anchor it with both `^` and `$`:
+```{r}
+str_view(fruit, "apple")
+str_view(fruit, "^apple$")
+```
+
+* Example: replace every fruit name which starts with "a" with an "o"
+```{r, output.lines=4}
+str_replace(fruit, "^a", "o")
+```
+
+</div>
+
+
+
+### Character sets
+
+<div class="pull-left">
+
+* We already saw how we can construct sets with `[]`: e.g. `[abc]` matches if any character is an "a", "b", or "c"
+* We also saw how to use `-` to denote ranges, e.g. `[a-z]` lowercase letters, `[0-9]` numbers
+* A few others:
+
+  * `\d` matches any digit; `\D` matches anything that isn’t a digit.
+  * `\s` matches any whitespace (e.g., space, tab, newline); `\S` matches anything that isn’t whitespace.
+  * `\w` matches any “word” character, i.e. letters and numbers; `\W` matches any “non-word” character.
+
+* Remember: to represent `\` in a string, need double backslash. 
+</div>
+
+<div class="pull-right">
+```{r, eval=FALSE}
+x <- "abcd ABCD 12345 -!@#%."
+str_view(x, "\\d+")
+#> [1] │ abcd ABCD <12345> -!@#%.
+str_view(x, "\\D+")
+#> [1] │ <abcd ABCD >12345< -!@#%.>
+str_view(x, "\\s+")
+#> [1] │ abcd< >ABCD< >12345< >-!@#%.
+str_view(x, "\\S+")
+#> [1] │ <abcd> <ABCD> <12345> <-!@#%.>
+str_view(x, "\\w+")
+#> [1] │ <abcd> <ABCD> <12345> -!@#%.
+str_view(x, "\\W+")
+#> [1] │ abcd< >ABCD< >12345< -!@#%.>
+```
+
+</div>
+
+
+
+---
+
+
+### Anchors: boundaries of words
+* You can specify the beginning or end of the word using `\b` (i.e. "\\b" when typing a string)
+  * This works by treating all letters and numbers as "word" characters, and everything else as "non-word" characters
+```{r}
+x <- c("summary(x)", "summarize(df)", "rowsum(x)", "sum(x)")
+str_view(x, "sum")
+str_view(x, "\\bsum\\b")
+```
+
+<div class="pull-left">
+
+
+</div>
+
+<div class="pull-right">
+* 
+</div>
+
+---
+
+
+### Quantifiers
+
+<div class="pull-left">
+* We already discussed `?` (0 or 1 match), `+` (1+ matches), `*` (0+ matches)
+  * `colou?r`: matches American and British English
+  * `\d+`: matches 1+ digits
+  * `\s?`: matches 0+ whitespaces
+* Can specify exact number of matches using `{}`: 
+
+
+  * `{n}` matches exactly n times.
+  *  `{n,}` matches at least n times.
+  *  `{n,m}` matches between n and m times.
+
+</div>
+
+<div class="pull-right">
+* Words with >= 3 consecutive vowels?
+```{r, output.lines=5}
+str_view(words, "[aeiou]{3,}")
+```
+
+* Words with between 4 and 6 consecutive consonants:
+```{r}
+str_view(words, "[^aeiou]{4,6}")
+```
+
+</div>
+
+---
+
+### Order of operations in regex
+
+<div class="pull-left">
+
+* Not immediately clear in which order R processes different operators.
+  * `ab+`: is this "a" and then 1+ "b", or is it "ab" repeated 1+ times? (1st case)
+  * `^a|b$`: match the string "a" or the string "b", OR:  string starting with "a" or string starting with "b" (2nd case)
+* Generally: quantifiers (`?+*`) have high precedence, alternation `|` low.
+
+</div>
+
+<div class="pull-right">
+* You can also introduce parenthesis to be more explicit about what you want, similar to normal math.
+
+```{r}
+str_view(words, "a(b+)") # same as `ab+`
+```
+
+```{r}
+str_view(words, "(^a)|(b$)") # same as `^a|b$`
+```
+</div>
+
+---
+
+### Grouping and capturing with parenthesis
+
+<div class="pull-left">
+* With paranthesis, you can back-reference matches that appeared in parens, using `\1` for match in first parens, `\2` for match in second, etc.
+* e.g. all fruits which have repeated **pair of letters**.
+  * Pair of letters = "(..)"; back-ref: "\\1"
+```{r}
+str_view(fruit, "(..)\\1")
+```
+</div>
+
+<div class="pull-right">
+
+* Words that start and end with same pair of letters:
+```{r}
+# "starts with" a pair: ^(..)
+# "ends with": need to end regex with \\1$
+# to allow any chars between, put .* in middle
+str_view(words, "^(..).*\\1$")
+```
+
+* Words that are repetitions of the same pair of letters:
+```{r}
+str_view(c("haha", "miumiu"), "^(..)+\\1$")
+```
+
+</div>
+
+---
+
+### More grouping and capturing
+
+<div class="pull-left">
+* Can also use back references in `str_replace()`, e.g. switching second and third words in sentences:
+```{r, output.lines=7}
+sentences |> 
+  str_replace(
+    "(\\w+) (\\w+) (\\w+)", 
+    "\\1 \\3 \\2") |> 
+  str_view()
+```
+
+</div>
+
+<div class="pull-right">
+* `(\\w+)`: matches with 1+ "word characters" (letters, numbers)
+* Spacing between `(\\w+)` ensures we are looking for sequences of the form: word-chars, space, word-chars, space, word-chars
+</div>
+
+---
+
+### Examples
+
+<div class="pull-left">
+* Words that start with "y":
+```{r, output.lines=5}
+str_view(words, "^y")
+```
+
+* Words that don't start with "y":
+```{r,output.lines=5}
+str_view(words, "^[^y]")
+```
+
+</div>
+
+<div class="pull-right">
+
+* Ends with a vowel-vowel-consonant triplet:
+```{r, output.lines=5}
+str_view(words, "[aeiou]{2}[^aeiou]$")
+```
+
+* Has 7 or more letters:
+```{r, output.lines=5}
+str_view(words, "[a-z]{7,}")
+```
+
+</div>
+
+
+---
+
+### Boolean operations
+
+<div class="pull-left">
+* We already saw how `^` inside `[]` negates the set, i.e. words with no vowels:
+```{r,output.lines=5}
+str_view(words, "^[^aeiou]+$")
+```
+
+* Another way: return vector of booleans indicating presence of vowels, then negate:
+
+```{r,output.lines=5}
+str_view(words[!str_detect(words, "[aeiou]")])
+```
+
+</div>
+
+<div class="pull-right">
+* This is useful since there's no "and" operator built into regex. 
+* e.g., find all words that contain an "a" and a "b": trickier in standard regex,
+```{r,output.lines=4}
+str_view(words, "a.*b|b.*a")
+```
+* Easier with `str_detect()` and `&`:
+```{r,output.lines=3}
+str_view(words[str_detect(words, "a") 
+               & str_detect(words, "b")])
+```
+
+</div>
+
+---
+
+### Boolean operations
+* What if we wanted to find a word that contains "a", "e", "i", and "o"?
+* If we tried to use standard regex, this would be very complex.
+* Much easier using `str_detect()` and `&`:
+```{r}
+words[
+  str_detect(words, "a") &
+  str_detect(words, "e") &
+  str_detect(words, "i") &
+  str_detect(words, "o") 
+]
+```
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Creating patterns with code
+
+<div class="pull-left">
+* What if we want all sentences which mention a color?
+  * Combine alternation with word boundaries `\b`:
+```{r, output.lines=5}
+str_view(sentences, "\\b(red|green|blue)\\b")
+```
+* But if we wanted to update this code to have more colors, would be pretty tedious to construct pattern by hand.
+* We can build up larger regex's using functions we have seen before.
+</div>
+
+<div class="pull-right">
+```{r,output.lines=5}
+match_colors <- c("red","green", "blue")
+for_regex <- str_c(
+  "\\b(", 
+  str_flatten(match_colors, "|"), 
+  ")\\b")
+str_view(sentences, for_regex)
+```
+
+* Then we can easily modify the list of colors by simply modifying `match_colors`. 
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
