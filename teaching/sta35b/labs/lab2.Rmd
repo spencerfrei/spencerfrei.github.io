@@ -1,0 +1,76 @@
+---
+title: 'Lab 2'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(nycflights13)
+```
+
+
+### Question 1 (6 pts)
+
+Refer to vectors x, y and z.
+
+```{r}
+x = c(1,9,6,7.8);y = c(8,2,NA,8.5);z = c(9,4,0,6.3)
+```
+
+
+(1) Use vectors x, y and z as columns to create a tibble 'df'. (2 pts)
+
+(2) Find the min and max of each row, and add two columns called 'min' and 'max' to 'df'.  (2 pts)
+
+(3) Add a column 'rank' to ‘df’ which ranks column 'z' ascendingly, and arrange the rows by 'rank'.  (2 pts)
+
+
+
+
+```{r}
+# code here
+```
+
+
+### Question 2 (7 points)
+
+Refer to the 'flights' dataset.
+
+(1) Find the 90th quantile of 'dep_delay' for flights per origin, and add a column 'q90'.  (2 pts)
+
+(2) Find the standard deviation of 'dep_delay' for flights per origin, round to the first digits, and add a column 'sd'.  (2 pts)
+
+(3) Find the 10th delay time for flights per origin, and add a column 'ten_th'.  (2 pts)
+
+(4) Arrange the rows in a descending order of the column 'sd'.  (1 pt)
+
+```{r}
+# code here
+```
+
+
+
+### Question 3 (2 pts)
+Refer to 'df2'.
+
+```{r}
+df2 <- tibble(x =c("Mary\"ABBA", "Sam\"AAC", "Bill\"CD"))
+df2
+```
+(1) Use 'separate_wider_delim', separate 'df2' into columns 'names' and 'grade'. (1 pt)
+
+(2) Use 'separate_longer_position', separate column 'grade' into one letter grade per row. (1 pt)
+
+```{r}
+# code here 
+```
+
