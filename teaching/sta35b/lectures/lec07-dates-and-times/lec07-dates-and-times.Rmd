@@ -1,0 +1,456 @@
+---
+title: "Dates and times"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: true
+    transition: faster
+    css: cols.css
+---
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+library(babynames)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+
+```
+
+---
+
+### Dates and times: complications
+
+A number of things contribute to dates and times being more complex than one might think.
+
+* Not all years have 365 days
+  * The actual rule that determines leap years:
+```{}
+A year is a leap year if it’s divisible by 4, 
+unless it’s also divisible by 100, 
+except if it’s also divisible by 400. 
+In other words, in every set of 400 years, there’s 97 leap years.
+```
+* Not every day in every location has 24 hours a day
+  * Daylight savings time implies one day has 23, another has 24
+* Time zones are difficult!
+* We will be using **lubridate** package (part of *latest* tidyverse), and nycflights13.
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+---
+
+### Creating dates and times
+
+<div class="pull-left">
+
+Three types of date/time data:
+
+  * A **date**. Tibbles print this as `<date>`.
+  * A **time** within a day. Tibbles print this as `<time>`.
+  * A **date-time** is a date plus a time: it uniquely identifies an instant in time (typically to the nearest second). Tibbles print this as `<dttm>`. Base R calls these POSIXct, but doesn’t exactly trip off the tongue.
+
+* We are going to focus on dates and date-times as R doesn’t have a native class for storing times. If you need one, you can use the **hms** package.
+
+</div>
+
+<div class="pull-right">
+
+To get the current date or date-time you can use today() or now():
+```{r}
+today()
+```
+```{r}
+now()
+(class(now()))
+```
+</div>
+
+
+---
+
+### Dates and times from strings
+
+<div class="pull-left">
+* Number of functions which create dates from strings: three letter combos of "y", "m", "d"
+```{r}
+ymd("2017-01-31")
+```
+```{r}
+mdy("January 31st, 2017")
+```
+```{r}
+mdy("January 31, 2017")
+```
+```{r}
+dmy("31-Jan-2017")
+```
+
+
+</div>
+
+<div class="pull-right">
+* To create date-times, you can add an underscore and then one or more of "h", "m", "s".
+```{r}
+(ymd_hms("2017-01-31 20:11:59"))
+mdy_hm("01/31/2017 08:01")
+```
+* Times are assumed to be UTC time zone; can change by using `tz=`
+```{r}
+mdy_hm("01/31/2017 08:01", tz = "PST")
+```
+
+</div>
+
+---
+
+### Creating date-times from dplyr parts
+Remember how flights stored some of the date information:
+```{r, output.lines=5}
+(flights_select <- flights %>% select(
+  year, month, day, hour, minute))
+```
+* To create date/time from this, can use `make_date()` or `make_datetime()`:
+```{r, output.lines=5}
+flights_select %>%
+  mutate(departure = make_datetime(year, month, day, hour, minute))
+```
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Slide
+
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
