@@ -155,7 +155,29 @@ flights_select %>%
 
 ---
 
-### Slide
+### Creating date-times from dplyr parts
+
+* We'll now do a similar computation for the four time columns in flights
+* We'll do so using a **function** - we haven't seen this yet, but we will see it in a couple weeks 
+```{r, output.lines=4}
+make_datetime_100 <- function(year, month, day, time) {
+  make_datetime(year, month, day, time %/% 100, time %% 100)
+} # recall: time is an integer, use modular arithmetic to convert 
+
+flights_dt <- flights |> 
+  filter(!is.na(dep_time), !is.na(arr_time)) |> 
+  mutate(
+    dep_time = make_datetime_100(year, month, day, dep_time),
+    arr_time = make_datetime_100(year, month, day, arr_time),
+    sched_dep_time = make_datetime_100(year, month, day, sched_dep_time),
+    sched_arr_time = make_datetime_100(year, month, day, sched_arr_time)
+  ) |> 
+  select(origin, dest, ends_with("delay"), ends_with("time"))
+
+flights_dt
+```
+
+
 
 <div class="pull-left">
 
@@ -167,7 +189,13 @@ flights_select %>%
 
 ---
 
-### Slide
+### Updated flights df with times for arrivals/departures
+* We'll now use this update df
+```{r}
+flights_dt %>%
+  filter(dep_time < ymd(20130102))
+```
+
 
 <div class="pull-left">
 
@@ -179,9 +207,73 @@ flights_select %>%
 
 ---
 
-### Slide
+### Date-time components
 
 <div class="pull-left">
+* Accessor functions which are helpful for date-time types: 
+  * `year()`, `month()`,  `hour()`, `minute()`, and `second()`
+  * `mday()` (day of the month), `yday()` (day of the year), `wday()` (day of the week)
+  
+```{r}
+datetime <- ymd_hms("2026-07-08 12:34:56")
+year(datetime)
+month(datetime)
+mday(datetime)
+```
+
+</div>
+
+<div class="pull-right">
+```{r}
+yday(datetime)
+wday(datetime) # 2026-07-08 is Weds. (Sun.=1)
+```
+
+* `month()` and `wday()` can have `label=TRUE`, returns abbreviated name of month/day
+* Set `abbr=FALSE` to get full name
+```{r}
+datetime <- ymd_hms("2026-07-08 12:34:56")
+month(datetime, label=TRUE) 
+wday(datetime, label=TRUE, abbr = FALSE)
+```
+
+
+</div>
+
+---
+
+### Date-time components
+With this you can do things like calculate the minute with the highest departure delays:
+```{r}
+flights_dt %>%
+  mutate(minute = minute(dep_time)) %>%
+  group_by(minute) %>%
+  summarize(avg_delay = mean(dep_delay, na.rm=TRUE)
+  ) %>% arrange(by = desc(avg_delay))
+```
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+
+</div>
+
+---
+
+### Rounding
+* There are analogues of the standard rounding functions for dates
+  * `floor_date()`, `ceiling_date()`
+  * `round_date()`
+* They take vector of dates to adjust, name of unit (week, day, etc)
+
+<div class="pull-left">
+```{r, output.lines=10}
+flights_dt %>%
+  mutate(year = floor_date(dep_time, "year")) %>%
+  select(dep_time, year)
+```
 
 </div>
 
@@ -191,9 +283,21 @@ flights_select %>%
 
 ---
 
-### Slide
-
+### Examples
+* Let's compute the average delay time of flights which depart at times in two groups:
+  * departure time is between minutes 20-30 and 50-60 vs. the other times 
 <div class="pull-left">
+```{r}
+flights_dt %>%
+  mutate(dep_minute = minute(dep_time),
+         mins_2030 = dep_minute >= 20 & dep_minute <= 30,
+         mins_5060 = dep_minute >= 50 & dep_minute <= 59,
+         mins_2030_or_5060 = mins_2030 | mins_5060) %>%
+  group_by(mins_2030_or_5060) %>%
+  summarize(avg_dep_delay = mean(dep_delay, na.rm=TRUE),
+            n = n())
+  
+```
 
 </div>
 
@@ -203,37 +307,31 @@ flights_select %>%
 
 ---
 
-### Slide
+### Time spans and date-time arithmetic
 
 <div class="pull-left">
+Three important classes representing time spans:
+
+* **Durations**: exact time, measured in seconds
+* **Periods**: human units, like weeks/months
+* **Intervals**: represent starting/end point
+
 
 </div>
 
 <div class="pull-right">
+* When subtracting two dates, we get a "difftime" object:
+```{r}
+# How old is Hadley?
+h_age <- today() - ymd("1979-10-14")
+h_age
+```
+* Exact unit of difftime can vary from seconds, minutes, hours, days, or weeks.
+* `as.duration()` always uses seconds:
+```{r}
+as.duration(h_age)
+```
 
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
 
 </div>
 
