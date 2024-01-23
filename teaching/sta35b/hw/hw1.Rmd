@@ -89,8 +89,8 @@ reviews <- tribble(
 reviews
 ```
 (a) Provide code which modifies `reviews` to have two new columns, `excellent` and `awful`.
-  * `excellent` is TRUE if the phrase "excellent" appears in `reviewtext` (with any lowercase/uppercase combos) and `FALSE` otherwise
-  * `excellent` is TRUE if the phrase "excellent" appears in `reviewtext` (with any lowercase/uppercase combos) and `FALSE` otherwise
+  * `excellent` is TRUE if the sequence of characters "excellent" appears in `reviewtext` (with any lowercase/uppercase combos) and `FALSE` otherwise
+  * `awful` is TRUE if the sequence of characters "awful" appears in `reviewtext` (with any lowercase/uppercase combos) and `FALSE` otherwise
 
 ```{r}
 # put your code here
