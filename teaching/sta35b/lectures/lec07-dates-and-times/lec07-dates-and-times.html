@@ -3263,11 +3263,11 @@ library(nycflights13)</pre>
 
 <pre class = 'prettyprint lang-r'>today()</pre>
 
-<pre >[1] &quot;2024-01-22&quot;</pre>
+<pre >[1] &quot;2024-01-23&quot;</pre>
 
 <pre class = 'prettyprint lang-r'>now()</pre>
 
-<pre >[1] &quot;2024-01-22 15:39:30 PST&quot;</pre>
+<pre >[1] &quot;2024-01-23 19:52:32 PST&quot;</pre>
 
 <pre class = 'prettyprint lang-r'>(class(now()))</pre>
 
@@ -3601,7 +3601,7 @@ month(datetime, label=TRUE) </pre>
 h_age &lt;- today() - ymd(&quot;1979-10-14&quot;)
 h_age</pre>
 
-<pre >Time difference of 16171 days</pre>
+<pre >Time difference of 16172 days</pre>
 
 <ul>
 <li>Exact unit of difftime can vary from seconds, minutes, hours, days, or weeks.</li>
@@ -3610,11 +3610,187 @@ h_age</pre>
 
 <pre class = 'prettyprint lang-r'>as.duration(h_age)</pre>
 
-<pre >[1] &quot;1397174400s (~44.27 years)&quot;</pre></div>
+<pre >[1] &quot;1397260800s (~44.28 years)&quot;</pre></div>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
 
-<h3>Slide</h3>
+<h3>Constructing durations</h3>
+
+<div class="pull-left">
+<ul>
+<li>Durations always record time span in seconds</li>
+<li>Useful constructors: <code>d{units}</code>, <code>{units}</code> is <code>seconds</code>, <code>days</code>, etc
+
+<ul>
+<li>No way to convert month to duration since it’s not well-defined</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>dseconds(15)</pre>
+
+<pre >[1] &quot;15s&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>dminutes(10)</pre>
+
+<pre >[1] &quot;600s (~10 minutes)&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>dhours(c(12, 24))</pre>
+
+<pre >[1] &quot;43200s (~12 hours)&quot; &quot;86400s (~1 days)&quot;  </pre></div>
+
+<div class="pull-right">
+<ul>
+<li>Can add and multiply durations:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>2 * dyears(1)</pre>
+
+<pre >[1] &quot;63115200s (~2 years)&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>dyears(1) + dweeks(12) + dhours(5)</pre>
+
+<pre >[1] &quot;38833200s (~1.23 years)&quot;</pre>
+
+<ul>
+<li>Can subtract durations to and from days</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>(tomorrow &lt;- today() + ddays(1)) # returns Date</pre>
+
+<pre >[1] &quot;2024-01-24&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>(last_year &lt;- today() - dyears(1)) # returns date-time</pre>
+
+<pre >[1] &quot;2023-01-22 18:00:00 UTC&quot;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Duration computations and weird results</h3>
+
+<ul>
+<li>Durations represent an exact number of seconds</li>
+<li>So if you are looking at time zones, things can be odd</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>one_am &lt;- ymd_hms(&quot;2026-03-08 01:00:00&quot;, tz = &quot;America/New_York&quot;)
+one_am</pre>
+
+<pre >[1] &quot;2026-03-08 01:00:00 EST&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>one_am + ddays(1)</pre>
+
+<pre >[1] &quot;2026-03-09 02:00:00 EDT&quot;</pre>
+
+<ul>
+<li>If we add a full day of seconds, would need to account for hour time change from EST to EDT.</li>
+<li>lubridate provides <strong>periods</strong> to address this
+
+<div class="pull-left">
+</li>
+</ul>
+
+</div>
+
+<div class="pull-right">
+</div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Periods</h3>
+
+<div class="pull-left">
+<ul>
+<li>Periods are time spans but don’t have fixed length in seconds
+
+<ul>
+<li>Work like &ldquo;human&rdquo; times, i.e. days/months</li>
+</ul></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>one_am</pre>
+
+<pre >[1] &quot;2026-03-08 01:00:00 EST&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>one_am + days(1)</pre>
+
+<pre >[1] &quot;2026-03-09 01:00:00 EDT&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>one_am + ddays(1)</pre>
+
+<pre >[1] &quot;2026-03-09 02:00:00 EDT&quot;</pre></div>
+
+<div class="pull-right">
+<ul>
+<li>Similar to durations, useful constructors and behavior under <code>+</code>/<code>*</code>:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>hours(c(12, 24))</pre>
+
+<pre >[1] &quot;12H 0M 0S&quot; &quot;24H 0M 0S&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>days(7)</pre>
+
+<pre >[1] &quot;7d 0H 0M 0S&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>months(1:3)</pre>
+
+<pre >[1] &quot;1m 0d 0H 0M 0S&quot; &quot;2m 0d 0H 0M 0S&quot; &quot;3m 0d 0H 0M 0S&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>10 * (months(6) + days(2))</pre>
+
+<pre >[1] &quot;60m 20d 0H 0M 0S&quot;</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Durations vs. periods</h3>
+
+<div class="pull-left">
+<ul>
+<li>Adding periods can be a bit more in line with expectations</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'># A leap year
+ymd(&quot;2024-01-01&quot;) + dyears(1)
+#&gt; [1] &quot;2024-12-31 06:00:00 UTC&quot;
+ymd(&quot;2024-01-01&quot;) + years(1)
+#&gt; [1] &quot;2025-01-01&quot;
+
+# Daylight saving time
+one_am + ddays(1)
+#&gt; [1] &quot;2026-03-09 02:00:00 EDT&quot;
+one_am + days(1)
+#&gt; [1] &quot;2026-03-09 01:00:00 EDT&quot;</pre></div>
+
+<div class="pull-right">
+</div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Fixing a bug in <code>flights_dt</code></h3>
+
+<ul>
+<li>We used same date information for arrival and departure times, but the flights really arrived on the following day.</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>flights_dt %&gt;% filter(arr_time &lt; dep_time) %&gt;% select(origin, dest, arr_time, dep_time)</pre>
+
+<pre ># A tibble: 10,633 × 4
+   origin dest  arr_time            dep_time           
+   &lt;chr&gt;  &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;             
+ 1 EWR    BQN   2013-01-01 00:03:00 2013-01-01 19:29:00
+ 2 JFK    DFW   2013-01-01 00:29:00 2013-01-01 19:39:00
+...</pre>
+
+<pre class = 'prettyprint lang-r'>flights_dt %&gt;% mutate(
+  overnight = arr_time &lt; dep_time, # returns T/F
+  arr_time = arr_time + days(overnight),
+  sched_arr_time = sched_arr_time + days(overnight)
+) %&gt;% filter(arr_time &lt; dep_time)</pre>
+
+<pre ># A tibble: 0 × 10
+# ℹ 10 variables: origin &lt;chr&gt;, dest &lt;chr&gt;, dep_delay &lt;dbl&gt;, arr_delay &lt;dbl&gt;,
+#   dep_time &lt;dttm&gt;, sched_dep_time &lt;dttm&gt;, arr_time &lt;dttm&gt;,
+#   sched_arr_time &lt;dttm&gt;, air_time &lt;dbl&gt;, overnight &lt;lgl&gt;</pre>
 
 <div class="pull-left">
 </div>
@@ -3624,7 +3800,103 @@ h_age</pre>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
 
-<h3>Slide</h3>
+<h3>Intervals</h3>
+
+<div class="pull-left">
+<ul>
+<li><code>dyears(1) / ddays(365)</code> does not return 1, since <code>dyears()</code> is defined as the number of seconds per average year: 365.25 days.</li>
+<li><code>years(1) / days(1)</code> does not return 365, since in leap years this isn’t true.</li>
+<li><strong>Intervals</strong> allow for defining specific intervals of time, using pair of starting/end date times.</li>
+<li>Format: <code>start %--% end</code>:</li>
+</ul></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>(y2023 &lt;- ymd(&quot;2023-01-01&quot;) %--% ymd(&quot;2024-01-01&quot;))</pre>
+
+<pre >[1] 2023-01-01 UTC--2024-01-01 UTC</pre>
+
+<pre class = 'prettyprint lang-r'>(y2024 &lt;- ymd(&quot;2024-01-01&quot;) %--% ymd(&quot;2025-01-01&quot;))</pre>
+
+<pre >[1] 2024-01-01 UTC--2025-01-01 UTC</pre>
+
+<ul>
+<li>Can divide by <code>days()</code> to find out how many days/year:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>y2023 / days(1)</pre>
+
+<pre >[1] 365</pre>
+
+<pre class = 'prettyprint lang-r'>y2024 / days(1)</pre>
+
+<pre >[1] 366</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Example: extracting dates and computing durations</h3>
+
+<ul>
+<li>Suppose we are given a tibble whose first three rows are as follows:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'> df &lt;- tribble(
+    ~name, ~entry,
+    &quot;Mary&quot;, &quot;First arrival: January 2, 2005; Second arrival: January 6, 2023&quot;,
+    &quot;Will&quot;, &quot;First time: January 5, 1997; Second time: January 8, 2015&quot;,
+    &quot;Jose&quot;, &quot;First visit: January 4, 1990; Second visit: January 9, 2008&quot;,
+  )</pre>
+
+<ul>
+<li>Task: return a tibble which says how many days elapsed between the first and second visit, ordered by the most number of days</li>
+<li>Complex task! Need to:
+
+<ul>
+<li>Parse the &ldquo;entry&rdquo; column to extract the dates</li>
+<li>Turn them into proper date-times</li>
+<li>Compute the number of days between visits (leap years happen at different times!)</li>
+<li>Order by number of days</li>
+</ul></li>
+<li>Let’s start by parsing &ldquo;entry&rdquo; and creating two columns for different dates
+
+<div class="pull-left">
+</li>
+</ul>
+
+</div>
+
+<div class="pull-right">
+</div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<ul>
+<li><code>entry</code> elements look like: First arrival: January 2, 2005; Second arrival: January 9, 2023”</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>( df2 &lt;- df %&gt;% mutate(
+    date1 = mdy(str_replace(entry, &quot;(.*): (.*); (.*): (.*)&quot;, &quot;\\2&quot;)),
+    date2 = mdy(str_replace(entry, &quot;(.*): (.*); (.*): (.*)&quot;, &quot;\\4&quot;))
+  ) )</pre>
+
+<pre ># A tibble: 3 × 4
+  name  entry                                              date1      date2     
+  &lt;chr&gt; &lt;chr&gt;                                              &lt;date&gt;     &lt;date&gt;    
+1 Mary  First arrival: January 2, 2005; Second arrival: J… 2005-01-02 2023-01-06
+2 Will  First time: January 5, 1997; Second time: January… 1997-01-05 2015-01-08
+3 Jose  First visit: January 4, 1990; Second visit: Janua… 1990-01-04 2008-01-09</pre>
+
+<ul>
+<li>Now we want to compute number of days between: <code>ddays</code> of the difference!</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>df2 %&gt;% mutate(days_elapsed = days(date2 - date1) )</pre>
+
+<pre ># A tibble: 3 × 5
+  name  entry                               date1      date2      days_elapsed  
+  &lt;chr&gt; &lt;chr&gt;                               &lt;date&gt;     &lt;date&gt;     &lt;Period&gt;      
+1 Mary  First arrival: January 2, 2005; Se… 2005-01-02 2023-01-06 6578d 0H 0M 0S
+2 Will  First time: January 5, 1997; Secon… 1997-01-05 2015-01-08 6577d 0H 0M 0S
+3 Jose  First visit: January 4, 1990; Seco… 1990-01-04 2008-01-09 6579d 0H 0M 0S</pre>
 
 <div class="pull-left">
 </div>
@@ -3634,7 +3906,103 @@ h_age</pre>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
 
-<h3>Slide</h3>
+<h3>Examples</h3>
+
+<ul>
+<li>Just need to order by maximum number of days now</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>df %&gt;% mutate(
+    date1 = mdy(str_replace(entry, &quot;(.*): (.*); (.*): (.*)&quot;, &quot;\\2&quot;)),
+    date2 = mdy(str_replace(entry, &quot;(.*): (.*); (.*): (.*)&quot;, &quot;\\4&quot;)),
+    days_elapsed = days(date2-date1)
+  ) %&gt;% arrange(by = desc(days_elapsed))</pre>
+
+<pre ># A tibble: 3 × 5
+  name  entry                               date1      date2      days_elapsed  
+  &lt;chr&gt; &lt;chr&gt;                               &lt;date&gt;     &lt;date&gt;     &lt;Period&gt;      
+1 Jose  First visit: January 4, 1990; Seco… 1990-01-04 2008-01-09 6579d 0H 0M 0S
+2 Mary  First arrival: January 2, 2005; Se… 2005-01-02 2023-01-06 6578d 0H 0M 0S
+3 Will  First time: January 5, 1997; Secon… 1997-01-05 2015-01-08 6577d 0H 0M 0S</pre>
+
+<ul>
+<li>We could also have done <code>separate_wider_regex()</code> to parse the string initially. How would we do that?
+
+<div class="pull-left">
+</li>
+</ul>
+
+</div>
+
+<div class="pull-right">
+</div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Examples</h3>
+
+<div class="pull-left">
+<pre class = 'prettyprint lang-r'>df2 &lt;- df %&gt;% separate_wider_regex(
+  entry,
+  patterns = c(
+    &quot;.*&quot;,
+    &quot;: &quot;,
+    date1 = &quot;.*&quot;,
+    &quot;;&quot;,
+    &quot;.*&quot;,
+    &quot;: &quot;,
+    date2 = &quot;.*&quot;
+  ) ) %&gt;%
+  mutate(date1 = mdy(date1), date2 = mdy(date2))</pre>
+
+<ul>
+<li>Original df:</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>df</pre>
+
+<pre ># A tibble: 3 × 2
+  name  entry                                                          
+  &lt;chr&gt; &lt;chr&gt;                                                          
+1 Mary  First arrival: January 2, 2005; Second arrival: January 6, 2023
+2 Will  First time: January 5, 1997; Second time: January 8, 2015      
+3 Jose  First visit: January 4, 1990; Second visit: January 9, 2008    </pre></div>
+
+<div class="pull-right">
+<pre class = 'prettyprint lang-r'>df2</pre>
+
+<pre ># A tibble: 3 × 3
+  name  date1      date2     
+  &lt;chr&gt; &lt;date&gt;     &lt;date&gt;    
+1 Mary  2005-01-02 2023-01-06
+2 Will  1997-01-05 2015-01-08
+3 Jose  1990-01-04 2008-01-09</pre></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+
+<h3>Example - string formatting errors for dates</h3>
+
+<ul>
+<li>Let’s suppose we are given a string with a bunch of supposed dates</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>ds &lt;- c(&quot;2022-01-08&quot;, &quot;202-01-09&quot;, &quot;2022/01/10&quot;)</pre>
+
+<ul>
+<li>And suppose we want to return a new datetime vector satisfying the following:
+
+<ul>
+<li>if the date is in the correct format, it is the original datetime</li>
+<li>otherwise, return the datetime of january 1, year 1.</li>
+</ul></li>
+<li>We need to flag which elements of <code>ds</code> have the format of either YYYY-MM-DD or YYYY/MM/DD, i.e. return a vector with booleans saying whether that element has the correct format.</li>
+<li>We’ll use regular expressions</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>pattern_regex &lt;- &quot;^\\d{4}[-/]\\d{2}[-/]\\d{2}$&quot;
+str_detect(ds, pattern_regex)</pre>
+
+<pre >[1]  TRUE FALSE  TRUE</pre>
 
 <div class="pull-left">
 </div>
@@ -3644,87 +4012,32 @@ h_age</pre>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
 
-<h3>Slide</h3>
+<h3>Example - string formatting errors for dates</h3>
 
-<div class="pull-left">
-</div>
+<pre class = 'prettyprint lang-r'>ds</pre>
 
-<div class="pull-right">
-</div>
+<pre >[1] &quot;2022-01-08&quot; &quot;202-01-09&quot;  &quot;2022/01/10&quot;</pre>
 
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
+<pre class = 'prettyprint lang-r'>str_detect(ds, &quot;^\\d{4}[-/]\\d{2}[-/]\\d{2}$&quot;)</pre>
 
-<h3>Slide</h3>
+<pre >[1]  TRUE FALSE  TRUE</pre>
 
-<div class="pull-left">
-</div>
+<ul>
+<li>Now we can use a <code>case_when</code> to make it year 1 if not correct format:</li>
+</ul>
 
-<div class="pull-right">
-</div>
+<pre class = 'prettyprint lang-r'>df &lt;- tibble(entered = ds)
+df %&gt;% mutate(new_date = case_when(
+  str_detect(entered, &quot;^\\d{4}[-/]\\d{2}[-/]\\d{2}$&quot;) ~ ymd(entered, quiet=TRUE),
+  TRUE ~ ymd(&quot;0001-01-01&quot;) )
+  )</pre>
 
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
-
-<div class="pull-left">
-</div>
-
-<div class="pull-right">
-</div>
-
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  class="smaller">
-
-<h3>Slide</h3>
+<pre ># A tibble: 3 × 2
+  entered    new_date  
+  &lt;chr&gt;      &lt;date&gt;    
+1 2022-01-08 2022-01-08
+2 202-01-09  1-01-01   
+3 2022/01/10 2022-01-10</pre>
 
 <div class="pull-left">
 </div>

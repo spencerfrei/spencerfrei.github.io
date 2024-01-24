@@ -337,7 +337,122 @@ as.duration(h_age)
 
 ---
 
-### Slide
+### Constructing durations
+
+<div class="pull-left">
+* Durations always record time span in seconds
+* Useful constructors: `d{units}`, `{units}` is `seconds`, `days`, etc
+  * No way to convert month to duration since it's not well-defined
+```{r}
+dseconds(15)
+dminutes(10)
+dhours(c(12, 24))
+```
+
+</div>
+
+<div class="pull-right">
+* Can add and multiply durations:
+```{r}
+2 * dyears(1)
+dyears(1) + dweeks(12) + dhours(5)
+```
+* Can subtract durations to and from days
+```{r}
+(tomorrow <- today() + ddays(1)) # returns Date
+(last_year <- today() - dyears(1)) # returns date-time
+```
+
+</div>
+
+---
+
+### Duration computations and weird results
+* Durations represent an exact number of seconds
+* So if you are looking at time zones, things can be odd
+```{r}
+one_am <- ymd_hms("2026-03-08 01:00:00", tz = "America/New_York")
+one_am
+one_am + ddays(1)
+```
+* If we add a full day of seconds, would need to account for hour time change from EST to EDT.
+* lubridate provides **periods** to address this
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Periods
+
+<div class="pull-left">
+* Periods are time spans but don't have fixed length in seconds
+  * Work like "human" times, i.e. days/months
+```{r}
+one_am
+one_am + days(1)
+one_am + ddays(1)
+```
+
+</div>
+
+<div class="pull-right">
+* Similar to durations, useful constructors and behavior under `+`/`*`:
+```{r}
+hours(c(12, 24))
+days(7)
+months(1:3)
+10 * (months(6) + days(2))
+```
+
+</div>
+
+---
+
+### Durations vs. periods
+
+
+<div class="pull-left">
+* Adding periods can be a bit more in line with expectations
+```{r, eval=FALSE}
+# A leap year
+ymd("2024-01-01") + dyears(1)
+#> [1] "2024-12-31 06:00:00 UTC"
+ymd("2024-01-01") + years(1)
+#> [1] "2025-01-01"
+
+# Daylight saving time
+one_am + ddays(1)
+#> [1] "2026-03-09 02:00:00 EDT"
+one_am + days(1)
+#> [1] "2026-03-09 01:00:00 EDT"
+```
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Fixing a bug in `flights_dt`
+* We used same date information for arrival and departure times, but the flights really arrived on the following day.
+```{r, output.lines=5}
+flights_dt %>% filter(arr_time < dep_time) %>% select(origin, dest, arr_time, dep_time)
+```
+
+```{r}
+flights_dt %>% mutate(
+  overnight = arr_time < dep_time, # returns T/F
+  arr_time = arr_time + days(overnight),
+  sched_arr_time = sched_arr_time + days(overnight)
+) %>% filter(arr_time < dep_time)
+```
 
 <div class="pull-left">
 
@@ -349,7 +464,148 @@ as.duration(h_age)
 
 ---
 
-### Slide
+### Intervals
+
+<div class="pull-left">
+* `dyears(1) / ddays(365)` does not return 1, since `dyears()` is defined as the number of seconds per average year: 365.25 days.
+* `years(1) / days(1)` does not return 365, since in leap years this isn't true.
+* **Intervals** allow for defining specific intervals of time, using pair of starting/end date times.
+* Format: `start %--% end`:
+</div>
+
+<div class="pull-right">
+```{r}
+(y2023 <- ymd("2023-01-01") %--% ymd("2024-01-01"))
+(y2024 <- ymd("2024-01-01") %--% ymd("2025-01-01"))
+```
+* Can divide by `days()` to find out how many days/year:
+```{r}
+y2023 / days(1)
+y2024 / days(1)
+```
+
+</div>
+
+---
+
+### Example: extracting dates and computing durations
+* Suppose we are given a tibble whose first three rows are as follows:
+```{r}
+ df <- tribble(
+    ~name, ~entry,
+    "Mary", "First arrival: January 2, 2005; Second arrival: January 6, 2023",
+    "Will", "First time: January 5, 1997; Second time: January 8, 2015",
+    "Jose", "First visit: January 4, 1990; Second visit: January 9, 2008",
+  )
+```
+* Task: return a tibble which says how many days elapsed between the first and second visit, ordered by the most number of days
+* Complex task!  Need to:
+  * Parse the "entry" column to extract the dates
+  * Turn them into proper date-times
+  * Compute the number of days between visits (leap years happen at different times!)
+  * Order by number of days
+
+* Let's start by parsing "entry" and creating two columns for different dates
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+</div>
+
+---
+
+* `entry` elements look like: First arrival: January 2, 2005; Second arrival: January 9, 2023"
+```{r}
+( df2 <- df %>% mutate(
+    date1 = mdy(str_replace(entry, "(.*): (.*); (.*): (.*)", "\\2")),
+    date2 = mdy(str_replace(entry, "(.*): (.*); (.*): (.*)", "\\4"))
+  ) )
+```
+* Now we want to compute number of days between: `ddays` of the difference!
+```{r}
+df2 %>% mutate(days_elapsed = days(date2 - date1) )
+```
+
+<div class="pull-left">
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Examples
+
+* Just need to order by maximum number of days now 
+```{r}
+df %>% mutate(
+    date1 = mdy(str_replace(entry, "(.*): (.*); (.*): (.*)", "\\2")),
+    date2 = mdy(str_replace(entry, "(.*): (.*); (.*): (.*)", "\\4")),
+    days_elapsed = days(date2-date1)
+  ) %>% arrange(by = desc(days_elapsed))
+```
+
+* We could also have done `separate_wider_regex()` to parse the string initially. How would we do that?
+<div class="pull-left">
+
+</div>
+
+<div class="pull-right">
+
+</div>
+
+---
+
+### Examples
+
+
+<div class="pull-left">
+```{r}
+df2 <- df %>% separate_wider_regex(
+  entry,
+  patterns = c(
+    ".*",
+    ": ",
+    date1 = ".*",
+    ";",
+    ".*",
+    ": ",
+    date2 = ".*"
+  ) ) %>%
+  mutate(date1 = mdy(date1), date2 = mdy(date2))
+```
+* Original df:
+```{r}
+df
+```
+
+</div>
+
+<div class="pull-right">
+```{r}
+df2
+```
+
+</div>
+
+---
+
+### Example - string formatting errors for dates
+* Let's suppose we are given a string with a bunch of supposed dates
+```{r}
+ds <- c("2022-01-08", "202-01-09", "2022/01/10")
+```
+* And suppose we want to return a new datetime vector satisfying the following:
+  * if the date is in the correct format, it is the original datetime
+  * otherwise, return the datetime of january 1, year 1. 
+* We need to flag which elements of `ds` have the format of either YYYY-MM-DD or YYYY/MM/DD, i.e. return a vector with booleans saying whether that element has the correct format.
+* We'll use regular expressions
+```{r}
+pattern_regex <- "^\\d{4}[-/]\\d{2}[-/]\\d{2}$"
+str_detect(ds, pattern_regex)
+```
 
 <div class="pull-left">
 
@@ -361,115 +617,21 @@ as.duration(h_age)
 
 ---
 
-### Slide
+### Example - string formatting errors for dates
 
-<div class="pull-left">
+```{r}
+ds
+str_detect(ds, "^\\d{4}[-/]\\d{2}[-/]\\d{2}$")
+```
+* Now we can use a `case_when` to make it year 1 if not correct format:
+```{r}
+df <- tibble(entered = ds)
+df %>% mutate(new_date = case_when(
+  str_detect(entered, "^\\d{4}[-/]\\d{2}[-/]\\d{2}$") ~ ymd(entered, quiet=TRUE),
+  TRUE ~ ymd("0001-01-01") )
+  )
+```
 
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
-
-<div class="pull-left">
-
-</div>
-
-<div class="pull-right">
-
-</div>
-
----
-
-### Slide
 
 <div class="pull-left">
 
