@@ -1,0 +1,391 @@
+---
+title: "Visualizations I"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+# source("_common.R")
+```
+
+
+### Visualization
+* We'll see how to create beautiful visualizations using ggplot2.
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+library(ggthemes) # color palettes for ggplot
+penguins
+```
+
+
+---
+### Goal: be able to create visualizations like this
+```{r}
+#| echo: false
+#| out-width: '75%'
+knitr::include_graphics("penguins_visualization.png", dpi = 270)
+```
+---
+
+### Creating a ggplot
+* Start with function `ggplot()`
+* Add **layers** to this plot
+* Then need to define the **aesthetics** of the plot
+
+```{r}
+ggplot(data = penguins) # tells ggplot to get info from penguins tibble
+```
+
+---
+### Creating a ggplot
+* Start with function `ggplot()`
+* Add **layers** to this plot
+* Then need to define the **aesthetics** of the plot
+  * No data displayed yet, but axes are clear
+
+```{r}
+ggplot(data = penguins,
+       mapping = aes(x = flipper_length_mm, y = body_mass_g)) 
+```
+
+---
+### Creating a ggplot
+.pull-left[ 
+* Start with function `ggplot()`
+* Add **layers** to this plot
+* Then need to define the **aesthetics** of the plot
+  * Data displayed using **geom**: geometrical object used to represent data
+  * `geom_bar()`: bar chart; `geom_line()`: lines; `geom_boxplot()`: boxplot; `geom_point()`: scatterplot, etc.
+]
+
+.pull-right[
+```{r, fig.width=7, fig.height=4}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm, 
+         y = body_mass_g)) +
+  geom_point()
+```
+]
+
+---
+### Adding aesthetics and layers
+
+.pull-left[ 
+* We can have aesthetics change as a function of categorical variables inside the tibble
+* e.g. each penguin has a **species**; we can use different colors for each species easily
+* When categorical variable is mapped to an aesthetic, ggplot assigns unique value of the aesthetic (here: unique color) to each unique level of the variable (here: species), then add a legend explaining this
+]
+.pull-right[
+```{r, fig.width=7, fig.height=4}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g,
+         color = species)) +
+  geom_point()
+```
+]
+
+
+---
+
+### Adding aesthetics and layers
+
+.pull-left[ 
+* Let's now add a new layer, `geom_smooth(method = "lm")`, which visualizes line of best fit based on a `l`inear `m`odel
+* We now have lines, but we have lines for each species rather than one global line.
+* When aesthetic mappings are added at the beginning of ggplot, they are done so at *global* level - all remaining layers will use the structure defined from this
+* So when we say `color=species`, it groups all of the penguins by species
+* When we want aesthetic mappings at local level, we can use `mapping` arg inside the specific things we want them for
+]
+.pull-right[
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g,
+         color = species)) +
+  geom_point() + 
+  geom_smooth(method = "lm")
+```
+]
+
+---
+
+### Adding aesthetics and layers
+
+.pull-left[ 
+* Let's now add a new layer, `geom_smooth(method = "lm")`, which visualizes line of best fit based on a `l`inear `m`odel
+* We now have lines, but we have lines for each species rather than one global line.
+* When aesthetic mappings are added at the beginning of ggplot, they are done so at *global* level - all remaining layers will use the structure defined from this
+* So when we say `color=species`, it groups all of the penguins by species
+* When we want aesthetic mappings at local level, we can use `mapping` arg inside the specific things we want them for
+]
+.pull-right[
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point(mapping = aes(color = species)) + 
+  geom_smooth(method = "lm")
+```
+]
+
+
+---
+### Adding aesthetics and layers
+
+.pull-left[ 
+* One thing that remains: we want different shapes for different species
+* We can specify this in a local aesthetic mapping of points using `shape=`
+* The legend will be updated to show this too!
+```{r, fig.width=7, fig.height=4, warning=FALSE,eval=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point(mapping = aes(
+    color = species,
+    shape = species)) + 
+  geom_smooth(method = "lm")
+```
+
+]
+.pull-right[
+```{r, fig.width=7, fig.height=4, warning=FALSE,echo=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point(mapping = aes(
+    color = species,
+    shape = species)) + 
+  geom_smooth(method = "lm")
+```
+]
+
+
+---
+### Axis labels
+
+.pull-left[ 
+* Now just need to add title and axis labels
+
+```{r, fig.width=7, fig.height=4, warning=FALSE,eval=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point(mapping = aes(
+    color = species,
+    shape = species)) + 
+  geom_smooth(method = "lm") + 
+  labs(
+    title = "Body mass and flipper length",
+    subtitle = "Dimensions for Adelie, Chinstrap, and Gentoo Penguins",
+    x = "Flipper length (mm)", y = "Body mass (g)",
+    color = "Species", shape = "Species"
+  ) +
+  scale_color_colorblind()
+```
+
+]
+.pull-right[
+```{r, fig.width=7, fig.height=4, warning=FALSE,echo=FALSE}
+ggplot(data = penguins,
+       mapping = aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point(mapping = aes(
+    color = species,
+    shape = species)) + 
+  geom_smooth(method = "lm") + 
+  labs(
+    title = "Body mass and flipper length",
+    subtitle = "Dimensions for Adelie, Chinstrap, and Gentoo Penguins",
+    x = "Flipper length (mm)", y = "Body mass (g)",
+    color = "Species", shape = "Species"
+  ) +
+  scale_color_colorblind()
+```
+]
+
+---
+
+### ggplot2 calls
+* The first two arguments of ggplot are always `data = ` and `mapping = `, so we will often see things like
+```{r, eval = FALSE}
+ggplot(penguins,
+       aes(
+         x = flipper_length_mm,
+         y = body_mass_g)) +
+  geom_point()
+```
+* We can do this with piping as well:
+```{r, eval = FALSE}
+penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+```
+
+---
+
+### Visualizing distributions
+.pull-left[
+
+* **Categorical** variables take only one of a finite set of values
+* Bar charts are useful for visualizing categorical variables
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = species)) +
+  geom_bar()
+```
+]
+
+.pull-right[
+* **Numeric** values we are familiar with
+* Histograms are useful for these - use argument `binwidth = `
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200)
+```
+
+]
+
+---
+### Visualizing distributions
+* You will likely need to spend time tuning the binwidth parameter
+.pull-left[
+
+* **Categorical** variables take only one of a finite set of values
+* Bar charts are useful for visualizing categorical variables
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 2000)
+```
+]
+
+.pull-right[
+* **Numeric** values we are familiar with
+* Histograms are useful for these - use argument `binwidth = `
+```{r, fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 20)
+```
+
+]
+
+---
+
+
+### Density plots
+* A smoothed out version of histogram which is supposed to approximate a probability density function (if you haven't heard of this term, don't worry)
+ 
+.pull-left[
+```{r, fig.width=7, fig.height=4,warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_density()
+```
+]
+
+.pull-right[
+```{r, fig.width=7, fig.height=4,warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200)
+```
+]
+
+---
+
+### Visualizing distributions
+
+* Let's check the difference between setting `color = ` vs `fill = ` with `geom_bar`:
+.pull-left[
+```{r, fig.width=7, fig.height=4}
+ggplot(penguins, aes(x = species)) +
+  geom_bar(color = "red")
+```
+]
+
+.pull-right[
+```{r, fig.width=7, fig.height=4}
+ggplot(penguins, aes(x = species)) +
+  geom_bar(fill = "red")
+```
+]
+
+
+---
+
+### Box plots
+* Box plots allow for visualizing the spread of a distribution
+* Makes it easy to see 25th percentile, median, 75Th percentile, and outliers (>1.5*IQR from 25th or 75th percentile)
+
+```{r}
+#| echo: false
+#| out-width: '75%'
+knitr::include_graphics("boxplot.png", dpi = 270)
+```
+---
+
+
+### Box plots
+.pull-left[
+* Let's see distribution of body mass by species using `geom_boxplot()`:
+
+
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = species, y = body_mass_g)) +
+  geom_boxplot()
+```
+]
+
+.pull-right[
+* Compare to `geom_density()`:
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g, color = species)) +
+  geom_density(linewidth = 0.75)
+```
+
+
+]
