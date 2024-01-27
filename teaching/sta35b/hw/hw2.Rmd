@@ -1,0 +1,148 @@
+---
+title: "STA035B Homework 2, due: 2/1, 9pm"
+author: "Spencer Frei"
+output: 
+  pdf_document:
+    extra_dependencies: ["booktabs"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(tibble)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+```
+
+## Instructions
+Upload a PDF file, named with your UC Davis email ID and homework number (e.g., sfrei_hw2.pdf), to Gradescope (accessible through Canvas). You will give the commands to answer each question in its own code block, which will also produce output that will be automatically embedded in the output file.  All code used to answer the question must be supplied, as well as written statements where appropriate. 
+
+All code used to produce your results must be shown in your PDF file (e.g., do not use `echo = FALSE` or `include = FALSE` as options anywhere). Rmd files do not need to be submitted, but may be requested by the TA and must be available when the assignment is submitted.
+
+Students may choose to collaborate with each other on the homework, but must clearly indicate with whom they collaborated.
+
+
+\newpage
+
+
+### Problem 1
+
+```{r}
+library(nycflights13)
+```
+Consider the `weather` dataset (comes when you load `nycflights13` library), which has columns: "origin",     "year",       "month",      "day",        "hour",       "temp",       "dewp",       "humid",      "wind_dir",   "wind_speed", "wind_gust",  "precip",     "pressure",   "visib", and "time_hour".  We show the first few rows and columns below. 
+```{r, output.lines=8}
+weather
+```
+
+(a) Provide code which computes the average precipitation per origin per month, removing any missing values.
+Then filter the resulting tibble so that only those origin-month pairs with the 5 highest average precipitation remain.
+
+```{r}
+# code here
+```
+
+(b) Do a similar calculation: compute the average precipitation per origin per **week number** (i.e., Jan 1 - Jan 7 is week 1, Jan 8 - 15 is week 2, etc.) removing any missing values.  Then filter the resulting tibble so that only those origin-month pairs with the 5 highest average precipitation remain.  Note that `weather` does not have a week number so you need to create this yourself---think of what mathematical operations allow for you to find the week number, and look back at the slides on dates/times. 
+
+```{r}
+# code here
+```
+
+\newpage 
+### Problem 2
+
+* Suppose we have a tibble of the following form:
+```{r}
+df <- tribble(
+  ~name, ~date_of_birth, ~favorite_food,
+  "Will", "1995-09-01", "Tacos",
+  "Angela", "1993-01-02", "Sushi",
+  "Ana", "1994-11-20", "Italian"
+)
+```
+
+(a) Provide R code which adds the following columns:
+
+* `year`, a number, indicating the year of birth 
+* `month`, a string, the month (fully spelled out, i.e. January) of birth
+* `day`, a number, indicating the day of the month the person was born
+
+
+The resulting tibble should have 6 columns, the 3 original ones plus these 3 new ones.
+
+```{r}
+# code here
+```
+
+
+(b) Provide R code which adds the following column:
+
+* `ten_years_later`: a date time, indicating a the date corresponding to ten years after the person's birth
+
+The resulting tibble should have 4 columns, the original 3 plus this new one.
+
+
+```{r}
+# code here
+```
+
+
+(c) Provide R code which adds the following column:
+
+* `age_when_obama_born`: an **integer**, indicating how many years old the person was when Barack Obama was born (August 4, 1961)
+  * Be sure it is an integer and there are no decimal places!
+  * The resulting tibble should have 4 columns, the original 3 plus this new one.  No extra columns!
+
+```{r}
+# code here
+```
+
+
+\newpage
+
+### Problem 3
+
+* Suppose we have the following tibble:
+```{r}
+entered_data <- tribble(
+  ~id, ~entry,
+  0, "Arthur_1985-09-01_Present",
+  1, "Zack_1983-01-02_Absent",
+  2, "Pat_1984-11-20_Present",
+)
+```
+
+Provide R code which parses the `entry` column and creates three new columns:
+
+* `name`, a string, indicating the person's name (preceding the first underscore),
+* `date_of_birth`, a date time indicating the person's date of birth,
+* `day_can_vote`, a date time indicating the day when the person is 18 years old.
+
+The resulting tibble should have 5 columns: `id` and `entry` in addition to these 3 new columns.
+
+```{r}
+# code here
+```
+
