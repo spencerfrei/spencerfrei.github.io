@@ -111,7 +111,7 @@ The resulting tibble should have 4 columns, the original 3 plus this new one.
 
 (c) Provide R code which adds the following column:
 
-* `age_when_obama_born`: an **integer**, indicating how many years old the person was when Barack Obama was born (August 4, 1961)
+* `obama_age_when_born`: an **integer**, indicating how many years old Barack Obama (born August 4, 1961) was when the person was born
   * Be sure it is an integer and there are no decimal places!
   * The resulting tibble should have 4 columns, the original 3 plus this new one.  No extra columns!
 
