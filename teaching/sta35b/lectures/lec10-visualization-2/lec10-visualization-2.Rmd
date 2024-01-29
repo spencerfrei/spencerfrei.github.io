@@ -1,5 +1,5 @@
 ---
-title: "Visualizations I"
+title: "Visualizations II"
 subtitle: "<br><br> STA35B: Statistical Data Science 2"
 author: "Spencer Frei"
 output:
