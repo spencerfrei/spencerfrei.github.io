@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Visualizations I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec11-visualization-3_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec11-visualization-3_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec11-visualization-3_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Visualizations I
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+
+  
+
+
+
+### Further inspecting diamond prices
+* Recall that it appeared that diamond prices seemed inversely correlated with quality
+
+```r
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-1-1.png" width="288" /&gt;
+* What might be responsible for this? Recall variables: x,y,z refer to length/width/depth of diamond in mm
+
+```r
+colnames(diamonds)
+#&gt;  [1] "carat"   "cut"     "color"   "clarity" "depth"   "table"   "price"  
+#&gt;  [8] "x"       "y"       "z"
+```
+
+* Let's look at **size** vs price.
+
+
+---
+
+### Size vs. price in diamonds
+* We can try doing 3 side-by-side plots by just doing 3 ggplots:
+
+```r
+ggplot(diamonds, aes(x = x, y = price)) +
+  geom_point()
+ggplot(diamonds, aes(x = y, y = price)) +
+  geom_point()
+ggplot(diamonds, aes(x = z, y = price)) +
+  geom_point()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-3-1.png" width="252" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-3-2.png" width="252" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-3-3.png" width="252" /&gt;
+* Some things we notice:
+  * Clearly some outliers - "zero" length / width / depth diamonds apparently?
+  * But still some positive correlation between x, y, z and price
+  * Hard to see with so many dots
+* Let's use `alpha=` to add some transparency, make it easier on the eyes
+
+---
+
+### Size vs. price in diamonds
+* We can try doing 3 side-by-side plots by just doing 3 ggplots:
+
+```r
+ggplot(diamonds, aes(x = x, y = price)) +
+  geom_point(alpha = 0.02)
+ggplot(diamonds, aes(x = y, y = price)) +
+  geom_point(alpha = 0.02)
+ggplot(diamonds, aes(x = z, y = price)) +
+  geom_point(alpha = 0.02)
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-4-1.png" width="252" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-4-2.png" width="252" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-4-3.png" width="252" /&gt;
+* Some things we notice:
+  * Clearly some outliers - "zero" length / width / depth diamonds apparently?
+  * But still some positive correlation between x, y, z and price
+  * Hard to see with so many dots
+* Let's now clean up the tibble so we are only looking at the middle 95% of values for x, y, z
+
+---
+
+### Size vs. price in diamonds
+* Let's clean up the tibble so we are only looking at the middle 95% of values for x, y, z
+
+```r
+diamonds_middle &lt;- diamonds %&gt;%
+  filter(between(x, quantile(diamonds$x, 0.025), quantile(diamonds$x, 0.975)),
+         between(y, quantile(diamonds$y, 0.025), quantile(diamonds$y, 0.975)),
+         between(z, quantile(diamonds$z, 0.025), quantile(diamonds$z, 0.975)))
+ggplot(diamonds_middle, aes(x = x, y = price)) +
+  geom_point(alpha = 0.02)
+ggplot(diamonds_middle, aes(x = y, y = price)) +
+  geom_point(alpha = 0.02)
+ggplot(diamonds_middle, aes(x = z, y = price)) +
+  geom_point(alpha = 0.02)
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-5-1.png" width="288" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-5-2.png" width="288" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-5-3.png" width="288" /&gt;
+
+---
+### Size vs. price in diamonds
+* Appears x, y, z (length/width/depth) are highly correlated with price
+* Recall that volume of a cube is length * width * depth - so let's look at the relationship between estimated volume (x\*y\*z) and price
+
+```r
+diamonds_middle %&gt;%
+  mutate(est_volume = x*y*z) %&gt;%
+  ggplot(aes(x = est_volume, y = price)) +
+  geom_point(alpha = 0.01)
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-6-1.png" width="360" /&gt;
+* Does appear to be a strong correlation.
+* Now let's think again as to why it was that we previously found that higher quality diamonds were cheaper.
+
+---
+### Size vs. price in diamonds
+* Hypothesis: higher quality diamonds are smaller, lower quality diamonds are larger.
+* To investigate, we could use boxplot: we want to visualize variation in size for each category of quality
+.pull-left[ 
+
+```r
+diamonds_middle %&gt;%
+  mutate(est_volume = x*y*z) %&gt;%
+  ggplot(aes(x = cut, y = est_volume)) +
+  geom_boxplot()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-7-1.png" width="432" /&gt;
+
+]
+
+---
+
+### Size vs price in diamonds
+* Let's try to visualize the different cuts on the dot plot:
+
+```r
+diamonds_middle %&gt;%
+  mutate(est_volume = x*y*z) %&gt;%
+  ggplot(aes(x = est_volume, y = price, color = cut)) +
+  geom_point(alpha = 0.5)
+diamonds_middle %&gt;%
+  mutate(est_volume = x*y*z) %&gt;%
+  ggplot(aes(x = est_volume, y = price, color = cut)) +
+  geom_smooth()
+#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-8-1.png" width="360" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-8-2.png" width="360" /&gt;
+
+
+---
+
+### Size vs. price in diamonds
+* We were looking at the estimated volume, but could also look at the *weight*: carat.  
+* Let's see how if weight varies by class.
+.pull-left[ 
+
+```r
+diamonds %&gt;%
+  ggplot(aes(x = cut, y = carat)) +
+  geom_boxplot()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-9-1.png" width="288" /&gt;
+]
+
+.pull-right[
+* Again appears to be a lot of outliers; let's look at middle 95%.
+
+```r
+diamonds_middle &lt;- diamonds %&gt;%
+  filter(between(carat, quantile(carat, 0.025), quantile(carat, 0.975)))
+diamonds_middle %&gt;%
+  ggplot(aes(x = cut, y = carat)) +
+  geom_boxplot()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-10-1.png" width="288" /&gt;
+
+]
+---
+### Size vs price in diamonds 
+.pull-left[ 
+* And now let's visualize relationship between carat size and price by cut:
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-11-1.png" width="324" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-11-2.png" width="324" /&gt;
+]
+.pull-right[
+* Compare this to what happens if we didn't ignore outliers!
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-12-1.png" width="324" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-12-2.png" width="324" /&gt;
+
+]
+
+---
+
+### Communicating ideas
+* Now we'll look at how to best display data once we've figured out some meaningful relationships between things
+* Packages we'll be using: `tidyverse`, `scales`, `ggrepel`, `patchwork`
+
+.pull-left[
+* Good labels are crucial to good figures:
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Engine displacement (L)",
+    y = "Highway fuel economy (mpg)",
+    color = "Car type",
+    title = "Fuel efficiency generally decreases with engine size",
+    subtitle = "Two seaters (sports cars) are an exception because of their light weight",
+    caption = "Data from fueleconomy.gov"
+  )
+```
+
+]
+
+.pull-right[
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-15-1.png" width="360" /&gt;
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

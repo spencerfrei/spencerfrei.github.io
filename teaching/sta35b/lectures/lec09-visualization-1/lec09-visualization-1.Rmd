@@ -389,3 +389,143 @@ ggplot(penguins, aes(x = body_mass_g, color = species)) +
 
 
 ]
+
+(End of January 26 slides)
+
+---
+
+### Box plots
+* We can map `species` to both `color` and `fill` aesthetics and use `alpha` to add transparency
+* `alpha` is a number between 0 and 1; 0 = completely transparent, 1 = fully opaque
+
+.pull-left[
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(alpha = 0.3)
+```
+
+]
+
+.pull-right[
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(alpha = 0.7)
+```
+
+]
+
+---
+
+### Multiple categorical variables
+* Stacked bar plots can help visualize relationships between 2 categorical variables
+.pull-left[
+* Frequencies of each species on each island:
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar()
+```
+
+]
+
+.pull-right[
+* Isn't easy to tell relative frequency of each percentage
+* `position= "fill"` in geom allows for comparing frequencies across distributions
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = 'fill')
+```
+
+]
+
+---
+
+### Multiple numerical variables
+* Already saw how to use scatter plots to visualize two numeric variables
+.pull-left[
+* Frequencies of each species on each island:
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+```
+
+]
+
+.pull-right[
+* We saw how using color aesthetic in the geom can help incorporate group information for two numeric variables
+* We can use separate vals for color and shape 
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = island))
+```
+
+]
+
+---
+
+### Multiple numerical variables
+* With too many aesthetic changes (shape, color, size etc), plots become cluttered and difficult to visualize
+* Useful to use **facets**, using `facet_wrap`
+* `facet_wrap()` takes a *formula* argument - we will see more later, but an example:
+
+```{r,fig.width=10, fig.height=4, warning=FALSE}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = species)) +
+  facet_wrap(~island)
+```
+
+
+---
+
+### Saving plots
+* Once you've made a plot, you can save using `ggsave()`
+* Either can save whatever plot you made last:
+
+```{r, eval=FALSE}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+ggsave(filename = "penguin-plot.png")
+```
+
+* Or you can save the plot object and save that
+```{r, eval=FALSE}
+p <- ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+ggsave(filename = "penguin-plot.png", p)
+```
+
+---
+
+### Aesthetic mappings
+* Let's consider the `mpg` dataframe - bundled with ggplot2.
+```{r}
+mpg
+```
+* `displ`: numerical, car's engine size, in liters
+* `hwy`: numerical, car's fuel efficiency in mpg
+* `class`: string / categorical, kind of car 
+
+
+---
+
+### Aesthetic mappings
+* Let's look at the relationship between `displ` and `hwy` for different classes of ars
+* We'll use a scatterplot with numerical values mapped to `x` and `y`, categorical to aesthetics like `shape` and `color`:
+
+.pull-left[
+
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
+  geom_point()
+```
+
+]
+
+.pull-right[
+
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(mpg, aes(x = displ, y = hwy, shape = class)) +
+  geom_point()
+
+```
+
+]

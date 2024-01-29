@@ -437,6 +437,192 @@ ggplot(penguins, aes(x = body_mass_g, color = species)) +
 
 
 ]
+
+(End of January 26 slides)
+
+---
+
+### Box plots
+* We can map `species` to both `color` and `fill` aesthetics and use `alpha` to add transparency
+* `alpha` is a number between 0 and 1; 0 = completely transparent, 1 = fully opaque
+
+.pull-left[
+
+```r
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(alpha = 0.3)
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+
+```r
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(alpha = 0.7)
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+
+]
+
+---
+
+### Multiple categorical variables
+* Stacked bar plots can help visualize relationships between 2 categorical variables
+.pull-left[
+* Frequencies of each species on each island:
+
+```r
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar()
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+* Isn't easy to tell relative frequency of each percentage
+* `position= "fill"` in geom allows for comparing frequencies across distributions
+
+```r
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = 'fill')
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-29-1.png)&lt;!-- --&gt;
+
+]
+
+---
+
+### Multiple numerical variables
+* Already saw how to use scatter plots to visualize two numeric variables
+.pull-left[
+* Frequencies of each species on each island:
+
+```r
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+* We saw how using color aesthetic in the geom can help incorporate group information for two numeric variables
+* We can use separate vals for color and shape 
+
+```r
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = island))
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-31-1.png)&lt;!-- --&gt;
+
+]
+
+---
+
+### Multiple numerical variables
+* With too many aesthetic changes (shape, color, size etc), plots become cluttered and difficult to visualize
+* Useful to use **facets**, using `facet_wrap`
+* `facet_wrap()` takes a *formula* argument - we will see more later, but an example:
+
+
+```r
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = species)) +
+  facet_wrap(~island)
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
+
+
+---
+
+### Saving plots
+* Once you've made a plot, you can save using `ggsave()`
+* Either can save whatever plot you made last:
+
+
+```r
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+ggsave(filename = "penguin-plot.png")
+```
+
+* Or you can save the plot object and save that
+
+```r
+p &lt;- ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+ggsave(filename = "penguin-plot.png", p)
+```
+
+---
+
+### Aesthetic mappings
+* Let's consider the `mpg` dataframe - bundled with ggplot2.
+
+```r
+mpg
+```
+
+```
+# A tibble: 234 × 11
+   manufacturer model      displ  year   cyl trans drv     cty   hwy fl    class
+   &lt;chr&gt;        &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;
+ 1 audi         a4           1.8  1999     4 auto… f        18    29 p     comp…
+ 2 audi         a4           1.8  1999     4 manu… f        21    29 p     comp…
+ 3 audi         a4           2    2008     4 manu… f        20    31 p     comp…
+ 4 audi         a4           2    2008     4 auto… f        21    30 p     comp…
+ 5 audi         a4           2.8  1999     6 auto… f        16    26 p     comp…
+ 6 audi         a4           2.8  1999     6 manu… f        18    26 p     comp…
+ 7 audi         a4           3.1  2008     6 auto… f        18    27 p     comp…
+ 8 audi         a4 quattro   1.8  1999     4 manu… 4        18    26 p     comp…
+ 9 audi         a4 quattro   1.8  1999     4 auto… 4        16    25 p     comp…
+10 audi         a4 quattro   2    2008     4 manu… 4        20    28 p     comp…
+# ℹ 224 more rows
+```
+* `displ`: numerical, car's engine size, in liters
+* `hwy`: numerical, car's fuel efficiency in mpg
+* `class`: string / categorical, kind of car 
+
+
+---
+
+### Aesthetic mappings
+* Let's look at the relationship between `displ` and `hwy` for different classes of ars
+* We'll use a scatterplot with numerical values mapped to `x` and `y`, categorical to aesthetics like `shape` and `color`:
+
+.pull-left[
+
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
+  geom_point()
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-36-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, shape = class)) +
+  geom_point()
+```
+
+![](lec09-visualization-1_files/figure-html/unnamed-chunk-37-1.png)&lt;!-- --&gt;
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

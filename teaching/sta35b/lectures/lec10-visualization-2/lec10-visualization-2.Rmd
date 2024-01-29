@@ -1,0 +1,952 @@
+---
+title: "Visualizations I"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+source("../_common.R")
+```
+
+### Aesthetic mappings
+* Let's consider the `mpg` dataframe - bundled with ggplot2.
+```{r}
+mpg
+```
+* `displ`: numerical, car's engine size, in liters
+* `hwy`: numerical, car's fuel efficiency in mpg
+* `class`: string / categorical, kind of car 
+
+
+---
+
+### Aesthetic mappings
+* Let's look at the relationship between `displ` and `hwy` for different classes of ars
+* We'll use scatterplot with numerical valu mapped to `x` and `y`, categorical to `shape` and `color`:
+
+.pull-left[
+
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(mpg, aes(x = displ, y = hwy, color = class)) +
+  geom_point()
+```
+
+]
+
+.pull-right[
+
+```{r,fig.width=7, fig.height=4, warning=FALSE}
+ggplot(mpg, aes(x = displ, y = hwy, shape = class)) +
+  geom_point()
+#> Warning: The shape palette can deal with a maximum of 6 discrete values because more
+#> than 6 becomes difficult to discriminate
+#> ℹ you have requested 7 values. Consider specifying shapes manually if you
+#>   need that many have them.
+#> Warning: Removed 62 rows containing missing values (`geom_point()`).
+```
+
+]
+
+
+---
+
+### Aesthetic mappings
+* Can also use `size` and `alpha` for categorical mappings like class.
+  * However, not recommended, since `size` and `alpha` are **ordered** aesthetics, and no natural ordering to these categorical variables 
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-alt: |
+#|   Two scatterplots next to each other, both visualizing highway fuel 
+#|   efficiency versus engine size of cars and showing a negative 
+#|   association. In the plot on the left class is mapped to the size 
+#|   aesthetic, resulting in different sizes for each class. 
+#|   In the plot on the right class is mapped the alpha aesthetic, 
+#|   resulting in different alpha (transparency) levels for each class. 
+#|   Each plot comes with a legend that shows the mapping between size 
+#|   or alpha level and levels of the class variable.
+
+# Left
+ggplot(mpg, aes(x = displ, y = hwy, size = class)) +
+  geom_point()
+
+# Right
+ggplot(mpg, aes(x = displ, y = hwy, alpha = class)) +
+  geom_point()
+```
+
+---
+
+### Aesthetics
+
+.pull-left[ 
+* You can also set visual properties of geoms by manually supplying argments of the geom function *outide * of `aes()`, e.g. making all points in a plot blue:
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(color = "blue")
+```
+]
+
+.pull-left[
+-   The name of a color as a character string, e.g., `color = "blue"`
+-   The size of a point in mm, e.g., `size = 1`
+-   The shape of a point as a number, e.g.
+```{r}
+#| label: fig-shapes
+#| echo: false
+#| warning: false
+#| fig.asp: 0.364
+#| fig-align: "center"
+#| fig-cap: |
+#|   R has 25 built-in shapes that are identified by numbers. There are some 
+#|   seeming duplicates: for example, 0, 15, and 22 are all squares. The 
+#|   difference comes from the interaction of the `color` and `fill` 
+#|   aesthetics. The hollow shapes (0--14) have a border determined by `color`; 
+#|   the solid shapes (15--20) are filled with `color`; the filled shapes 
+#|   (21--24) have a border of `color` and are filled with `fill`.
+#| fig-alt: |
+#|   Mapping between shapes and the numbers that represent them: 0 - square, 
+#|   1 - circle, 2 - triangle point up, 3 - plus, 4 - cross, 5 - diamond, 
+#|   6 - triangle point down, 7 - square cross, 8 - star, 9 - diamond plus, 
+#|   10 - circle plus, 11 - triangles up and down, 12 - square plus, 
+#|   13 - circle cross, 14 - square and triangle down, 15 - filled square, 
+#|   16 - filled circle, 17 - filled triangle point-up, 18 - filled diamond, 
+#|   19 - solid circle, 20 - bullet (smaller circle), 21 - filled circle blue, 
+#|   22 - filled square blue, 23 - filled diamond blue, 24 - filled triangle 
+#|   point-up blue, 25 - filled triangle point down blue.
+
+shapes <- tibble(
+  shape = c(0, 1, 2, 5, 3, 4, 6:19, 22, 21, 24, 23, 20),
+  x = (0:24 %/% 5) / 2,
+  y = (-(0:24 %% 5)) / 4
+)
+ggplot(shapes, aes(x, y)) + 
+  geom_point(aes(shape = shape), size = 5, fill = "red") +
+  geom_text(aes(label = shape), hjust = 0, nudge_x = 0.15) +
+  scale_shape_identity() +
+  expand_limits(x = 4.1) +
+  scale_x_continuous(NULL, breaks = NULL) + 
+  scale_y_continuous(NULL, breaks = NULL, limits = c(-1.2, 0.2)) + 
+  theme_minimal() +
+  theme(aspect.ratio = 1/2.75)
+```
+
+
+]
+
+
+---
+
+### Geometric objects
+How are these two plots similar?
+
+```{r}
+#| echo: false
+#| message: false
+#| layout-ncol: 2
+#| fig-width: 3
+#| fig-alt: |
+#|   There are two plots. The plot on the left is a scatterplot of highway 
+#|   fuel efficiency versus engine size of cars and the plot on the right 
+#|   shows a smooth curve that follows the trajectory of the relationship 
+#|   between these variables. A confidence interval around the smooth 
+#|   curve is also displayed.
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point()
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_smooth()
+```
+
+* Both plots contain the same x variable, the same y variable, and both describe the same data.
+* Each plot uses a different geometric object, geom, to represent the data.  
+
+```{r, eval=FALSE}
+# Left
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point()
+
+# Right
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_smooth()
+#> `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+```
+
+
+---
+
+* Every geom object takes a `mapping` argument
+  * Either dfeined locally in the geom arg, or inhereted from the `ggplot()` layer via `aes()`
+* Obvious restrictions - can set shape of points but not lines; can set linetypes for lines but not points
+
+```{r}
+#| message: false
+#| layout-ncol: 3
+#| fig-width: 4
+#| fig-alt: |
+
+# Left
+ggplot(mpg, aes(x = displ, y = hwy, shape = drv)) + 
+  geom_smooth()
+
+# Center
+ggplot(mpg, aes(x = displ, y = hwy, linetype = drv)) + 
+  geom_smooth()
+
+# Right
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_smooth(aes(linetype = drv))
+```
+
+
+---
+* Can utilize multiple geom's together to make relationship clearer
+
+```{r}
+#| message: false
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-alt: |
+
+# Left
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) + 
+  geom_point() +
+  geom_smooth(aes(linetype = drv))
+
+# Right
+ggplot(mpg, aes(x = displ, y = hwy, linetype = drv)) + 
+  geom_smooth()
+```
+
+---
+### Displaying multiple rows of data
+* Many geom's (like `geom_smooth`) use a single geometric object to display multiple rows of data
+* You can set `group` aesthetic  to a categorical variable to draw multiple objects, so ggplot will then automatically group data to make multiple plots
+* If you map any aesthetic to a discrete variable, it will automatically group them
+
+.pull-left[
+
+```{r}
+#| layout-ncol: 3
+#| fig-width: 3
+#| fig-asp: 1
+#| message: false
+#| eval: false
+#| fig-alt: |
+#|   Three plots, each with highway fuel efficiency on the y-axis and engine 
+#|   size of cars, where data are represented by a smooth curve. The first plot 
+#|   only has these two variables, the center plot has three separate smooth 
+#|   curves for each level of drive train, and the right plot not only has the 
+#|   same three separate smooth curves for each level of drive train but these 
+#|   curves are plotted in different colors, with a legend explaining which 
+#|   color maps to which level. Confidence intervals around the smooth curves 
+#|   are also displayed.
+
+# Top Left
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth() + geom_point(alpha=0.2) 
+
+# Top Right
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth(aes(group = drv))
+
+# Bottom
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth(aes(color = drv), show.legend = FALSE)
+```
+]
+
+.pull-right[
+```{r}
+#| layout-ncol: 3
+#| fig-width: 3
+#| fig-asp: 1
+#| message: false
+#| echo: false
+#| fig-alt: |
+#|   Three plots, each with highway fuel efficiency on the y-axis and engine 
+#|   size of cars, where data are represented by a smooth curve. The first plot 
+#|   only has these two variables, the center plot has three separate smooth 
+#|   curves for each level of drive train, and the right plot not only has the 
+#|   same three separate smooth curves for each level of drive train but these 
+#|   curves are plotted in different colors, with a legend explaining which 
+#|   color maps to which level. Confidence intervals around the smooth curves 
+#|   are also displayed.
+
+# Top Left
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth() + geom_point(alpha=0.2) 
+
+# Top Right
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth(aes(group = drv))
+
+# Bottom
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_smooth(aes(color = drv), show.legend = FALSE)
+```
+
+]
+
+---
+
+### Different mappings for different layers
+* By placing mappings inside geom functions, you can use local mappings for different layers
+* e.g., let's color dots according to class of car but then have a uniform line color for a `geom_smooth`:
+```{r}
+#| fig-width: 6
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(aes(color = class)) + 
+  geom_smooth()
+```
+
+
+---
+
+### Different mappings for different layers
+* You can also combine filtering and use multiple geom's to emphasize different things in the visualization
+
+.pull-left[
+```{r}
+#| message: false
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_point(
+    data = mpg |> filter(class == "2seater"), 
+    shape = "circle open", size = 3, color = "red")
+```
+
+
+
+]
+
+.pull-right[
+
+```{r}
+#| message: false
+#| fig-width: 4
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_point(
+    data = mpg |> filter(class == "2seater"), 
+    shape = "circle open", size = 3, color = "red") +
+  geom_point(
+    data = mpg |> filter(class == "2seater"), 
+    color = "red")
+```
+
+]
+
+---
+
+### Example
+
+* Let's look through how we can create these 4 figures:
+
+```{r}
+#| echo: false
+#| message: false
+#| layout-ncol: 2
+#| fig-width: 3.25
+# Left 
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+# Center Left
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+# Center Right
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+# Right 
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(aes(color = drv)) + 
+  geom_smooth(se = FALSE)
+```
+
+.pull-left[
+```{r}
+#| eval: false
+#| message: false
+#| layout-ncol: 2
+#| fig-width: 4.5
+# Left 
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+# Center Left
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+
+]
+
+.pull-right[
+```{r}
+#| eval: false
+#| message: false
+#| layout-ncol: 2
+#| fig-width: 4.5
+# Center Right
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+# Right 
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(aes(color = drv)) + 
+  geom_smooth(se = FALSE)
+```
+]
+
+---
+
+### Facets
+.pull-left[ 
+* Facetting with `facet_wrap()` splits plots into subplots based on categorical variables:
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  facet_wrap(~cyl)
+```
+
+]
+
+.pull-right[
+
+* To facet with the combo of 2 variables, use `facet_grid()`.
+* The first argument of `facet_grid()` is also a formula, but now it's a double sided formula: `rows ~ cols`.
+
+```{r}
+#| fig-alt: |
+#|   Scatterplot of highway fuel efficiency versus engine size of cars, faceted 
+#|   by number of cylinders across rows and by type of drive train across 
+#|   columns. This results in a 4x3 grid of 12 facets. Some of these facets have 
+#|   no observations: 5 cylinders and 4 wheel drive, 4 or 5 cylinders and front 
+#|   wheel drive.
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  facet_grid(drv ~ cyl)
+```
+]
+
+---
+
+### Facets
+* Facets share same scale for x/y axes by default
+* Useful for comparing across facets, but can be limiting
+* `scales` argument allows for freeing up the x or y variables
+
+```{r}
+#| fig-alt: |
+#| layout-ncol: 2
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  facet_grid(drv ~ cyl)
+
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  facet_grid(drv ~ cyl, scales = "free_y")
+```
+
+
+---
+
+### Facets
+* Which of the following makes it easier to compare engine size (`displ`) across cras with different drive trains?  
+```{r, message=FALSE}
+ggplot(mpg, aes(x = displ)) + 
+  geom_histogram() + 
+  facet_grid(drv ~ .)
+
+ggplot(mpg, aes(x = displ)) + 
+  geom_histogram() +
+  facet_grid(. ~ drv)
+```
+
+---
+
+### Facets
+* What are advantages and disadvantages to using facets instead of color?
+```{r}
+#| layout-ncol: 2
+ggplot(mpg) + 
+  geom_point(aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2)
+
+ggplot(mpg) + 
+  geom_point(aes(x = displ, y = hwy, color = class)) 
+```
+
+
+---
+
+### Statistical transformations
+.pull-left[ 
+* Consider the `diamonds` dataset, in tidyverse:
+```{r}
+head(diamonds)
+```
+
+* Let's create a bar chart across cuts:
+```{r, eval=FALSE}
+ggplot(diamonds, aes(x = cut)) + 
+  geom_bar()
+```
+
+]
+.pull-right[
+```{r, echo=FALSE}
+ggplot(diamonds, aes(x = cut)) + 
+  geom_bar()
+```
+* `count` is not a variable in diamonds, so how is it creating this?
+]
+
+
+---
+
+### Statistical transformations
+
+
+-   Bar charts, histograms, and frequency polygons bin your data and then plot bin counts, the number of points that fall in each bin.
+
+-   Smoothers fit a model to your data and then plot predictions from the model.
+
+-   Boxplots compute the five-number summary of the distribution and then display that summary as a specially formatted box.
+
+The algorithm used to calculate new values for a graph is called a **stat**, short for statistical transformation.
+
+```{r}
+#| label: fig-vis-stat-bar
+#| echo: false
+#| out-width: "75%"
+
+knitr::include_graphics("visualization-stat-bar.png")
+```
+
+
+
+---
+
+### Position adjustments
+
+.pull-left[ 
+* You can color bar charts using `color` or `fill` aesthetics:
+```{r}
+#| layout-ncol: 2
+#| fig-width: 2.5
+#| fig-alt: |
+#|   Two bar charts of drive types of cars. In the first plot, the bars have 
+#|   colored borders. In the second plot, they're filled with colors. Heights 
+#|   of the bars correspond to the number of cars in each cut category.
+
+# Left
+ggplot(mpg, aes(x = drv, color = drv)) + 
+  geom_bar()
+
+# Right
+ggplot(mpg, aes(x = drv, fill = drv)) + 
+  geom_bar()
+```
+]
+
+.pull-right[
+* You can also fill aesthetics with other variables
+```{r}
+#| fig-alt: |
+#|   Segmented bar chart of drive types of cars, where each bar is filled with 
+#|   colors for the classes of cars. Heights of the bars correspond to the 
+#|   number of cars in each drive category, and heights of the colored 
+#|   segments are proportional to the number of cars with a given class 
+#|   level within a given drive type level.
+
+ggplot(mpg, aes(x = drv, fill = class)) + 
+  geom_bar()
+```
+* Each rectangle represents a combo of `drv` and `class`
+]
+
+
+---
+
+### Position adjustments
+* The way bar charts are stacked is determined using `position` argument (position adjustment)
+* For non-stacked charts, you can use three options: `position = 'identity'`, `position = 'dodge'`, `position = 'fill'`
+* `position = 'identity'` is not super useful for bar charts: it places each bar exactly where it falls in context of the graph (i.e. at `drv`)
+```{r}
+#| fig-width: 3.5
+# Left
+ggplot(mpg, aes(x = drv, fill = class)) + 
+  geom_bar(alpha = 1/5, position = "identity")
+
+# Right
+ggplot(mpg, aes(x = drv, color = class)) + 
+  geom_bar(fill = NA, position = "identity")
+```
+* `position = 'identity'` is useful for geom_point, since we want all dots to appear where data is
+
+
+---
+
+### Position adjustments
+* `position = "fill"` works like stacking, but makes each set of stacked bars the same height. This makes it easier to compare proportions across groups.
+
+* `position = "dodge"` places overlapping objects directly beside one another. This makes it easier to compare individual values.
+
+```{r}
+#| fig-width: 4.5
+# Left
+ggplot(mpg, aes(x = drv, fill = class)) + 
+  geom_bar(position = "fill")
+
+# Right
+ggplot(mpg, aes(x = drv, fill = class)) + 
+  geom_bar(position = "dodge")
+```
+
+
+---
+
+### Exploratory data analysis
+Cycle through the following:
+
+* Generate questions about your data.
+
+* Search for answers by visualizing, transforming, and modelling your data.
+
+* Use what you learn to refine your questions and/or generate new questions
+
+Requires creativity and critical thinking.  Two questions which capture many different types of questions:
+* What type of variation occurs **within** each variable?  (Mean, standard deviation, skewness, ...)
+* What type of covariation occurs **between** variables?  (How does height vary with weight, ... )
+
+---
+
+### Variation
+* **Variation** is tendency for values of a variable to change from measurement to measurement
+* Can be due to measurement error (e.g., measuring height with different rulers) or due to within-group variation (different people have different heights)
+* Let's explore the distribution of weights (`carat`) of the ~50k diamonds from `diamonds` dataset.
+* `carat` is numerical, can use histogram:
+```{r}
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(binwidth = 0.5)
+```
+
+---
+
+### Typical values
+.pull-left[ 
+* In bar charts and histograms, tall bars = common values; no bars = values not seen
+* Questions to ask yourself:
+    - Which values are the most common? Why?
+    - Which values are rare? Why? Does that match your expectations?
+    - Can you see any unusual patterns? What might explain them?
+* Let's look at distribution of weights of smaller diamonds.
+```{r}
+#| eval: false
+smaller <- diamonds |> 
+  filter(carat < 3)
+
+ggplot(smaller, aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+```
+
+]
+
+.pull-right[
+```{r}
+#| echo: false
+smaller <- diamonds |> 
+  filter(carat < 3)
+
+ggplot(smaller, aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+```
+* Why are there more diamonds at whole carats than fractional?
+* Why are more diamonds slightly to the right of each peak than slightly to left?
+
+
+]
+
+---
+### Unusual values
+* If you encounter unusual values in dataset, and want to ignore them for rest of analysis, two options:
+  - Drop entire row with the strange values, e.g.
+```{r}
+diamonds_filtered <- diamonds %>% 
+  filter(between( y, 3, 20))
+```
+  - Replacing unusual values with missing values
+```{r}
+diamonds2 <- diamonds |> 
+  mutate(y = if_else(y < 3 | y > 20, NA, y))
+```
+
+* Latter is more recommended behavior.
+
+---
+### Covariation
+* **Covariation** is tendency for values of >= 2 variables to vary together in a related way
+
+#### Categorical and numerical variable
+* We can use `geom_freqpoly()` (similar to `geom_hist`) to show "frequency polygons", e.g. for how price of a diamond varies with quality
+```{r}
+ggplot(diamonds, aes(x = price)) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+```
+* Not super informative, since the height mainly reflects the count.
+
+---
+
+### Covariation
+* More useful to understand the *density* of the variable (count / total number)
+* To do this, we can use `after_stat(density)`, which does this normalization
+* Default behavior is `after_stat(count)`
+
+```{r}
+#| layout-ncol: 3
+#| fig-width: 4
+ggplot(diamonds, aes(x = price)) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+
+ggplot(diamonds, aes(x = price, y = after_stat(count))) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+
+ggplot(diamonds, aes(x = price, y = after_stat(density))) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+
+```
+* Doesn't appear that diamond quality has significant effect? 
+
+
+---
+
+### Covariation
+* Let's further inspect with a box plot
+.pull-left[ 
+```{r}
+#| fig-alt: 
+#| fig-width: 4
+
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
+```
+
+]
+.pull-right[
+* Can now easily compare medians and 25th/75th percentiles
+* Seems that better quality diamonds are typically cheaper!  We'll investigate further why.
+]
+
+
+---
+
+### Factor orders
+.pull-left[
+* `cut` in the `diamonds` dataset is an **(ordered) factor**: categorical varibale which has ordering (fair < good < very good, etc)
+* We'll see a lot more about factors in the next few lectures
+* We can re-define the ordering of factors using `fct_reorder()`
+```{r}
+#| fig-alt: 
+#| fig-width: 4.5
+
+ggplot(mpg, aes(x = fct_reorder(class, hwy, median), y = hwy)) +
+  geom_boxplot()
+```
+
+]
+.pull-right[
+* If we have long variable names, sometimes better by making the y axis have labels 
+```{r}
+#| fig-alt: |
+#| fig-width: 4.5
+ggplot(mpg, aes(x = hwy, y = fct_reorder(class, hwy, median))) +
+  geom_boxplot()
+```
+]
+
+---
+
+### Further inspecting diamond prices
+* Recall that it appeared that diamond prices seemed inversely correlated with quality
+```{r}
+#| fig-alt: 
+#| fig-width: 4
+
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
+```
+* What might be responsible for this? Recall variables: x,y,z refer to length/width/depth of diamond in mm
+```{r}
+colnames(diamonds)
+```
+
+* Let's look at **size** vs price.
+
+
+---
+
+### Size vs. price in diamonds
+* We can try doing 3 side-by-side plots by just doing 3 ggplots:
+```{r}
+#| layout-ncol: 3
+#| fig-width: 3.5
+ggplot(diamonds, aes(x = x, y = price)) +
+  geom_point()
+ggplot(diamonds, aes(x = y, y = price)) +
+  geom_point()
+ggplot(diamonds, aes(x = z, y = price)) +
+  geom_point()
+```
+* Some things we notice:
+  * Clearly some outliers - "zero" length / width / depth diamonds apparently?
+  * But still some positive correlation between x, y, z and price
+* Let's clean up the tibble so we are only looking at the middle 95% of values for x, y, z
+
+---
+
+### Size vs. price in diamonds
+* Let's clean up the tibble so we are only looking at the middle 95% of values for x, y, z
+```{r}
+#| layout-ncol: 3
+#| fig-width: 4
+diamonds_middle <- diamonds %>%
+  filter(between(x, quantile(diamonds$x, 0.025), quantile(diamonds$x, 0.975)),
+         between(y, quantile(diamonds$y, 0.025), quantile(diamonds$y, 0.975)),
+         between(z, quantile(diamonds$z, 0.025), quantile(diamonds$z, 0.975)))
+ggplot(diamonds_middle, aes(x = x, y = price)) +
+  geom_point()
+ggplot(diamonds_middle, aes(x = y, y = price)) +
+  geom_point()
+ggplot(diamonds_middle, aes(x = z, y = price)) +
+  geom_point()
+```
+
+---
+### Size vs. price in diamonds
+* Appears x, y, z (length/width/depth) are highly correlated with price
+* Recall that volume of a cube is length * width * depth - so let's look at the relationship between estimated volume (x\*y\*z) and price
+```{r}
+#| layout-ncol: 1
+#| fig-width: 5
+diamonds_middle %>%
+  mutate(est_volume = x*y*z) %>%
+  ggplot(aes(x = est_volume, y = price)) +
+  geom_point()
+```
+* Does appear to be a strong correlation.
+* Now let's think again as to why it was that we previously found that higher quality diamonds were cheaper.
+
+---
+### Size vs. price in diamonds
+* Hypothesis: higher quality diamonds are smaller, lower quality diamonds are larger.
+* To investigate, we could use boxplot: we want to visualize variation in size for each category of quality
+.pull-left[ 
+```{r}
+diamonds_middle %>%
+  mutate(est_volume = x*y*z) %>%
+  ggplot(aes(x = cut, y = est_volume)) +
+  geom_boxplot()
+```
+
+]
+
+---
+
+### Size vs price in diamonds
+* Let's try to visualize the different cuts on the dot plot:
+```{r}
+#| layout-ncol: 2
+#| fig-width: 5
+diamonds_middle %>%
+  mutate(est_volume = x*y*z) %>%
+  ggplot(aes(x = est_volume, y = price, color = cut)) +
+  geom_point()
+diamonds_middle %>%
+  mutate(est_volume = x*y*z) %>%
+  ggplot(aes(x = est_volume, y = price, color = cut)) +
+  geom_smooth()
+```
+
+
+---
+
+### Size vs. price in diamonds
+.pull-left[ 
+* We were looking at the estimated volume, but could also look at the *weight*: carat.  
+* Let's see how if weight varies by class.
+
+```{r}
+#| layout-ncol: 1
+#| fig-width: 4
+diamonds_middle %>%
+  ggplot(aes(x = cut, y = carat)) +
+  geom_boxplot()
+```
+
+
+]
+
+.pull-right[
+* And now let's visualize relationship between carat size and price by cut:
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+diamonds_middle %>%
+  ggplot(aes(x = carat, y = price, color = cut)) +
+  geom_point()
+diamonds_middle %>%
+  mutate(est_volume = x*y*z) %>%
+  ggplot(aes(x = carat, y = price, color = cut)) +
+  geom_smooth()
+```
+
+
+]
