@@ -1,0 +1,92 @@
+---
+title: 'Lab 3'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(babynames)
+library(tidyverse)
+library(nycflights13)
+```
+
+
+### Question 1 (6 pts)
+
+Refer to the dataset 'babynames',
+
+(1) Filter out names starting with 'A' or 'a' (2 pts)
+
+(2) Create a new column 'Multiple', which returns true if there are consecutive 'n's (i.e., 'nn' or 'nnn', etc), and false otherwise. (2 pts).
+
+(3) Create a new column 'Replacement', which replaces any sequence of consecutive 'n's in the name with a single '\.' (2 pts).
+
+```{r}
+# code here 
+```
+
+
+
+\newpage 
+
+### Question 2 (8 points)
+
+Refer to the 'flights' dataset, run the following code,
+
+```{r}
+make_datetime_100 <- function(year, month, day, time) {
+  make_datetime(year, month, day, time %/% 100, time %% 100)
+} 
+
+flights_dt <- flights |> 
+  filter(!is.na(dep_time), !is.na(arr_time)) |> 
+  mutate(
+    dep_time = make_datetime_100(year, month, day, dep_time),
+    arr_time = make_datetime_100(year, month, day, arr_time),
+  ) |> 
+  select(tailnum, carrier, dep_time, arr_time)
+
+```
+
+(1) Return all flights which depart on January 1, 2013. (2 pts).
+
+(2) Create new columns as 'n.dep_time' and 'n.arr_time', which returns a datetime which specifies the floor of the hour of departure / arrival respectively.  i.e., if departs at 5:54 PM on January 1, 2013, we want to return the date time corresponding to January 1, 2013 at 5:00 PM.  (2 pts)
+
+(3) Create a column 'time_elapse.s' which calculates how long the flights fly in seconds (2 pts).
+
+(4) Create a column 'time_elapse.h' which calculates how long the flights fly in hours (2 pts).
+
+```{r}
+# code here
+```
+
+
+\newpage 
+
+
+### Question 3 (1 pts)
+Refer to the 'flights' and 'weather' datasets, run the following code,
+
+```{r}
+flights2 <- flights %>%
+  select(year, month,day, origin, dest, dep_time)%>%
+  mutate(hour = dep_time%/%100)
+
+
+```
+
+Left join the column "temp" of "weather" to "flights 2", explicitly using the `by = ` argument so that you specify which keys you are joining on. 
+
+
+```{r}
+# code here
+```
