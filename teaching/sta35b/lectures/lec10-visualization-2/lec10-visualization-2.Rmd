@@ -942,10 +942,6 @@ diamonds_middle %>%
 diamonds_middle %>%
   ggplot(aes(x = carat, y = price, color = cut)) +
   geom_point()
-diamonds_middle %>%
-  mutate(est_volume = x*y*z) %>%
-  ggplot(aes(x = carat, y = price, color = cut)) +
-  geom_smooth()
 ```
 
 

@@ -906,14 +906,9 @@ diamonds_middle %&gt;%
 diamonds_middle %&gt;%
   ggplot(aes(x = carat, y = price, color = cut)) +
   geom_point()
-diamonds_middle %&gt;%
-  mutate(est_volume = x*y*z) %&gt;%
-  ggplot(aes(x = carat, y = price, color = cut)) +
-  geom_smooth()
-#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 ```
 
-&lt;img src="lec10-visualization-2_files/figure-html/unnamed-chunk-50-1.png" width="288" /&gt;&lt;img src="lec10-visualization-2_files/figure-html/unnamed-chunk-50-2.png" width="288" /&gt;
+&lt;img src="lec10-visualization-2_files/figure-html/unnamed-chunk-50-1.png" width="288" /&gt;
 
 
 ]
