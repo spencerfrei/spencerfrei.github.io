@@ -171,6 +171,7 @@ diamonds_middle %&gt;%
 ### Size vs. price in diamonds
 * We were looking at the estimated volume, but could also look at the *weight*: carat.  
 * Let's see how if weight varies by class.
+
 .pull-left[ 
 
 ```r
@@ -237,6 +238,304 @@ ggplot(mpg, aes(x = displ, y = hwy)) +
 &lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-15-1.png" width="396" /&gt;
 
 ]
+
+
+---
+
+### Annotations
+.pull-left[ 
+* Often helpful to label individual observations or gruops of observations
+* Tool to use: `geom_text()`, similar to `geom_point` but has additional aesthetic `label`.
+* Sources of labels:
+  - Tibble itself has labels
+  - Custom, user-added labels.
+
+```r
+label_info &lt;- mpg |&gt;
+  group_by(drv) |&gt;
+  arrange(desc(displ)) |&gt;
+  slice_head(n = 1) |&gt;
+  mutate(
+    drive_type = case_when(
+      drv == "f" ~ "front-wheel drive",
+      drv == "r" ~ "rear-wheel drive",
+      drv == "4" ~ "4-wheel drive"
+    )
+  ) |&gt;
+  select(displ, hwy, drv, drive_type)
+```
+
+  ]
+  
+.pull-right[
+
+```r
+label_info
+#&gt; # A tibble: 3 × 4
+#&gt; # Groups:   drv [3]
+#&gt;   displ   hwy drv   drive_type       
+#&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;            
+#&gt; 1   6.5    17 4     4-wheel drive    
+#&gt; 2   5.3    25 f     front-wheel drive
+#&gt; 3   7      24 r     rear-wheel drive
+```
+* Can use this to directly label groups and replace legend
+]
+  
+---
+
+### Annotations
+.pull-left[
+
+```r
+label_info
+#&gt; # A tibble: 3 × 4
+#&gt; # Groups:   drv [3]
+#&gt;   displ   hwy drv   drive_type       
+#&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;            
+#&gt; 1   6.5    17 4     4-wheel drive    
+#&gt; 2   5.3    25 f     front-wheel drive
+#&gt; 3   7      24 r     rear-wheel drive
+```
+* Want to use `label_info` as the data.
+* x and y aesthetics the same as in the original `mpg` tibble
+* But then want to set `hjust` and `vjust` 
+]
+
+.pull-right[
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  geom_text(
+    data = label_info, 
+    aes(x = displ, y = hwy, label = drive_type),
+    fontface = "bold", size = 5, hjust = "right", vjust = "bottom"
+  ) +
+  theme(legend.position = "none")
+#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-19-1.png" width="324" /&gt;
+
+]
+
+
+---
+
+### Annotations
+.pull-left[
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-20-1.png" width="324" /&gt;
+* Two things to address: (1) What are `hjust` and `vjust` doing, why is text appearing where it does? (2) 
+* Let's look at `label_info`
+
+```r
+label_info
+#&gt;   displ   hwy drv   drive_type       
+#&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt;            
+#&gt; 1   6.5    17 4     4-wheel drive    
+#&gt; 2   5.3    25 f     front-wheel drive
+#&gt; 3   7      24 r     rear-wheel drive
+```
+
+]
+
+.pull-right[
+* We can use ``ggrepel::geom_label_repel()` to make text repel other text labels.
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  geom_label_repel(
+    data = label_info, 
+    aes(x = displ, y = hwy, label = drive_type),
+    fontface = "bold", size = 5, nudge_y = 2
+  ) +
+  theme(legend.position = "none")
+#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-22-1.png" width="288" /&gt;
+
+]
+
+---
+
+### Annotations
+.pull-left[ 
+* Same idea can be used to highlight points on plot, e.g. outliers
+
+```r
+potential_outliers &lt;- mpg |&gt;
+  filter(hwy &gt; 40 | (hwy &gt; 20 &amp; displ &gt; 5))
+  
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_text_repel(data = potential_outliers, aes(label = model)) +
+  geom_point(data = potential_outliers, color = "red") +
+  geom_point(
+    data = potential_outliers,
+    color = "red", size = 3, shape = "circle open"
+  )
+```
+
+]
+.pull-right[
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-24-1.png" width="432" /&gt;
+
+]
+
+---
+### Annotations
+* Other annotations which you might encounter / could be useful:
+  * `geom_hline()`, `geom_vline()`: create horizontal / vertical lines
+  * `geom_rect()`: rectangle around points of interest, require specifying `xmin`, `xmax`, `ymin`, `ymax`
+  * `geom_segment()`: draw an arrow from one point to another
+* Function which allows for doing any of these: `annotate()`
+* Let's say we want to add some text to our plot, but split lines every 30 characters using `str_wrap()`
+
+```r
+trend_text &lt;- "Larger engine sizes tend to have lower fuel economy." |&gt;
+  str_wrap(width = 30)
+trend_text
+#&gt; [1] "Larger engine sizes tend to\nhave lower fuel economy."
+```
+
+---
+
+### Annotations
+
+.pull-left[
+
+* Let's add a text label in red using `annotate(geom = 'label')`
+* ... and then add a line segment giving general trend
+
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  annotate(
+    geom = "label", x = 3.5, y = 38,
+    label = trend_text,
+    hjust = "left", color = "red"
+  ) +
+  annotate(
+    geom = "segment",
+    x = 3, y = 35, xend = 5, yend = 25, color = "red",
+    arrow = arrow(type = "closed")
+  )
+```
+
+]
+
+.pull-right[
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-27-1.png" width="432" /&gt;
+
+]
+
+---
+
+### Scales
+* By default, ggplot2 automatically adds scales for you, e.g. this code
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = class))
+```
+uses the default behavior for scaling `geom_point()`, which is using continuous scales for x and y and discrete color scales:
+
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = class)) +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  scale_color_discrete()
+```
+
+---
+
+### Axis ticks
+* Axes and legends are called **guides** in R.  Axes used for x,y aesthetics, legends for everything else
+* Ticks on axes and keys on legend affected by args `breaks` and `labels`.
+
+.pull-left[
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point() +
+  scale_y_continuous(breaks = seq(15, 40, by = 5)) 
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-30-1.png" width="288" /&gt;
+
+]
+
+.pull-right[
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point() +
+  scale_x_continuous(labels = NULL) +
+  scale_y_continuous(labels = NULL) +
+  scale_color_discrete(labels = c("4" = "4-wheel", "f" = "front", "r" = "rear"))
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-31-1.png" width="288" /&gt;
+
+]
+
+---
+
+### Axis ticks
+* Specifying `labels` and `breaks` gives a lot of flexibility on how to plot
+
+
+```r
+# Left
+ggplot(diamonds, aes(x = price, y = cut)) +
+  geom_boxplot(alpha = 0.05) +
+  scale_x_continuous(labels = label_dollar())
+
+# Right
+ggplot(diamonds, aes(x = price, y = cut)) +
+  geom_boxplot(alpha = 0.05) +
+  scale_x_continuous(
+    labels = label_dollar(scale = 1/1000, suffix = "K"), 
+    breaks = seq(1000, 19000, by = 6000) )
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-32-1.png" width="324" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-32-2.png" width="324" /&gt;
+
+---
+
+### Legends
+.pull-left[ 
+* To control location of legend, use `theme()` (themes control non data parts of a plot)
+
+```r
+base &lt;- ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = class))
+
+base + theme(legend.position = "right") # the default
+base + theme(legend.position = "left")
+base + 
+  theme(legend.position = "top") +
+  guides(color = guide_legend(nrow = 3))
+base + 
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(nrow = 3))
+```
+]
+
+.pull-right[
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-34-1.png" width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-34-2.png" width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-34-3.png" width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-34-4.png" width="216" /&gt;
+
+]
+
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
