@@ -602,4 +602,125 @@ base +
 
 ]
 
+---
 
+### Replacing scales
+.pull-left[ 
+* It's often useful to consider transformations of data, e.g. log transformations
+```{r}
+#| layout-ncol: 2
+#| fig-width: 3
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = 0.02)
+
+# Right
+ggplot(diamonds, aes(x = log10(carat), y = log10(price))) +
+  geom_point(alpha = 0.02)
+```
+]
+
+.pull-right[
+* A useful geom for large-sample-size datasets: `geom_bin2d()`
+```{r}
+#| layout-ncol: 2
+#| fig-width: 3
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d()
+
+# Right
+ggplot(diamonds, aes(x = log10(carat), y = log10(price))) +
+  geom_bin2d()
+```
+]
+
+---
+### Replacing scales
+* Not ideal that previous plots had `log10(carat)` on the x axis, hard to interpret
+* Can use `scale_x_log10()` and `scale_y_log190)` to plot regular values, but with ticks that are spread using a log scale
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4.5
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d()
+
+# Right
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d() + 
+  scale_x_log10() + scale_y_log10() 
+```
+
+---
+### Replacing scales
+.pull-left[ 
+* Color scales are also often replaced; especially using `scale_color_brewer`
+
+```{r}
+#| fig-align: default
+#| layout-ncol: 2
+#| fig-width: 3
+#| fig-alt: |
+#|   Two scatterplots of highway mileage versus engine size where points are 
+#|   colored by drive type. The plot on the left uses the default 
+#|   ggplot2 color palette and the plot on the right uses a different color 
+#|   palette.
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = drv))
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = drv)) +
+  scale_color_brewer(palette = "Set1")
+```
+]
+.pull-right[
+* Many different options for color brewer
+```{r}
+#| label: fig-brewer
+#| echo: false
+#| fig-cap: All colorBrewer scales.
+#| fig-asp: 2.5
+#| fig-alt: |
+#|   All colorBrewer scales. One group goes from light to dark colors. 
+#|   Another group is a set of non ordinal colors. And the last group has 
+#|   diverging scales (from dark to light to dark again). Within each set 
+#|   there are a number of palettes.
+
+par(mar = c(0, 3, 0, 0))
+RColorBrewer::display.brewer.all()
+```
+]
+
+
+---
+
+### Manual color scaling
+.pull-left[
+* `scale_color_manual()` allows for you to give specific colors for groups in the tibble, e.g.
+```{r}
+presidential
+```
+* Takes argument `values` which should be a named list, with entries of the form `group=color`.  
+* `color` can be either English names ("blue", "red") or hexadecimal color codes
+]
+.pull-right[
+
+```{r}
+#| fig-alt: |
+#|   Line plot of id number of presidents versus the year they started their 
+#|   presidency. Start year is marked with a point and a segment that starts 
+#|   there and ends at the end of the presidency. Democratic presidents are 
+#|   represented in blue and Republicans in red.
+
+presidential |>
+  mutate(id = 33 + row_number()) |>
+  ggplot(aes(x = start, y = id, color = party)) +
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  scale_color_manual(
+    values = c(Republican = "#E81B23",
+               Democratic = "#00AEF3"))
+```
+]

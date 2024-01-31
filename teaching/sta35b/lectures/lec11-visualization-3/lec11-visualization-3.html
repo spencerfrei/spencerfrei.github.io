@@ -535,7 +535,135 @@ base +
 
 ]
 
+---
 
+### Replacing scales
+.pull-left[ 
+* It's often useful to consider transformations of data, e.g. log transformations
+
+```r
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = 0.02)
+
+# Right
+ggplot(diamonds, aes(x = log10(carat), y = log10(price))) +
+  geom_point(alpha = 0.02)
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-35-1.png" width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-35-2.png" width="216" /&gt;
+]
+
+.pull-right[
+* A useful geom for large-sample-size datasets: `geom_bin2d()`
+
+```r
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d()
+
+# Right
+ggplot(diamonds, aes(x = log10(carat), y = log10(price))) +
+  geom_bin2d()
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-36-1.png" width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-36-2.png" width="216" /&gt;
+]
+
+---
+### Replacing scales
+* Not ideal that previous plots had `log10(carat)` on the x axis, hard to interpret
+* Can use `scale_x_log10()` and `scale_y_log190)` to plot regular values, but with ticks that are spread using a log scale
+
+```r
+# Left
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d()
+
+# Right
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d() + 
+  scale_x_log10() + scale_y_log10() 
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-37-1.png" width="324" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-37-2.png" width="324" /&gt;
+
+---
+### Replacing scales
+.pull-left[ 
+* Color scales are also often replaced; especially using `scale_color_brewer`
+
+
+```r
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = drv))
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = drv)) +
+  scale_color_brewer(palette = "Set1")
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-38-1.png" alt="Two scatterplots of highway mileage versus engine size where points are
+colored by drive type. The plot on the left uses the default
+ggplot2 color palette and the plot on the right uses a different color
+palette." width="216" /&gt;&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-38-2.png" alt="Two scatterplots of highway mileage versus engine size where points are
+colored by drive type. The plot on the left uses the default
+ggplot2 color palette and the plot on the right uses a different color
+palette." width="216" /&gt;
+]
+.pull-right[
+* Many different options for color brewer
+&lt;div class="figure"&gt;
+&lt;img src="lec11-visualization-3_files/figure-html/fig-brewer-1.png" alt="All colorBrewer scales. One group goes from light to dark colors.
+Another group is a set of non ordinal colors. And the last group has
+diverging scales (from dark to light to dark again). Within each set
+there are a number of palettes." width="432" /&gt;
+&lt;p class="caption"&gt;All colorBrewer scales.&lt;/p&gt;
+&lt;/div&gt;
+]
+
+
+---
+
+### Manual color scaling
+.pull-left[
+* `scale_color_manual()` allows for you to give specific colors for groups in the tibble, e.g.
+
+```r
+presidential
+#&gt; # A tibble: 12 × 4
+#&gt;   name       start      end        party     
+#&gt;   &lt;chr&gt;      &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;     
+#&gt; 1 Eisenhower 1953-01-20 1961-01-20 Republican
+#&gt; 2 Kennedy    1961-01-20 1963-11-22 Democratic
+#&gt; 3 Johnson    1963-11-22 1969-01-20 Democratic
+#&gt; 4 Nixon      1969-01-20 1974-08-09 Republican
+#&gt; 5 Ford       1974-08-09 1977-01-20 Republican
+#&gt; 6 Carter     1977-01-20 1981-01-20 Democratic
+#&gt; # ℹ 6 more rows
+```
+* Takes argument `values` which should be a named list, with entries of the form `group=color`.  
+* `color` can be either English names ("blue", "red") or hexadecimal color codes
+]
+.pull-right[
+
+
+```r
+presidential |&gt;
+  mutate(id = 33 + row_number()) |&gt;
+  ggplot(aes(x = start, y = id, color = party)) +
+  geom_point() +
+  geom_segment(aes(xend = end, yend = id)) +
+  scale_color_manual(
+    values = c(Republican = "#E81B23",
+               Democratic = "#00AEF3"))
+```
+
+&lt;img src="lec11-visualization-3_files/figure-html/unnamed-chunk-41-1.png" alt="Line plot of id number of presidents versus the year they started their
+presidency. Start year is marked with a point and a segment that starts
+there and ends at the end of the presidency. Democratic presidents are
+represented in blue and Republicans in red." width="432" /&gt;
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
