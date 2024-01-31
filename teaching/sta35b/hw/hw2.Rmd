@@ -57,14 +57,18 @@ Consider the `weather` dataset (comes when you load `nycflights13` library), whi
 weather
 ```
 
-(a) Provide code which computes the average precipitation per origin per month, removing any missing values.
+(a) Provide code which computes the average total precipitation per origin per month, removing any missing values.  That is, you should have for every origin and month pair, the average (across all years in the tibble) amount of precipitation received at that origin in that month.  
 Then filter the resulting tibble so that only those origin-month pairs with the 5 highest average precipitation remain.
+
+*Hint*: You should first compute what the total precipitation per origin, year, and month is. You now have a tibble which records the total precipitation per origin-month pair for every year; now average across all of the years for which you have observations in that month for the origin. 
 
 ```{r}
 # code here
 ```
 
-(b) Do a similar calculation: compute the average precipitation per origin per **week number** (i.e., Jan 1 - Jan 7 is week 1, Jan 8 - 15 is week 2, etc.) removing any missing values.  Then filter the resulting tibble so that only those origin-month pairs with the 5 highest average precipitation remain.  Note that `weather` does not have a week number so you need to create this yourself---think of what mathematical operations allow for you to find the week number, and look back at the slides on dates/times. 
+(b) Do a similar calculation: compute the average total precipitation per origin per **week number** (i.e., Jan 1 - Jan 7 is week 1, Jan 8 - 15 is week 2, etc.) removing any missing values.  Then filter the resulting tibble so that only those origin-month pairs with the 5 highest average precipitation remain.  Note that `weather` does not have a week number so you need to create this yourself---think of what mathematical operations allow for you to find the week number, and look back at the slides on dates/times. 
+
+*Hint*: similar to the previous part of the problem, you need to calculate the total precipitation per each week for every origin and year. Then average over different years. 
 
 ```{r}
 # code here
