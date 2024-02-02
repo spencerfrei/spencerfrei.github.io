@@ -473,18 +473,17 @@ weather %>%
   filter(month == 5, temp < 25)
 ```
 * Appears real!
-* How does it compare to EWR and LGA? 
-```{r}
-weather %>% filter(month == 5, day == 8) %>%
-  filter(between(hour, 21, 23))
-```
-
-* Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
 
 ]
 
 .pull-right[
 
-* Need to compute the per-day minimum 
+* How does it compare to EWR and LGA? 
+```{r}
+weather %>% filter(month == 5, day == 8) %>%
+  filter(between(hour, 21, 23)) %>% print(n = Inf)
+```
+
+* Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
 
 ]

@@ -605,11 +605,16 @@ weather %&gt;%
 #&gt; #   visib &lt;dbl&gt;, time_hour &lt;dttm&gt;
 ```
 * Appears real!
+
+]
+
+.pull-right[
+
 * How does it compare to EWR and LGA? 
 
 ```r
 weather %&gt;% filter(month == 5, day == 8) %&gt;%
-  filter(between(hour, 21, 23))
+  filter(between(hour, 21, 23)) %&gt;% print(n = Inf)
 #&gt; # A tibble: 9 × 15
 #&gt;   origin  year month   day  hour  temp  dewp humid wind_dir wind_speed
 #&gt;   &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
@@ -619,17 +624,14 @@ weather %&gt;% filter(month == 5, day == 8) %&gt;%
 #&gt; 4 JFK     2013     5     8    21  57.0  48.9  74.3      170      11.5 
 #&gt; 5 JFK     2013     5     8    22  13.1  12.0  95.3       80       8.06
 #&gt; 6 JFK     2013     5     8    23  57.2  53.6  87.7      120       4.60
-#&gt; # ℹ 3 more rows
-#&gt; # ℹ 5 more variables: wind_gust &lt;dbl&gt;, precip &lt;dbl&gt;, pressure &lt;dbl&gt;, …
+#&gt; 7 LGA     2013     5     8    21  59    48.9  69.2       NA       5.75
+#&gt; 8 LGA     2013     5     8    22  59    51.1  75.0      100       6.90
+#&gt; 9 LGA     2013     5     8    23  55.9  51.1  83.7       90       6.90
+#&gt; # ℹ 5 more variables: wind_gust &lt;dbl&gt;, precip &lt;dbl&gt;, pressure &lt;dbl&gt;,
+#&gt; #   visib &lt;dbl&gt;, time_hour &lt;dttm&gt;
 ```
 
 * Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
-
-]
-
-.pull-right[
-
-* Need to compute the per-day minimum 
 
 ]
     </textarea>
