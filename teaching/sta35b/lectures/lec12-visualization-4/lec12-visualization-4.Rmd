@@ -487,3 +487,13 @@ weather %>% filter(month == 5, day == 8) %>%
 * Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
 
 ]
+
+
+
+---
+
+### Midterm studying tips
+* Review labs, homeworks (and homework solutions - HW 2 sol up tonight), and practice midterm
+* Make sure you understand all of the core functions: `min`, `max`, `mean`, `pmin`, `pmax`, `group_by()`, `summarize()`, `pivot_wider`, `pivot_longer`, regex, joins, etc.   Understand how NA's work, what typical default behavior for NA's is, etc. 
+* Test-taking strategy: Go through exam and solve all of the easy questions last.  If it takes more than 2 minutes, skip and return later.
+* Work through examples on the margins / side / back of the exam to make sure you're understanding things correctly.
