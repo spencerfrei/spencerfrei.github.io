@@ -1,0 +1,490 @@
+---
+title: "Visualizations IV / Factors"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+source("../_common.R")
+```
+
+### Factors
+.pull-left[ 
+* Factors are used for categorical variables that have a fixed and known set of values
+* Useful when we want to display character vectors in non-alphabetical order
+* E.g. let's suppose we have a variable that records month:
+```{r}
+x1 <- c("Dec", "Apr", "Jan", "Mar")
+```
+Two issues:
+* Only twelve possible months, so if we typed "Jam" instead of "Jan", would be hard to catch the error.
+* Sorting by characters is not meaningful:
+```{r}
+sort(x1)
+```
+
+]
+
+.pull-right[
+* We can fix these by treating them as a factor
+* Factors require a list of valid **levels**:
+```{r}
+month_levels <- c(
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+```
+* With levels, you can create factors:
+```{r}
+y1 <- factor(x1, levels = month_levels)
+y1
+sort(y1)
+```
+
+]
+
+
+---
+
+### Factors
+.pull-left[
+* If you create a factor from a vector, every element of the vector must be a level of a factor, otherwise you get `NA`:
+```{r}
+x2 <- c("Dec", "Apr", "Jam", "Mar")
+(y2 <- factor(x2, levels = month_levels))
+```
+* If you want to throw an error for non-level vector info, you can use ``forcats::fct()`
+```{r, eval = FALSE}
+y2 <- fct(x2, levels = month_levels)
+#> Error in `fct()`:
+#> ! All values of `x` must appear in `levels` or `na`
+#> ℹ Missing level: "Jam"
+```
+
+]
+
+.pull-right[
+* If you omit levels, `factor()` makes factors in alphabetical order:
+```{r}
+factor(x1)
+```
+* `forcats::fct()` orders by first appearance in the vector
+```{r}
+fct(x1)
+```
+* You can extract levels from a factor using `levels()`:
+```{r}
+levels(y2)
+```
+
+]
+
+---
+
+### Factor: General Social Survey
+* We'll look at survey data from the General Social Survey (`forcats::gss_cat`, loaded in tidyverse)
+```{r}
+gss_cat
+```
+* When factors are in a tibble, levels do not directly show, but can see them using `count`:
+
+.pull-left[
+```{r, eval=FALSE}
+gss_cat %>%
+  count(race)
+```
+]
+
+.pull-right[
+```{r, echo=FALSE}
+gss_cat %>%
+  count(race)
+```
+]
+
+
+---
+
+### GSS Data: exploratory data analysis
+.pull-left[ 
+* Let's look at the distribution of `rincome` (reported income)
+```{r}
+#| fig-width: 6
+ggplot(gss_cat, aes(x = rincome)) + geom_bar()
+```
+* A little hard to see what's happening on the x-axis!
+]
+
+--
+
+.pull-right[
+
+
+```{r}
+#| fig-width: 6
+ggplot(gss_cat, aes(y = rincome)) + geom_bar()
+```
+
+]
+
+---
+
+### GSS Data: exploratory data analysis
+.pull-left[ 
+* Does income vary by religion much?
+```{r}
+#| fig-width: 6
+ggplot(gss_cat, aes(x = rincome)) + geom_bar()
+```
+* A little hard to see what's happening on the x-axis!
+]
+
+--
+
+.pull-right[
+
+
+```{r}
+#| fig-width: 6
+ggplot(gss_cat, aes(y = rincome)) + geom_bar()
+```
+
+]
+
+---
+
+### Exploratory data analysis
+.pull-left[ 
+* What are the most common religions in the survey?  What about party ID?  
+
+```{r}
+gss_cat %>% count(relig) %>% arrange(n) %>% print(n=Inf)
+```
+
+]
+
+.pull-right[
+
+```{r}
+gss_cat %>% count(partyid) %>% arrange(n) %>% print(n=Inf)
+```
+
+]
+---
+
+.pull-left[ 
+* Let's look at different TV watching habits by marital status.  Maybe we can first try doing a `geom_freqpoly()` with color given by religion.
+```{r, message=FALSE, warning=FALSE}
+ggplot(gss_cat,
+       aes(x = tvhours, y = after_stat(density), color = marital)) + 
+  geom_freqpoly()
+```
+]
+
+--
+
+.pull-right[
+* If we try the same thing for religion, it is trickier to visualize:
+
+* Let's look at TV hours watched per religion.  Maybe we can first try doing a `geom_freqpoly()` with color given by religion.
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(gss_cat,
+       aes(x = tvhours, y = after_stat(density), color = relig)) + 
+  geom_freqpoly()
+```
+
+* We need to reduce the amount of data we're trying to show.
+]
+
+---
+.pull-left[ 
+* To reduce amount of information, we should summarize the data, e.g. by taking the average per religion.
+
+```{r}
+#| fig-width: 5
+relig_summary <- gss_cat |>
+  group_by(relig) |>
+  summarize(
+    tvhours = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+ggplot(relig_summary, aes(x = tvhours, y = relig)) + 
+  geom_point()
+```
+* Hard to read because there's no clear pattern in the plot.
+
+]
+
+.pull-right[
+* To re-order, we can improve it by reordering using `fact_reorder( f=, x=, fun=)`
+* `f`: factor whose levels to modify
+* `x`: numeric vector to give the new order of levels
+* `fun`: function to use if multiple values of `x` for given value of `f` (default: `median`)
+```{r}
+#| fig-width: 5
+ggplot(relig_summary,
+       aes(x = tvhours, y = fct_reorder(relig, tvhours))) +
+  geom_point()
+```
+
+]
+
+---
+
+### Modifying factor levels 
+
+.pull-left[
+* Often will want to change values of levels so that plots look better
+```{r}
+gss_cat %>% count(partyid)
+```
+* Not ideal for plotting - inconsistent (acronyms vs full spelling etc)
+* Key function: `fct_recode()`
+
+]
+
+.pull-left[
+```{r}
+gss_cat %>%
+  mutate(
+    partyid = fct_recode(partyid,
+      "Republican, strong"    = "Strong republican",
+      "Republican, weak"      = "Not str republican",
+      "Independent, near rep" = "Ind,near rep",
+      "Independent, near dem" = "Ind,near dem",
+      "Democrat, weak"        = "Not str democrat",
+      "Democrat, strong"      = "Strong democrat")) %>%
+  count(partyid)
+```
+* Levels not explicitly mentioned will be kept as is. 
+]
+
+
+
+---
+
+### Modifying factor levels
+
+.pull-left[
+* To combine groups, assign multiple old levels to same new level
+```{r, eval = FALSE}
+gss_cat |>
+  mutate(
+    partyid = fct_recode(partyid,
+      "Republican, strong"    = "Strong republican",
+      "Republican, weak"      = "Not str republican",
+      "Independent, near rep" = "Ind,near rep",
+      "Independent, near dem" = "Ind,near dem",
+      "Democrat, weak"        = "Not str democrat",
+      "Democrat, strong"      = "Strong democrat",
+      "Other"                 = "No answer",
+      "Other"                 = "Don't know",
+      "Other"                 = "Other party"
+    )
+  )
+```
+
+]
+
+.pull-right[
+* If you are collapsing many levels, can use `fct_collapse`:
+```{r}
+gss_cat |>
+  mutate(
+    partyid = fct_collapse(partyid,
+      "other" = c("No answer", "Don't know", "Other party"),
+      "rep" = c("Strong republican", "Not str republican"),
+      "ind" = c("Ind,near rep", "Independent", "Ind,near dem"),
+      "dem" = c("Not str democrat", "Strong democrat")
+    )
+  ) |>
+  count(partyid)
+```
+]
+
+
+---
+
+### Examples
+* Let's now try and put some of all of the ideas we've seen so far together
+* Look at the `weather` tibble in nycflights13:
+```{r}
+library(nycflights13)
+weather
+```
+* Let's see if we can come up with a way of visualizing the temperature trends across every year.
+* We want to visualize what are the minimum temperature, maximum temperature, and average temperature per month, at each location
+
+---
+
+### Data prep
+* We need to compute the min/max/average temp per month in every year in every location
+```{r, warning=FALSE,message=FALSE}
+weather2 <- weather %>% 
+  group_by(year, month, origin) %>%
+  summarize(min_temp = min(temp, na.rm=TRUE), max_temp = max(temp, na.rm=TRUE),
+            avg_temp = mean(temp, na.rm=TRUE)) %>%
+  group_by(month, origin) %>%
+  summarize(min_temp = mean(min_temp, na.rm=TRUE),
+            max_temp = mean(max_temp, na.rm=TRUE),
+            avg_temp = mean(avg_temp, na.rm=TRUE), n = n())
+```
+* This tibble only has one year in it, so we don't actually need the code following the second group by.
+* However, if there are > 1 years in tibble, this code will compute the average min/max/mean temp per month across years.
+
+---
+
+
+.pull-left[ 
+
+* Let's try plotting the monthly temps at Newark (EWR).
+```{r}
+#| fig-width: 5
+weather2 %>% filter(origin == 'EWR') %>%
+  ggplot(aes(x = month)) + 
+  geom_line(aes(y = min_temp), color = 'blue') +
+  geom_line(aes(y = max_temp), color = 'red') + 
+  geom_line(aes(y = avg_temp), color = 'black')
+```
+* This is OK, but not ideal.  No legend appears by default, also have to manually add three geom_line's.
+* Better idea is to clean the tibble so that we have groups of data: for this we need data to be *long*
+]
+
+.pull-right[
+```{r}
+(weather3 <- weather2 %>%
+  pivot_longer(cols = c(min_temp, max_temp, avg_temp),
+               values_to = "temperature",
+               names_to = "measurement")
+)
+```
+
+
+]
+
+---
+### Visualizing
+.pull-left[
+* Now we can do color by temperature type:
+```{r}
+ggplot(weather3 %>% filter(origin == 'EWR'),
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line()
+```
+* Now we'd like better legend; blue for min, black for avg, and red for max; fix ticks 
+]
+
+.pull-left[
+```{r}
+ggplot(weather3 %>% filter(origin == 'EWR'),
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line(linewidth = 2) + 
+  scale_color_manual(
+    values = c(min_temp = "blue", avg_temp = "black", max_temp = "red"),
+    labels = c("min_temp" = "minimum", "avg_temp" = "average", "max_temp" = "maximum")) + 
+  scale_x_continuous(breaks = 1:12, minor_breaks = 1:12) + 
+  labs(title = "Temperature at EWR per month")
+```
+]
+
+---
+### Visualizing
+.pull-left[ 
+* Now let's do the same type of plot but with each airport's min/avg/max temp per month plotted side-by-side.
+```{r}
+#| fig-width: 8
+#| fig-height: 2
+#| eval: false
+ggplot(weather3,
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line(linewidth = 2) + 
+  scale_color_manual(
+    values = c(min_temp = "blue", avg_temp = "black", max_temp = "red"),
+    labels = c("min_temp" = "minimum", "avg_temp" = "average", "max_temp" = "maximum")) + 
+  scale_x_continuous(breaks = 1:12, minor_breaks = 1:12) + 
+  facet_grid(. ~ origin)
+```
+]
+
+.pull-right[
+```{r}
+#| fig-width: 8
+#| echo: false
+ggplot(weather3,
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line(linewidth = 2) + 
+  scale_color_manual(
+    values = c(min_temp = "blue", avg_temp = "black", max_temp = "red"),
+    labels = c("min_temp" = "minimum", "avg_temp" = "average", "max_temp" = "maximum")) + 
+  scale_x_continuous(breaks = 1:12, minor_breaks = 1:12) + 
+  facet_grid(. ~ origin)
+```
+
+]
+
+* What happened at JFK in May?  Why is it so different from EWR and LGA?
+
+---
+
+.pull-left[ 
+
+```{r}
+weather %>%
+  filter(month == 5, temp < 25)
+```
+* Appears real!
+* How does it compare to EWR and LGA? 
+```{r}
+weather %>% filter(month == 5, day == 8) %>%
+  filter(between(hour, 21, 23))
+```
+
+* Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
+
+]
+
+.pull-right[
+
+* Need to compute the per-day minimum 
+
+]

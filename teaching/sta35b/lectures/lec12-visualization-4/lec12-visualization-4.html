@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Visualizations IV / Factors</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec12-visualization-4_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec12-visualization-4_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec12-visualization-4_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Visualizations IV / Factors
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+
+  
+
+
+### Factors
+.pull-left[ 
+* Factors are used for categorical variables that have a fixed and known set of values
+* Useful when we want to display character vectors in non-alphabetical order
+* E.g. let's suppose we have a variable that records month:
+
+```r
+x1 &lt;- c("Dec", "Apr", "Jan", "Mar")
+```
+Two issues:
+* Only twelve possible months, so if we typed "Jam" instead of "Jan", would be hard to catch the error.
+* Sorting by characters is not meaningful:
+
+```r
+sort(x1)
+#&gt; [1] "Apr" "Dec" "Jan" "Mar"
+```
+
+]
+
+.pull-right[
+* We can fix these by treating them as a factor
+* Factors require a list of valid **levels**:
+
+```r
+month_levels &lt;- c(
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+```
+* With levels, you can create factors:
+
+```r
+y1 &lt;- factor(x1, levels = month_levels)
+y1
+#&gt; [1] Dec Apr Jan Mar
+#&gt; Levels: Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+sort(y1)
+#&gt; [1] Jan Mar Apr Dec
+#&gt; Levels: Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+```
+
+]
+
+
+---
+
+### Factors
+.pull-left[
+* If you create a factor from a vector, every element of the vector must be a level of a factor, otherwise you get `NA`:
+
+```r
+x2 &lt;- c("Dec", "Apr", "Jam", "Mar")
+(y2 &lt;- factor(x2, levels = month_levels))
+#&gt; [1] Dec  Apr  &lt;NA&gt; Mar 
+#&gt; Levels: Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+```
+* If you want to throw an error for non-level vector info, you can use ``forcats::fct()`
+
+```r
+y2 &lt;- fct(x2, levels = month_levels)
+#&gt; Error in `fct()`:
+#&gt; ! All values of `x` must appear in `levels` or `na`
+#&gt; ℹ Missing level: "Jam"
+```
+
+]
+
+.pull-right[
+* If you omit levels, `factor()` makes factors in alphabetical order:
+
+```r
+factor(x1)
+#&gt; [1] Dec Apr Jan Mar
+#&gt; Levels: Apr Dec Jan Mar
+```
+* `forcats::fct()` orders by first appearance in the vector
+
+```r
+fct(x1)
+#&gt; [1] Dec Apr Jan Mar
+#&gt; Levels: Dec Apr Jan Mar
+```
+* You can extract levels from a factor using `levels()`:
+
+```r
+levels(y2)
+#&gt;  [1] "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
+```
+
+]
+
+---
+
+### Factor: General Social Survey
+* We'll look at survey data from the General Social Survey (`forcats::gss_cat`, loaded in tidyverse)
+
+```r
+gss_cat
+#&gt; # A tibble: 21,483 × 9
+#&gt;    year marital         age race  rincome        partyid           
+#&gt;   &lt;int&gt; &lt;fct&gt;         &lt;int&gt; &lt;fct&gt; &lt;fct&gt;          &lt;fct&gt;             
+#&gt; 1  2000 Never married    26 White $8000 to 9999  Ind,near rep      
+#&gt; 2  2000 Divorced         48 White $8000 to 9999  Not str republican
+#&gt; 3  2000 Widowed          67 White Not applicable Independent       
+#&gt; 4  2000 Never married    39 White Not applicable Ind,near rep      
+#&gt; 5  2000 Divorced         25 White Not applicable Not str democrat  
+#&gt; 6  2000 Married          25 White $20000 - 24999 Strong democrat   
+#&gt; # ℹ 21,477 more rows
+#&gt; # ℹ 3 more variables: relig &lt;fct&gt;, denom &lt;fct&gt;, tvhours &lt;int&gt;
+```
+* When factors are in a tibble, levels do not directly show, but can see them using `count`:
+
+.pull-left[
+
+```r
+gss_cat %&gt;%
+  count(race)
+```
+]
+
+.pull-right[
+
+```
+#&gt; # A tibble: 3 × 2
+#&gt;   race      n
+#&gt;   &lt;fct&gt; &lt;int&gt;
+#&gt; 1 Other  1959
+#&gt; 2 Black  3129
+#&gt; 3 White 16395
+```
+]
+
+
+---
+
+### GSS Data: exploratory data analysis
+.pull-left[ 
+* Let's look at the distribution of `rincome` (reported income)
+
+```r
+ggplot(gss_cat, aes(x = rincome)) + geom_bar()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-13-1.png" width="432" /&gt;
+* A little hard to see what's happening on the x-axis!
+]
+
+--
+
+.pull-right[
+
+
+
+```r
+ggplot(gss_cat, aes(y = rincome)) + geom_bar()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-14-1.png" width="432" /&gt;
+
+]
+
+---
+
+### GSS Data: exploratory data analysis
+.pull-left[ 
+* Does income vary by religion much?
+
+```r
+ggplot(gss_cat, aes(x = rincome)) + geom_bar()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-15-1.png" width="432" /&gt;
+* A little hard to see what's happening on the x-axis!
+]
+
+--
+
+.pull-right[
+
+
+
+```r
+ggplot(gss_cat, aes(y = rincome)) + geom_bar()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-16-1.png" width="432" /&gt;
+
+]
+
+---
+
+### Exploratory data analysis
+.pull-left[ 
+* What are the most common religions in the survey?  What about party ID?  
+
+
+```r
+gss_cat %&gt;% count(relig) %&gt;% arrange(n) %&gt;% print(n=Inf)
+#&gt; # A tibble: 15 × 2
+#&gt;    relig                       n
+#&gt;    &lt;fct&gt;                   &lt;int&gt;
+#&gt;  1 Don't know                 15
+#&gt;  2 Native american            23
+#&gt;  3 Other eastern              32
+#&gt;  4 Hinduism                   71
+#&gt;  5 No answer                  93
+#&gt;  6 Orthodox-christian         95
+#&gt;  7 Moslem/islam              104
+#&gt;  8 Inter-nondenominational   109
+#&gt;  9 Buddhism                  147
+#&gt; 10 Other                     224
+#&gt; 11 Jewish                    388
+#&gt; 12 Christian                 689
+#&gt; 13 None                     3523
+#&gt; 14 Catholic                 5124
+#&gt; 15 Protestant              10846
+```
+
+]
+
+.pull-right[
+
+
+```r
+gss_cat %&gt;% count(partyid) %&gt;% arrange(n) %&gt;% print(n=Inf)
+#&gt; # A tibble: 10 × 2
+#&gt;    partyid                n
+#&gt;    &lt;fct&gt;              &lt;int&gt;
+#&gt;  1 Don't know             1
+#&gt;  2 No answer            154
+#&gt;  3 Other party          393
+#&gt;  4 Ind,near rep        1791
+#&gt;  5 Strong republican   2314
+#&gt;  6 Ind,near dem        2499
+#&gt;  7 Not str republican  3032
+#&gt;  8 Strong democrat     3490
+#&gt;  9 Not str democrat    3690
+#&gt; 10 Independent         4119
+```
+
+]
+---
+
+.pull-left[ 
+* Let's look at different TV watching habits by marital status.  Maybe we can first try doing a `geom_freqpoly()` with color given by religion.
+
+```r
+ggplot(gss_cat,
+       aes(x = tvhours, y = after_stat(density), color = marital)) + 
+  geom_freqpoly()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-19-1.png" width="432" /&gt;
+]
+
+--
+
+.pull-right[
+* If we try the same thing for religion, it is trickier to visualize:
+
+* Let's look at TV hours watched per religion.  Maybe we can first try doing a `geom_freqpoly()` with color given by religion.
+
+
+```r
+ggplot(gss_cat,
+       aes(x = tvhours, y = after_stat(density), color = relig)) + 
+  geom_freqpoly()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-20-1.png" width="432" /&gt;
+
+* We need to reduce the amount of data we're trying to show.
+]
+
+---
+.pull-left[ 
+* To reduce amount of information, we should summarize the data, e.g. by taking the average per religion.
+
+
+```r
+relig_summary &lt;- gss_cat |&gt;
+  group_by(relig) |&gt;
+  summarize(
+    tvhours = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+ggplot(relig_summary, aes(x = tvhours, y = relig)) + 
+  geom_point()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-21-1.png" width="360" /&gt;
+* Hard to read because there's no clear pattern in the plot.
+
+]
+
+.pull-right[
+* To re-order, we can improve it by reordering using `fact_reorder( f=, x=, fun=)`
+* `f`: factor whose levels to modify
+* `x`: numeric vector to give the new order of levels
+* `fun`: function to use if multiple values of `x` for given value of `f` (default: `median`)
+
+```r
+ggplot(relig_summary,
+       aes(x = tvhours, y = fct_reorder(relig, tvhours))) +
+  geom_point()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-22-1.png" width="360" /&gt;
+
+]
+
+---
+
+### Modifying factor levels 
+
+.pull-left[
+* Often will want to change values of levels so that plots look better
+
+```r
+gss_cat %&gt;% count(partyid)
+#&gt; # A tibble: 10 × 2
+#&gt;   partyid                n
+#&gt;   &lt;fct&gt;              &lt;int&gt;
+#&gt; 1 No answer            154
+#&gt; 2 Don't know             1
+#&gt; 3 Other party          393
+#&gt; 4 Strong republican   2314
+#&gt; 5 Not str republican  3032
+#&gt; 6 Ind,near rep        1791
+#&gt; # ℹ 4 more rows
+```
+* Not ideal for plotting - inconsistent (acronyms vs full spelling etc)
+* Key function: `fct_recode()`
+
+]
+
+.pull-left[
+
+```r
+gss_cat %&gt;%
+  mutate(
+    partyid = fct_recode(partyid,
+      "Republican, strong"    = "Strong republican",
+      "Republican, weak"      = "Not str republican",
+      "Independent, near rep" = "Ind,near rep",
+      "Independent, near dem" = "Ind,near dem",
+      "Democrat, weak"        = "Not str democrat",
+      "Democrat, strong"      = "Strong democrat")) %&gt;%
+  count(partyid)
+#&gt; # A tibble: 10 × 2
+#&gt;   partyid                   n
+#&gt;   &lt;fct&gt;                 &lt;int&gt;
+#&gt; 1 No answer               154
+#&gt; 2 Don't know                1
+#&gt; 3 Other party             393
+#&gt; 4 Republican, strong     2314
+#&gt; 5 Republican, weak       3032
+#&gt; 6 Independent, near rep  1791
+#&gt; # ℹ 4 more rows
+```
+* Levels not explicitly mentioned will be kept as is. 
+]
+
+
+
+---
+
+### Modifying factor levels
+
+.pull-left[
+* To combine groups, assign multiple old levels to same new level
+
+```r
+gss_cat |&gt;
+  mutate(
+    partyid = fct_recode(partyid,
+      "Republican, strong"    = "Strong republican",
+      "Republican, weak"      = "Not str republican",
+      "Independent, near rep" = "Ind,near rep",
+      "Independent, near dem" = "Ind,near dem",
+      "Democrat, weak"        = "Not str democrat",
+      "Democrat, strong"      = "Strong democrat",
+      "Other"                 = "No answer",
+      "Other"                 = "Don't know",
+      "Other"                 = "Other party"
+    )
+  )
+```
+
+]
+
+.pull-right[
+* If you are collapsing many levels, can use `fct_collapse`:
+
+```r
+gss_cat |&gt;
+  mutate(
+    partyid = fct_collapse(partyid,
+      "other" = c("No answer", "Don't know", "Other party"),
+      "rep" = c("Strong republican", "Not str republican"),
+      "ind" = c("Ind,near rep", "Independent", "Ind,near dem"),
+      "dem" = c("Not str democrat", "Strong democrat")
+    )
+  ) |&gt;
+  count(partyid)
+#&gt; # A tibble: 4 × 2
+#&gt;   partyid     n
+#&gt;   &lt;fct&gt;   &lt;int&gt;
+#&gt; 1 other     548
+#&gt; 2 rep      5346
+#&gt; 3 ind      8409
+#&gt; 4 dem      7180
+```
+]
+
+
+---
+
+### Examples
+* Let's now try and put some of all of the ideas we've seen so far together
+* Look at the `weather` tibble in nycflights13:
+
+```r
+library(nycflights13)
+weather
+#&gt; # A tibble: 26,115 × 15
+#&gt;   origin  year month   day  hour  temp  dewp humid wind_dir wind_speed
+#&gt;   &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+#&gt; 1 EWR     2013     1     1     1  39.0  26.1  59.4      270      10.4 
+#&gt; 2 EWR     2013     1     1     2  39.0  27.0  61.6      250       8.06
+#&gt; 3 EWR     2013     1     1     3  39.0  28.0  64.4      240      11.5 
+#&gt; 4 EWR     2013     1     1     4  39.9  28.0  62.2      250      12.7 
+#&gt; 5 EWR     2013     1     1     5  39.0  28.0  64.4      260      12.7 
+#&gt; 6 EWR     2013     1     1     6  37.9  28.0  67.2      240      11.5 
+#&gt; # ℹ 26,109 more rows
+#&gt; # ℹ 5 more variables: wind_gust &lt;dbl&gt;, precip &lt;dbl&gt;, pressure &lt;dbl&gt;, …
+```
+* Let's see if we can come up with a way of visualizing the temperature trends across every year.
+* We want to visualize what are the minimum temperature, maximum temperature, and average temperature per month, at each location
+
+---
+
+### Data prep
+* We need to compute the min/max/average temp per month in every year in every location
+
+```r
+weather2 &lt;- weather %&gt;% 
+  group_by(year, month, origin) %&gt;%
+  summarize(min_temp = min(temp, na.rm=TRUE), max_temp = max(temp, na.rm=TRUE),
+            avg_temp = mean(temp, na.rm=TRUE)) %&gt;%
+  group_by(month, origin) %&gt;%
+  summarize(min_temp = mean(min_temp, na.rm=TRUE),
+            max_temp = mean(max_temp, na.rm=TRUE),
+            avg_temp = mean(avg_temp, na.rm=TRUE), n = n())
+```
+* This tibble only has one year in it, so we don't actually need the code following the second group by.
+* However, if there are &gt; 1 years in tibble, this code will compute the average min/max/mean temp per month across years.
+
+---
+
+
+.pull-left[ 
+
+* Let's try plotting the monthly temps at Newark (EWR).
+
+```r
+weather2 %&gt;% filter(origin == 'EWR') %&gt;%
+  ggplot(aes(x = month)) + 
+  geom_line(aes(y = min_temp), color = 'blue') +
+  geom_line(aes(y = max_temp), color = 'red') + 
+  geom_line(aes(y = avg_temp), color = 'black')
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-29-1.png" width="360" /&gt;
+* This is OK, but not ideal.  No legend appears by default, also have to manually add three geom_line's.
+* Better idea is to clean the tibble so that we have groups of data: for this we need data to be *long*
+]
+
+.pull-right[
+
+```r
+(weather3 &lt;- weather2 %&gt;%
+  pivot_longer(cols = c(min_temp, max_temp, avg_temp),
+               values_to = "temperature",
+               names_to = "measurement")
+)
+#&gt; # A tibble: 108 × 5
+#&gt; # Groups:   month [12]
+#&gt;   month origin     n measurement temperature
+#&gt;   &lt;int&gt; &lt;chr&gt;  &lt;int&gt; &lt;chr&gt;             &lt;dbl&gt;
+#&gt; 1     1 EWR        1 min_temp           10.9
+#&gt; 2     1 EWR        1 max_temp           64.4
+#&gt; 3     1 EWR        1 avg_temp           35.6
+#&gt; 4     1 JFK        1 min_temp           12.0
+#&gt; 5     1 JFK        1 max_temp           57.9
+#&gt; 6     1 JFK        1 avg_temp           35.4
+#&gt; # ℹ 102 more rows
+```
+
+
+]
+
+---
+### Visualizing
+.pull-left[
+* Now we can do color by temperature type:
+
+```r
+ggplot(weather3 %&gt;% filter(origin == 'EWR'),
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line()
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-31-1.png" width="432" /&gt;
+* Now we'd like better legend; blue for min, black for avg, and red for max; fix ticks 
+]
+
+.pull-left[
+
+```r
+ggplot(weather3 %&gt;% filter(origin == 'EWR'),
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line(linewidth = 2) + 
+  scale_color_manual(
+    values = c(min_temp = "blue", avg_temp = "black", max_temp = "red"),
+    labels = c("min_temp" = "minimum", "avg_temp" = "average", "max_temp" = "maximum")) + 
+  scale_x_continuous(breaks = 1:12, minor_breaks = 1:12) + 
+  labs(title = "Temperature at EWR per month")
+```
+
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-32-1.png" width="432" /&gt;
+]
+
+---
+### Visualizing
+.pull-left[ 
+* Now let's do the same type of plot but with each airport's min/avg/max temp per month plotted side-by-side.
+
+```r
+ggplot(weather3,
+       aes(x = month, y = temperature, color = measurement)) +
+  geom_line(linewidth = 2) + 
+  scale_color_manual(
+    values = c(min_temp = "blue", avg_temp = "black", max_temp = "red"),
+    labels = c("min_temp" = "minimum", "avg_temp" = "average", "max_temp" = "maximum")) + 
+  scale_x_continuous(breaks = 1:12, minor_breaks = 1:12) + 
+  facet_grid(. ~ origin)
+```
+]
+
+.pull-right[
+&lt;img src="lec12-visualization-4_files/figure-html/unnamed-chunk-34-1.png" width="576" /&gt;
+
+]
+
+* What happened at JFK in May?  Why is it so different from EWR and LGA?
+
+---
+
+.pull-left[ 
+
+
+```r
+weather %&gt;%
+  filter(month == 5, temp &lt; 25)
+#&gt; # A tibble: 1 × 15
+#&gt;   origin  year month   day  hour  temp  dewp humid wind_dir wind_speed
+#&gt;   &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+#&gt; 1 JFK     2013     5     8    22  13.1  12.0  95.3       80       8.06
+#&gt; # ℹ 5 more variables: wind_gust &lt;dbl&gt;, precip &lt;dbl&gt;, pressure &lt;dbl&gt;,
+#&gt; #   visib &lt;dbl&gt;, time_hour &lt;dttm&gt;
+```
+* Appears real!
+* How does it compare to EWR and LGA? 
+
+```r
+weather %&gt;% filter(month == 5, day == 8) %&gt;%
+  filter(between(hour, 21, 23))
+#&gt; # A tibble: 9 × 15
+#&gt;   origin  year month   day  hour  temp  dewp humid wind_dir wind_speed
+#&gt;   &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+#&gt; 1 EWR     2013     5     8    21  59    53.1  80.6       80       4.60
+#&gt; 2 EWR     2013     5     8    22  59    52.0  77.5       90       3.45
+#&gt; 3 EWR     2013     5     8    23  57.9  52.0  80.6        0       0   
+#&gt; 4 JFK     2013     5     8    21  57.0  48.9  74.3      170      11.5 
+#&gt; 5 JFK     2013     5     8    22  13.1  12.0  95.3       80       8.06
+#&gt; 6 JFK     2013     5     8    23  57.2  53.6  87.7      120       4.60
+#&gt; # ℹ 3 more rows
+#&gt; # ℹ 5 more variables: wind_gust &lt;dbl&gt;, precip &lt;dbl&gt;, pressure &lt;dbl&gt;, …
+```
+
+* Appears to be only a single instance of this, so definitely an outlier, can't be certain for why it happens.
+
+]
+
+.pull-right[
+
+* Need to compute the per-day minimum 
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
