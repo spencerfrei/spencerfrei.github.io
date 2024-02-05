@@ -1,0 +1,50 @@
+---
+title: 'Lab 4'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(palmerpenguins)
+library(ggthemes) 
+```
+
+
+ 
+
+Refer to the dataset 'penguins',
+
+(1) Drop all rows with missing values (1 pt).
+
+(2) Use `geom_point()`, draw a scatter plot between x = 'body_mass_g' and y ='bill_length_mm', colored by 'island', shaped by 'sex' (2 pts).
+
+(3) Use `geom_smooth()`, draw a line to describe the relationship between x = 'body_mass_g' and y ='bill_length_mm', remove the confidence interval around smooth, set color as black and size as 0.5 (2 pts).
+
+(4) Use `facet_grid()`,  split the plot into subplots based on 'species' horizontally (1 pt).
+ 
+(5) Use `scale_color_manual()`, change the colors of Biscoe, Dream and Torgersen  as blue, black, and red respectively (1 pt).
+
+(6) Use `scale_shape_manual()`, change the shapes of female and male as #1 and #3 respectively, and change 'female' and 'male' to 'Female' and 'Male' in the legends (2 pts).
+
+(7) Use `scale_x_continuous()`, change the x-axis scales as 3,4,5,6 (1 pt).
+
+(8) Use `labs()`, set x-axis label as "Body Mass (kg)", y-axis label as "Bill Length (mm)", color label as "Island", shape label as "Sex", subtitle as 'Species', and title as "Scatterplot of Body Mass v.s. Bill Length" (2 pts).
+
+(9) Use `theme()`, place the legend at the left-hand side of the plot, center both th plot title and subtitle (2 pts).
+
+(10) Use `theme()`, bold the legend titles and the plot title (1 pt).
+
+```{r}
+# code here 
+```
+
