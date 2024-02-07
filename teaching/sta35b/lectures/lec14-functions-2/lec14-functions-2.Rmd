@@ -1,0 +1,151 @@
+---
+title: "Functions 1"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+source("../_common.R")
+```
+
+
+### Iteration
+* We've already seen a few ways to do computations repeatedly in a clean / easy way:
+  - `facet_grid()` and `facet_wrap()`, drawing plots for each group
+  - `group_by()` + `summarize()` for summarys tatistics for each group
+  - creating custom functions
+  
+* We'll see what other ways R allows for us to flexibly do calculations and save time
+
+---
+
+###  Modifying multiple columns
+
+.pull-left[
+* Consider a simple tibble (`runif(n)`: n independent standard normals), and that we want to compute median of every column:
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+df |> summarize(
+  n = n(),
+  a = median(a),
+  b = median(b),
+  c = median(c),
+  d = median(d),
+)
+```
+
+]
+
+.pull-right[
+* Should never be copying+pasting more than twice (what if we had 500 columns!)
+* Helpful function: `across()`:
+```{r}
+df %>%
+  summarize(
+    n = n(),
+    across(a:d, median)
+  )
+```
+* In coming slides, we'll see `across` works and how to modify this behavior.
+* Three especially important arguments to `across()`:
+  - `.cols`: which columns to iterate over
+  - `.fns`: what to do (function) ofr each column
+  - `.names`: name output of each column
+]
+
+---
+
+### `across()`: Selecting columns with `.cols`
+
+.pull-left[
+* For `.cols`, we can use same things we used for `select()`:
+```{r}
+df %>% summarize(across(-a, median))
+df %>% summarize(across(c(a,c), median))
+```
+* Two additional arguments which are helpful: `everything()` and `where()`. 
+```{r}
+df %>% summarize(across(everything(), median))
+```
+
+]
+.pull-right[
+* `everything()` computes summaries for every non-grouping variable
+* `where()` allows for selecting columns based on type, e.g. `where(is.numeric)` for numbers, `where(is.character)` for strings, `where(is.logical)` for logicals, etc.
+```{r}
+df <- tibble(
+  grp = sample(2, 10, replace = TRUE), # either 1 or 2
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10))
+df |> 
+  group_by(grp) |> 
+  summarize(across(everything(), median))
+```
+
+]
+
+---
+
+### `across()`: calling a single function
+* `.fns` says how we want data to be transformed
+* We are passing the *function* to `across()`, we are not calling the function itself. 
+  - Never add the `()` after the function when you pass to across, otherwise you get an error.
+```{r, eval=FALSE}
+df |> 
+  group_by(grp) |> 
+  summarize(across(everything(), median()))
+#> Error in `summarize()`:
+#> ℹ In argument: `across(everything(), median())`.
+#> Caused by error in `median.default()`:
+#> ! argument "x" is missing, with no default
+```
+* Same reason why calling `median()` in console will result in an error, since it has no input.
+
+---
+### `across()`: calling multiple functions 
+* What happens if you want to do multiple 
