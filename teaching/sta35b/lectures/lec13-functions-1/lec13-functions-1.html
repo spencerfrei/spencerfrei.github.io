@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Functions 1</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec13-functions-1_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec13-functions-1_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec13-functions-1_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Functions 1
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+
+  
+
+
+### Functions
+* We'll talk in the next couple lectures about writing **functions**
+* Functions allow for automating tasks, with a number of advantages:
+  - Readability: have well-defined tasks that are encapsulated within individual functions, easier to debug
+  - Portability: makes it easy to re-use code
+
+
+---
+
+### Vector functions
+.pull-left[
+* We'll take a look at **vector functions**: takes &gt;=1 vector, returns vector as a result
+* Try and understand this code.
+
+```r
+df &lt;- tibble(
+  a = rnorm(5),
+  b = rnorm(5),
+  c = rnorm(5),
+  d = rnorm(5),
+)
+
+df |&gt; mutate(
+  a = (a - min(a, na.rm = TRUE)) / 
+    (max(a, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  b = (b - min(b, na.rm = TRUE)) / 
+    (max(b, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  c = (c - min(c, na.rm = TRUE)) / 
+    (max(c, na.rm = TRUE) - min(c, na.rm = TRUE)),
+  d = (d - min(d, na.rm = TRUE)) / 
+    (max(d, na.rm = TRUE) - min(d, na.rm = TRUE)),
+)
+#&gt; # A tibble: 5 × 4
+#&gt;       a     b     c     d
+#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 0.339  2.59 0.291 0    
+#&gt; 2 0.880  0    0.611 0.557
+#&gt; 3 0      1.37 1     0.752
+#&gt; 4 0.795  1.37 0     1    
+#&gt; 5 1      1.34 0.580 0.394
+```
+
+]
+
+--
+
+.pull-right[
+* Seems to be rescaling each column to have range between 0 and 1
+* Did you spot the error?  When creating column `b`, forgot to change an "a" to a "b"
+* Functions will generally make it harder to make these kinds of mistakes
+]
+
+---
+
+### Writing functions
+.pull-left[
+* Here's the computation we were trying to do:
+
+```r
+(a - min(a, na.rm = TRUE)) / (max(a, na.rm = TRUE) - min(a, na.rm = TRUE))
+(b - min(b, na.rm = TRUE)) / (max(b, na.rm = TRUE) - min(b, na.rm = TRUE))
+(c - min(c, na.rm = TRUE)) / (max(c, na.rm = TRUE) - min(c, na.rm = TRUE))
+(d - min(d, na.rm = TRUE)) / (max(d, na.rm = TRUE) - min(d, na.rm = TRUE))  
+```
+
+* More clearly:
+
+```r
+(█ - min(█, na.rm = TRUE)) / (max(█, na.rm = TRUE) - min(█, na.rm = TRUE))
+```
+* To write functions, need 3 things:
+  - **name**: we'll use `rescale01`
+  - **arguments**: things that vary across calls; we'll use `x`
+  - **body**: the code that repeats
+  
+]
+
+.pull-right[
+
+
+```r
+name &lt;- function(arguments) {
+  body
+}
+```
+
+* In our case:
+
+```r
+rescale01 &lt;- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+```
+* Can test it out:
+
+```r
+rescale01(c(-10, 0, 10))
+#&gt; [1] 0.0 0.5 1.0
+rescale01(c(1, 2, 3, NA, 5))
+#&gt; [1] 0.00 0.25 0.50   NA 1.00
+```
+
+]
+
+---
+
+.pull-left[
+* Compare code with functions...
+
+```r
+rescale01 &lt;- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+df |&gt; mutate(
+  a = rescale01(a),
+  b = rescale01(b),
+  c = rescale01(c),
+  d = rescale01(d),
+)
+#&gt; # A tibble: 5 × 4
+#&gt;       a     b     c     d
+#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 0.339 1     0.291 0    
+#&gt; 2 0.880 0     0.611 0.557
+#&gt; 3 0     0.530 1     0.752
+#&gt; 4 0.795 0.531 0     1    
+#&gt; 5 1     0.518 0.580 0.394
+```
+
+]
+
+.pull-right[
+* ... to code without functions:
+
+```r
+df &lt;- tibble(
+  a = rnorm(5),
+  b = rnorm(5),
+  c = rnorm(5),
+  d = rnorm(5),
+)
+
+df |&gt; mutate(
+  a = (a - min(a, na.rm = TRUE)) / 
+    (max(a, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  b = (b - min(b, na.rm = TRUE)) / 
+    (max(b, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  c = (c - min(c, na.rm = TRUE)) / 
+    (max(c, na.rm = TRUE) - min(c, na.rm = TRUE)),
+  d = (d - min(d, na.rm = TRUE)) / 
+    (max(d, na.rm = TRUE) - min(d, na.rm = TRUE)),
+)
+#&gt; # A tibble: 5 × 4
+#&gt;       a     b      c     d
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 0.555 -88.7 0.545  0.597
+#&gt; 2 0.522 -36.1 0.0426 0    
+#&gt; 3 0     -93.8 0.0871 0.548
+#&gt; 4 0.640 -43.0 1      0.536
+#&gt; 5 1       0   0      1
+```
+
+]
+
+
+---
+
+### Improving the function
+.pull-left[
+
+```r
+rescale01 &lt;- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+```
+* Suppose we want to modify function so that we only compute the min once rather than twice.
+
+```r
+rescale01 &lt;- function(x) {
+  minval &lt;- min(x, na.rm=TRUE)
+  maxval &lt;- max(x, na.rm=TRUE)
+  (x - minval) / (maxval - minval)
+}
+```
+* Much easier than having to go through copy/pasted code!
+]
+
+--
+
+.pull-right[
+* What if we want to modify it to deal with infinite values differently?
+
+```r
+x &lt;- c(1:5, Inf)
+rescale01(x)
+#&gt; [1]   0   0   0   0   0 NaN
+```
+* We can use `range()`: returns min and max of the vector, and has arguments `na.rm =` and `finite =`, which remove NA's and Inf's respectively
+
+```r
+rescale01 &lt;- function(x) {
+  rng &lt;- range(x, na.rm = TRUE, finite = TRUE)
+  minval &lt;- rng[1]
+  maxval &lt;- rng[2]
+  (x - minval) / (maxval - minval)
+}
+rescale01(x)
+#&gt; [1] 0.00 0.25 0.50 0.75 1.00  Inf
+```
+
+
+]
+
+---
+
+### Mutate functions 
+.pull-left[ 
+* We'll now look at functions which work well with `mutate` and `filter`
+* Consider a variation of `rescale01()`, where we compute the **z-score**: rescaling a vector to have mean zero and standard deviation of one.
+
+```r
+z_score &lt;- function(x) {
+  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+}
+```
+* Last line is returned as *output* of the function
+* Can also use `return()`
+
+```r
+z_score &lt;- function(x) {
+  results &lt;- (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+  return(results)
+}
+```
+]
+
+.pull-right[
+* Function `clamp()` which makes sure all values in a vector lie between a value `min` and value `max`
+
+```r
+clamp &lt;- function(x, min, max) {
+  case_when(
+    x &lt; min ~ min,
+    x &gt; max ~ max,
+    .default = x
+  )
+}
+
+clamp(1:10, min = 3, max = 7)
+#&gt;  [1] 3 3 3 4 5 6 7 7 7 7
+```
+
+]
+
+---
+
+### Mutate functions
+.pull-left[
+* Functions can also be applied to non-numeric variables.
+* Example: remove all percent signs, commas, and dollar signs from a string and then convert it to a number.
+
+```r
+clean_number &lt;- function(x) {
+  is_pct &lt;- str_detect(x, "%")
+  num &lt;- x |&gt; 
+    str_remove_all("%") |&gt; 
+    str_remove_all(",") |&gt; 
+    str_remove_all("\\$") |&gt; 
+    as.numeric()
+  if_else(is_pct, num / 100, num)
+}
+
+clean_number("$12,300")
+#&gt; [1] 12300
+clean_number("45%")
+#&gt; [1] 0.45
+```
+]
+
+--
+
+.pull-right[
+* Another example: taking a vector, and if someone previously used numbers 997 / 998 / 999 to record missing values, replace them with `NA`:
+
+```r
+fix_na &lt;- function(x) {
+  if_else(x %in% c(997, 998, 999), NA, x)
+}
+```
+* You can use multiple arguments
+
+```r
+make_a_pair &lt;- function(x, y) {
+  str_c("The pair will be ", x, " and ", y)
+}
+make_a_pair("William", "Henry")
+#&gt; [1] "The pair will be William and Henry"
+```
+
+]
+
+---
+
+### Summary functions
+.pull-left[
+* Functions which take a vector and return a single value - useful for `summarize()`
+
+```r
+commas &lt;- function(x) {
+  str_flatten(x, collapse = ", ", last = " and ")
+}
+commas(c("cat", "dog", "pigeon"))
+#&gt; [1] "cat, dog and pigeon"
+```
+
+* You can set default values for arguments, e.g. for computing "coefficient of variation": 
+
+```r
+cv &lt;- function(x, na.rm = FALSE) {
+  sd(x, na.rm = na.rm) / mean(x, na.rm = na.rm)
+}
+cv(runif(100, min = 0, max = 50))
+#&gt; [1] 0.5175436
+cv(c(1, 2, 3, NA))
+#&gt; [1] NA
+cv(c(1, 2, 3, NA), na.rm = TRUE)
+#&gt; [1] 0.5
+```
+
+]
+
+.pull-right[
+* Sometimes just want to create functions which make it easier to read code:
+
+```r
+n_missing &lt;- function(x) {
+  sum(is.na(x))
+}
+```
+
+]
+
+---
+
+### Examples
+.pull-left[
+* Writing a function which takes in a vector of strings of birthdates of the form "YYYY-MM-DD" and computes the age in years.
+
+```r
+age_in_years &lt;- function(dates) {
+  time_intervals &lt;- ymd(dates) %--% today()
+  floor(time_intervals / years(1))
+}
+age_in_years(c("2004-11-11", "1997-02-08"))
+#&gt; [1] 19 26
+```
+
+]
+
+.pull-right[
+* A function `both_na()` which takes in two vectors of same length and returns the number of ositions which have an `NA` in both vectors
+
+```r
+both_na &lt;- function(vec1, vec2) {
+  sum(is.na(vec1) &amp; is.na(vec2))
+}
+both_na(c(1,2,NA,3), c(4, 5, NA, NA))
+#&gt; [1] 1
+both_na(c(1,2,NA,NA), c(4, 5, NA, NA))
+#&gt; [1] 2
+```
+
+]
+
+
+---
+### Data frame functions
+.pull-left[
+* We will often do manipulations of tibbles in a repetitive way
+* Translating this into functions is a bit complicated for reasons to be discussed
+* Consider trying to compute the mean of a tibble by groups.
+
+```r
+grouped_mean &lt;- function(df, group_var, mean_var) {
+  df |&gt; 
+    group_by(group_var) |&gt; 
+    summarize(mean(mean_var))
+}
+```
+* If we try to use it for the `diamonds` dataset, we get an error:
+
+```r
+diamonds |&gt; grouped_mean(cut, carat)
+#&gt; Error in `group_by()`:
+#&gt; ! Must group by variables found in `.data`.
+#&gt; ✖ Column `group_var` is not found.
+```
+
+]
+
+.pull-right[
+* Let's make the example a bit more clear:
+
+```r
+df &lt;- tibble(
+  mean_var = 1,
+  group_var = "g",
+  group = 1,
+  x = 10,
+  y = 100
+)
+df |&gt; grouped_mean(group, x)
+#&gt; # A tibble: 1 × 2
+#&gt;   group_var `mean(mean_var)`
+#&gt;   &lt;chr&gt;                &lt;dbl&gt;
+#&gt; 1 g                        1
+df |&gt; grouped_mean(group, y)
+#&gt; # A tibble: 1 × 2
+#&gt;   group_var `mean(mean_var)`
+#&gt;   &lt;chr&gt;                &lt;dbl&gt;
+#&gt; 1 g                        1
+```
+* Always does `df %&gt;% group_by(group_var)` instead of `df %&gt;% group_by(group)` 
+]
+
+
+---
+### Embracing
+.pull-left[
+* Solution is to use **embracing**: wrap a variable inside of `{{}}`
+
+```r
+df &lt;- tibble(
+  mean_var = 1,
+  group_var = "g",
+  group = 1,
+  x = 10,
+  y = 100
+)
+grouped_mean &lt;- function(df, group_var, mean_var) {
+  df |&gt; 
+    group_by({{ group_var }}) |&gt; 
+    summarize(mean({{ mean_var }}))
+}
+
+df |&gt; grouped_mean(group, x)
+#&gt; # A tibble: 1 × 2
+#&gt;   group `mean(x)`
+#&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+#&gt; 1     1        10
+```
+
+]
+
+.pull-right[
+
+* Typically use embracing whenever using functions like `arrange`, `filter`, `summarize`, `select`, `rename`, etc.
+* We'll see examples of how to apply it
+]
+
+---
+
+.pull-left[ 
+* Let's create a function which does initial summary statistics of a variable
+
+```r
+summary6 &lt;- function(data, var) {
+  data |&gt; summarize(
+    min = min({{ var }}, na.rm = TRUE),
+    mean = mean({{ var }}, na.rm = TRUE),
+    median = median({{ var }}, na.rm = TRUE),
+    max = max({{ var }}, na.rm = TRUE),
+    n = n(),
+    n_miss = sum(is.na({{ var }})),
+    .groups = "drop"
+  )
+}
+
+diamonds |&gt; summary6(carat)
+#&gt; # A tibble: 1 × 6
+#&gt;     min  mean median   max     n n_miss
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;  &lt;int&gt;
+#&gt; 1   0.2 0.798    0.7  5.01 53940      0
+```
+
+]
+
+.pull-right[
+* Since it is inside a `summarize()`, we can use it on grouped data:
+
+```r
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summary6(carat)
+#&gt; # A tibble: 5 × 7
+#&gt;   cut         min  mean median   max     n n_miss
+#&gt;   &lt;ord&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;  &lt;int&gt;
+#&gt; 1 Fair       0.22 1.05    1     5.01  1610      0
+#&gt; 2 Good       0.23 0.849   0.82  3.01  4906      0
+...
+```
+
+* We can even do computations on top of variables:
+
+```r
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summary6(log10(carat))
+#&gt; # A tibble: 5 × 7
+#&gt;   cut          min    mean  median   max     n n_miss
+#&gt;   &lt;ord&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;  &lt;int&gt;
+#&gt; 1 Fair      -0.658 -0.0273  0      0.700  1610      0
+#&gt; 2 Good      -0.638 -0.133  -0.0862 0.479  4906      0
+...
+```
+
+]
+
+
+---
+
+.pull-left[
+* You can supply conditions as well:
+
+```r
+library(nycflights13)
+unique_where &lt;- function(df, condition, var) {
+  df |&gt; 
+    filter({{ condition }}) |&gt; 
+    distinct({{ var }}) |&gt; 
+    arrange({{ var }})
+}
+
+flights |&gt; unique_where(month == 12, dest)
+#&gt; # A tibble: 96 × 1
+#&gt;   dest 
+#&gt;   &lt;chr&gt;
+#&gt; 1 ABQ  
+#&gt; 2 ALB  
+#&gt; 3 ATL  
+#&gt; 4 AUS  
+#&gt; 5 AVL  
+#&gt; 6 BDL  
+#&gt; # ℹ 90 more rows
+```
+
+]
+
+---
+
+### Examples
+* For `flights` tibble, find all flights that were cancelled (`is.na(arr_time)` or delayed by more than an hour; create a function `filter_severe()` to do so
+
+```r
+filter_severe &lt;- function(df) {
+  df %&gt;%
+    filter(is.na(arr_time) | dep_delay &gt; 60)
+}
+flights %&gt;% filter_severe()
+```
+
+* Finds all flights that were cancelled or delayed by more than a user supplied number of hours:
+
+```r
+filter_severe &lt;- function(df, hours = 1) {
+  df %&gt;%
+    filter(is.na(arr_time) | dep_delay &gt; 60*hours)
+}
+flights %&gt;% filter_severe(hours = 3)
+```
+
+---
+
+### Plot functions
+.pull-left[
+* If you are repeatedly using small variations on plots, you'll find it useful to make functions involving ggplot
+
+```r
+diamonds |&gt; 
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.1)
+
+diamonds |&gt; 
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.05)
+```
+* Same as in the case of dplyr, you need to `{{embrace}}` if you want to refer to variables
+
+]
+
+.pull-right[
+
+```r
+histogram &lt;- function(df, var, binwidth = NULL) {
+  df |&gt; 
+    ggplot(aes(x = {{ var }})) + 
+    geom_histogram(binwidth = binwidth)
+}
+
+diamonds |&gt; histogram(carat, 0.1)
+```
+
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-35-1.png" width="432" /&gt;
+
+]
+
+---
+
+### Plot functions
+.pull-left[
+
+```r
+histogram &lt;- function(df, var, binwidth = NULL) {
+  df |&gt; 
+    ggplot(aes(x = {{ var }})) + 
+    geom_histogram(binwidth = binwidth)
+}
+```
+* Since this function returns a ggplot, you can still add additional components, e.g.
+
+```r
+diamonds |&gt; 
+  histogram(carat, 0.1) +
+  labs(x = "Size (in carats)", y = "Number of diamonds")
+```
+
+]
+.pull-right[
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-38-1.png" width="432" /&gt;
+
+]
+
+
+---
+### Plot functions
+.pull-left[
+* It's easy to add more variables to the function
+
+```r
+linearity_check &lt;- function(df, x, y) {
+  df |&gt;
+    ggplot(aes(x = {{ x }}, y = {{ y }})) +
+    geom_point() +
+    geom_smooth(method = "loess", formula = y ~ x, color = "red", se = FALSE) +
+    geom_smooth(method = "lm", formula = y ~ x, color = "blue", se = FALSE) 
+}
+
+starwars |&gt; 
+  filter(mass &lt; 1000) |&gt; 
+  linearity_check(mass, height)
+```
+
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-39-1.png" width="216" /&gt;
+
+]
+
+.pull-right[
+* Example of creating a hexagon plot that is quite flexible: 
+
+```r
+hex_plot &lt;- function(df, x, y, z, bins = 20, fun = "mean") {
+  df |&gt; 
+    ggplot(aes(x = {{ x }}, y = {{ y }}, z = {{ z }})) + 
+    stat_summary_hex(
+      aes(color = after_scale(fill)), # make border same color as fill
+      bins = bins, 
+      fun = fun,
+    )
+}
+
+diamonds |&gt; hex_plot(carat, price, depth)
+```
+
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-40-1.png" width="252" /&gt;
+
+]
+
+---
+
+.pull-left[ 
+* Let's now try to create a function which creates a bar plot given a tibble and a variable name (a factor), but where the bars are ordered top-to-bottom from most-frequent to least-frequent.
+* Useful function: `fct_infreq`, re-orders factor levels by number of observations within each level (largest first)
+* See how it works:
+
+```r
+diamonds %&gt;% count(clarity) %&gt;% 
+  arrange(by = desc(n))
+#&gt; # A tibble: 8 × 2
+#&gt;   clarity     n
+#&gt;   &lt;ord&gt;   &lt;int&gt;
+#&gt; 1 SI1     13065
+#&gt; 2 VS2     12258
+#&gt; 3 SI2      9194
+#&gt; 4 VS1      8171
+#&gt; 5 VVS2     5066
+#&gt; 6 VVS1     3655
+#&gt; # ℹ 2 more rows
+diamonds$clarity %&gt;% 
+  fct_infreq %&gt;%
+  levels
+#&gt; [1] "SI1"  "VS2"  "SI2"  "VS1"  "VVS2" "VVS1" "IF"   "I1"
+```
+
+]
+
+--
+
+.pull-right[
+* Now create the function:
+
+```r
+sorted_bars &lt;- function(df, var) {
+  df |&gt; 
+    mutate({{ var }} := fct_infreq({{ var }}))  |&gt;
+    ggplot(aes(y = {{ var }})) +
+    geom_bar()
+}
+diamonds |&gt; sorted_bars(clarity)
+```
+
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-42-1.png" width="432" /&gt;
+* Note `:=` needed due to bracing 
+* Largest is at bottom, not top - now use `fct_rev()` reverses factor levels.
+
+]
+
+---
+
+.pull-left[ 
+* Let's now try to create a function which creates a bar plot given a tibble and a variable name (a factor), but where the bars are ordered top-to-bottom from most-frequent to least-frequent.
+* Useful function: `fct_infreq`, re-orders factor levels by number of observations within each level (largest first)
+* See how it works:
+
+```r
+diamonds %&gt;% count(clarity) %&gt;% 
+  arrange(by = desc(n))
+#&gt; # A tibble: 8 × 2
+#&gt;   clarity     n
+#&gt;   &lt;ord&gt;   &lt;int&gt;
+#&gt; 1 SI1     13065
+#&gt; 2 VS2     12258
+#&gt; 3 SI2      9194
+#&gt; 4 VS1      8171
+#&gt; 5 VVS2     5066
+#&gt; 6 VVS1     3655
+#&gt; # ℹ 2 more rows
+diamonds$clarity %&gt;% 
+  fct_infreq %&gt;%
+  levels
+#&gt; [1] "SI1"  "VS2"  "SI2"  "VS1"  "VVS2" "VVS1" "IF"   "I1"
+```
+
+]
+
+.pull-right[
+* Now create the function:
+
+```r
+sorted_bars &lt;- function(df, var) {
+  df |&gt; 
+    mutate({{ var }} := fct_rev(fct_infreq({{ var }})))  |&gt;
+    ggplot(aes(y = {{ var }})) +
+    geom_bar()
+}
+diamonds |&gt; sorted_bars(clarity)
+```
+
+&lt;img src="lec13-functions-1_files/figure-html/unnamed-chunk-44-1.png" width="432" /&gt;
+* Largest is at bottom, not top - now use `fct_rev()` reverses factor levels.
+
+]
+
+---
+
+### Style
+* Function names should be verbs, arguments should be nouns (typically) 
+* Function names should be descriptive and tell the reader something about them
+
+```r
+# Too short
+f()
+
+# Not a verb, or descriptive
+my_awesome_function()
+
+# Long, but clear
+impute_missing()
+collapse_years()
+```
+
+.pull-left[
+* Although R doesn't care about whitespace (unlike Python), it is very helpful to readers to be use consistent spacing conventions
+* 2 space indent after `{}` in functions, and 2 space indent after beginning pipe
+* In R Studio, the command `Ctrl + I` on a given line will indent it correctly (usually)
+]
+
+.pull-right[
+
+```r
+density &lt;- function(color, facets, binwidth = 0.1) {
+diamonds |&gt; 
+ggplot(aes(x = carat, y = after_stat(density), color = {{ color }})) +
+geom_freqpoly(binwidth = binwidth) +
+facet_wrap(vars({{ facets }}))
+}
+```
+
+
+]
+
+---
+
+### Style
+* Function names should be verbs, arguments should be nouns (typically) 
+* Function names should be descriptive and tell the reader something about them
+
+```r
+# Too short
+f()
+
+# Not a verb, or descriptive
+my_awesome_function()
+
+# Long, but clear
+impute_missing()
+collapse_years()
+```
+
+.pull-left[
+* Although R doesn't care about whitespace (unlike Python), it is very helpful to readers to be use consistent spacing conventions
+* 2 space indent after `{}` in functions, and 2 space indent after beginning pipe
+* In R Studio, the command `Ctrl + I` on a given line will indent it correctly (usually)
+]
+
+.pull-right[
+
+```r
+density &lt;- function(color, facets, binwidth = 0.1) {
+  diamonds |&gt; 
+    ggplot(aes(x = carat, y = after_stat(density), color = {{ color }})) +
+    geom_freqpoly(binwidth = binwidth) +
+    facet_wrap(vars({{ facets }}))
+}
+```
+
+
+]
+
+---
+
+### Coming lectures
+* In the coming lectures, we'll look at **linear models** and how to perform **inference**
+* A quick refresher on plotting lines:
+  * `y = m x + b`: slope of `m`, intercept of `b` (when `x=0`, `y=b`)
+  * `y - v = m (x - u)`: point slope form.  Line going through `(u, v)` with slope `m`
+  * If you have two points, you can always connect a line through them and find the slope by substituting into first equation above.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

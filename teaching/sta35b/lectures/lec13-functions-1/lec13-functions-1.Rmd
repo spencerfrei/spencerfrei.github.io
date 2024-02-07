@@ -1,0 +1,764 @@
+---
+title: "Functions 1"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+source("../_common.R")
+```
+
+### Functions
+* We'll talk in the next couple lectures about writing **functions**
+* Functions allow for automating tasks, with a number of advantages:
+  - Readability: have well-defined tasks that are encapsulated within individual functions, easier to debug
+  - Portability: makes it easy to re-use code
+
+
+---
+
+### Vector functions
+.pull-left[
+* We'll take a look at **vector functions**: takes >=1 vector, returns vector as a result
+* Try and understand this code.
+```{r}
+df <- tibble(
+  a = rnorm(5),
+  b = rnorm(5),
+  c = rnorm(5),
+  d = rnorm(5),
+)
+
+df |> mutate(
+  a = (a - min(a, na.rm = TRUE)) / 
+    (max(a, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  b = (b - min(b, na.rm = TRUE)) / 
+    (max(b, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  c = (c - min(c, na.rm = TRUE)) / 
+    (max(c, na.rm = TRUE) - min(c, na.rm = TRUE)),
+  d = (d - min(d, na.rm = TRUE)) / 
+    (max(d, na.rm = TRUE) - min(d, na.rm = TRUE)),
+)
+```
+
+]
+
+--
+
+.pull-right[
+* Seems to be rescaling each column to have range between 0 and 1
+* Did you spot the error?  When creating column `b`, forgot to change an "a" to a "b"
+* Functions will generally make it harder to make these kinds of mistakes
+]
+
+---
+
+### Writing functions
+.pull-left[
+* Here's the computation we were trying to do:
+```{r, eval = FALSE}
+(a - min(a, na.rm = TRUE)) / (max(a, na.rm = TRUE) - min(a, na.rm = TRUE))
+(b - min(b, na.rm = TRUE)) / (max(b, na.rm = TRUE) - min(b, na.rm = TRUE))
+(c - min(c, na.rm = TRUE)) / (max(c, na.rm = TRUE) - min(c, na.rm = TRUE))
+(d - min(d, na.rm = TRUE)) / (max(d, na.rm = TRUE) - min(d, na.rm = TRUE))  
+```
+
+* More clearly:
+```{r, eval=FALSE}
+(█ - min(█, na.rm = TRUE)) / (max(█, na.rm = TRUE) - min(█, na.rm = TRUE))
+```
+* To write functions, need 3 things:
+  - **name**: we'll use `rescale01`
+  - **arguments**: things that vary across calls; we'll use `x`
+  - **body**: the code that repeats
+  
+]
+
+.pull-right[
+
+```{r}
+name <- function(arguments) {
+  body
+}
+```
+
+* In our case:
+```{r}
+rescale01 <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+```
+* Can test it out:
+```{r}
+rescale01(c(-10, 0, 10))
+rescale01(c(1, 2, 3, NA, 5))
+```
+
+]
+
+---
+
+.pull-left[
+* Compare code with functions...
+```{r}
+rescale01 <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+df |> mutate(
+  a = rescale01(a),
+  b = rescale01(b),
+  c = rescale01(c),
+  d = rescale01(d),
+)
+```
+
+]
+
+.pull-right[
+* ... to code without functions:
+```{r}
+df <- tibble(
+  a = rnorm(5),
+  b = rnorm(5),
+  c = rnorm(5),
+  d = rnorm(5),
+)
+
+df |> mutate(
+  a = (a - min(a, na.rm = TRUE)) / 
+    (max(a, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  b = (b - min(b, na.rm = TRUE)) / 
+    (max(b, na.rm = TRUE) - min(a, na.rm = TRUE)),
+  c = (c - min(c, na.rm = TRUE)) / 
+    (max(c, na.rm = TRUE) - min(c, na.rm = TRUE)),
+  d = (d - min(d, na.rm = TRUE)) / 
+    (max(d, na.rm = TRUE) - min(d, na.rm = TRUE)),
+)
+```
+
+]
+
+
+---
+
+### Improving the function
+.pull-left[
+```{r}
+rescale01 <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+```
+* Suppose we want to modify function so that we only compute the min once rather than twice.
+```{r}
+rescale01 <- function(x) {
+  minval <- min(x, na.rm=TRUE)
+  maxval <- max(x, na.rm=TRUE)
+  (x - minval) / (maxval - minval)
+}
+```
+* Much easier than having to go through copy/pasted code!
+]
+
+--
+
+.pull-right[
+* What if we want to modify it to deal with infinite values differently?
+```{r}
+x <- c(1:5, Inf)
+rescale01(x)
+```
+* We can use `range()`: returns min and max of the vector, and has arguments `na.rm =` and `finite =`, which remove NA's and Inf's respectively
+```{r}
+rescale01 <- function(x) {
+  rng <- range(x, na.rm = TRUE, finite = TRUE)
+  minval <- rng[1]
+  maxval <- rng[2]
+  (x - minval) / (maxval - minval)
+}
+rescale01(x)
+```
+
+
+]
+
+---
+
+### Mutate functions 
+.pull-left[ 
+* We'll now look at functions which work well with `mutate` and `filter`
+* Consider a variation of `rescale01()`, where we compute the **z-score**: rescaling a vector to have mean zero and standard deviation of one.
+```{r}
+z_score <- function(x) {
+  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+}
+```
+* Last line is returned as *output* of the function
+* Can also use `return()`
+```{r}
+z_score <- function(x) {
+  results <- (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+  return(results)
+}
+
+```
+]
+
+.pull-right[
+* Function `clamp()` which makes sure all values in a vector lie between a value `min` and value `max`
+```{r}
+clamp <- function(x, min, max) {
+  case_when(
+    x < min ~ min,
+    x > max ~ max,
+    .default = x
+  )
+}
+
+clamp(1:10, min = 3, max = 7)
+```
+
+]
+
+---
+
+### Mutate functions
+.pull-left[
+* Functions can also be applied to non-numeric variables.
+* Example: remove all percent signs, commas, and dollar signs from a string and then convert it to a number.
+```{r}
+clean_number <- function(x) {
+  is_pct <- str_detect(x, "%")
+  num <- x |> 
+    str_remove_all("%") |> 
+    str_remove_all(",") |> 
+    str_remove_all("\\$") |> 
+    as.numeric()
+  if_else(is_pct, num / 100, num)
+}
+
+clean_number("$12,300")
+clean_number("45%")
+```
+]
+
+--
+
+.pull-right[
+* Another example: taking a vector, and if someone previously used numbers 997 / 998 / 999 to record missing values, replace them with `NA`:
+```{r}
+fix_na <- function(x) {
+  if_else(x %in% c(997, 998, 999), NA, x)
+}
+```
+* You can use multiple arguments
+```{r}
+make_a_pair <- function(x, y) {
+  str_c("The pair will be ", x, " and ", y)
+}
+make_a_pair("William", "Henry")
+```
+
+]
+
+---
+
+### Summary functions
+.pull-left[
+* Functions which take a vector and return a single value - useful for `summarize()`
+```{r}
+commas <- function(x) {
+  str_flatten(x, collapse = ", ", last = " and ")
+}
+commas(c("cat", "dog", "pigeon"))
+```
+
+* You can set default values for arguments, e.g. for computing "coefficient of variation": 
+```{r}
+cv <- function(x, na.rm = FALSE) {
+  sd(x, na.rm = na.rm) / mean(x, na.rm = na.rm)
+}
+cv(runif(100, min = 0, max = 50))
+cv(c(1, 2, 3, NA))
+cv(c(1, 2, 3, NA), na.rm = TRUE)
+```
+
+]
+
+.pull-right[
+* Sometimes just want to create functions which make it easier to read code:
+```{r}
+n_missing <- function(x) {
+  sum(is.na(x))
+}
+```
+
+]
+
+---
+
+### Examples
+.pull-left[
+* Writing a function which takes in a vector of strings of birthdates of the form "YYYY-MM-DD" and computes the age in years.
+```{r}
+age_in_years <- function(dates) {
+  time_intervals <- ymd(dates) %--% today()
+  floor(time_intervals / years(1))
+}
+age_in_years(c("2004-11-11", "1997-02-08"))
+```
+
+]
+
+.pull-right[
+* A function `both_na()` which takes in two vectors of same length and returns the number of ositions which have an `NA` in both vectors
+```{r}
+both_na <- function(vec1, vec2) {
+  sum(is.na(vec1) & is.na(vec2))
+}
+both_na(c(1,2,NA,3), c(4, 5, NA, NA))
+both_na(c(1,2,NA,NA), c(4, 5, NA, NA))
+```
+
+]
+
+
+---
+### Data frame functions
+.pull-left[
+* We will often do manipulations of tibbles in a repetitive way
+* Translating this into functions is a bit complicated for reasons to be discussed
+* Consider trying to compute the mean of a tibble by groups.
+```{r}
+grouped_mean <- function(df, group_var, mean_var) {
+  df |> 
+    group_by(group_var) |> 
+    summarize(mean(mean_var))
+}
+```
+* If we try to use it for the `diamonds` dataset, we get an error:
+```{r, eval=FALSE}
+diamonds |> grouped_mean(cut, carat)
+#> Error in `group_by()`:
+#> ! Must group by variables found in `.data`.
+#> ✖ Column `group_var` is not found.
+```
+
+]
+
+.pull-right[
+* Let's make the example a bit more clear:
+```{r, eval=FALSE}
+df <- tibble(
+  mean_var = 1,
+  group_var = "g",
+  group = 1,
+  x = 10,
+  y = 100
+)
+df |> grouped_mean(group, x)
+#> # A tibble: 1 × 2
+#>   group_var `mean(mean_var)`
+#>   <chr>                <dbl>
+#> 1 g                        1
+df |> grouped_mean(group, y)
+#> # A tibble: 1 × 2
+#>   group_var `mean(mean_var)`
+#>   <chr>                <dbl>
+#> 1 g                        1
+```
+* Always does `df %>% group_by(group_var)` instead of `df %>% group_by(group)` 
+]
+
+
+---
+### Embracing
+.pull-left[
+* Solution is to use **embracing**: wrap a variable inside of `{{}}`
+```{r}
+df <- tibble(
+  mean_var = 1,
+  group_var = "g",
+  group = 1,
+  x = 10,
+  y = 100
+)
+grouped_mean <- function(df, group_var, mean_var) {
+  df |> 
+    group_by({{ group_var }}) |> 
+    summarize(mean({{ mean_var }}))
+}
+
+df |> grouped_mean(group, x)
+
+```
+
+]
+
+.pull-right[
+
+* Typically use embracing whenever using functions like `arrange`, `filter`, `summarize`, `select`, `rename`, etc.
+* We'll see examples of how to apply it
+]
+
+---
+
+.pull-left[ 
+* Let's create a function which does initial summary statistics of a variable
+```{r}
+summary6 <- function(data, var) {
+  data |> summarize(
+    min = min({{ var }}, na.rm = TRUE),
+    mean = mean({{ var }}, na.rm = TRUE),
+    median = median({{ var }}, na.rm = TRUE),
+    max = max({{ var }}, na.rm = TRUE),
+    n = n(),
+    n_miss = sum(is.na({{ var }})),
+    .groups = "drop"
+  )
+}
+
+diamonds |> summary6(carat)
+```
+
+]
+
+.pull-right[
+* Since it is inside a `summarize()`, we can use it on grouped data:
+```{r, output.lines=5}
+diamonds |> 
+  group_by(cut) |> 
+  summary6(carat)
+```
+
+* We can even do computations on top of variables:
+```{r, output.lines=5}
+diamonds |> 
+  group_by(cut) |> 
+  summary6(log10(carat))
+```
+
+]
+
+
+---
+
+.pull-left[
+* You can supply conditions as well:
+```{r}
+library(nycflights13)
+unique_where <- function(df, condition, var) {
+  df |> 
+    filter({{ condition }}) |> 
+    distinct({{ var }}) |> 
+    arrange({{ var }})
+}
+
+flights |> unique_where(month == 12, dest)
+```
+
+]
+
+---
+
+### Examples
+* For `flights` tibble, find all flights that were cancelled (`is.na(arr_time)` or delayed by more than an hour; create a function `filter_severe()` to do so
+```{r, eval=FALSE}
+filter_severe <- function(df) {
+  df %>%
+    filter(is.na(arr_time) | dep_delay > 60)
+}
+flights %>% filter_severe()
+```
+
+* Finds all flights that were cancelled or delayed by more than a user supplied number of hours:
+```{r, eval=FALSE}
+filter_severe <- function(df, hours = 1) {
+  df %>%
+    filter(is.na(arr_time) | dep_delay > 60*hours)
+}
+flights %>% filter_severe(hours = 3)
+```
+
+---
+
+### Plot functions
+.pull-left[
+* If you are repeatedly using small variations on plots, you'll find it useful to make functions involving ggplot
+```{r, eval=FALSE}
+diamonds |> 
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.1)
+
+diamonds |> 
+  ggplot(aes(x = carat)) +
+  geom_histogram(binwidth = 0.05)
+```
+* Same as in the case of dplyr, you need to `{{embrace}}` if you want to refer to variables
+
+]
+
+.pull-right[
+```{r}
+histogram <- function(df, var, binwidth = NULL) {
+  df |> 
+    ggplot(aes(x = {{ var }})) + 
+    geom_histogram(binwidth = binwidth)
+}
+
+diamonds |> histogram(carat, 0.1)
+```
+
+]
+
+---
+
+### Plot functions
+.pull-left[
+```{r}
+histogram <- function(df, var, binwidth = NULL) {
+  df |> 
+    ggplot(aes(x = {{ var }})) + 
+    geom_histogram(binwidth = binwidth)
+}
+```
+* Since this function returns a ggplot, you can still add additional components, e.g.
+```{r, eval = FALSE}
+diamonds |> 
+  histogram(carat, 0.1) +
+  labs(x = "Size (in carats)", y = "Number of diamonds")
+```
+
+]
+.pull-right[
+```{r, echo = FALSE}
+diamonds |> 
+  histogram(carat, 0.1) +
+  labs(x = "Size (in carats)", y = "Number of diamonds")
+```
+
+]
+
+
+---
+### Plot functions
+.pull-left[
+* It's easy to add more variables to the function
+```{r}
+#| fig-width: 3
+linearity_check <- function(df, x, y) {
+  df |>
+    ggplot(aes(x = {{ x }}, y = {{ y }})) +
+    geom_point() +
+    geom_smooth(method = "loess", formula = y ~ x, color = "red", se = FALSE) +
+    geom_smooth(method = "lm", formula = y ~ x, color = "blue", se = FALSE) 
+}
+
+starwars |> 
+  filter(mass < 1000) |> 
+  linearity_check(mass, height)
+```
+
+]
+
+.pull-right[
+* Example of creating a hexagon plot that is quite flexible: 
+```{r}
+#| fig-width: 3.5
+hex_plot <- function(df, x, y, z, bins = 20, fun = "mean") {
+  df |> 
+    ggplot(aes(x = {{ x }}, y = {{ y }}, z = {{ z }})) + 
+    stat_summary_hex(
+      aes(color = after_scale(fill)), # make border same color as fill
+      bins = bins, 
+      fun = fun,
+    )
+}
+
+diamonds |> hex_plot(carat, price, depth)
+```
+
+]
+
+---
+
+.pull-left[ 
+* Let's now try to create a function which creates a bar plot given a tibble and a variable name (a factor), but where the bars are ordered top-to-bottom from most-frequent to least-frequent.
+* Useful function: `fct_infreq`, re-orders factor levels by number of observations within each level (largest first)
+* See how it works:
+```{r}
+diamonds %>% count(clarity) %>% 
+  arrange(by = desc(n))
+diamonds$clarity %>% 
+  fct_infreq %>%
+  levels
+```
+
+]
+
+--
+
+.pull-right[
+* Now create the function:
+```{r}
+sorted_bars <- function(df, var) {
+  df |> 
+    mutate({{ var }} := fct_infreq({{ var }}))  |>
+    ggplot(aes(y = {{ var }})) +
+    geom_bar()
+}
+diamonds |> sorted_bars(clarity)
+```
+* Note `:=` needed due to bracing 
+* Largest is at bottom, not top - now use `fct_rev()` reverses factor levels.
+
+]
+
+---
+
+.pull-left[ 
+* Let's now try to create a function which creates a bar plot given a tibble and a variable name (a factor), but where the bars are ordered top-to-bottom from most-frequent to least-frequent.
+* Useful function: `fct_infreq`, re-orders factor levels by number of observations within each level (largest first)
+* See how it works:
+```{r}
+diamonds %>% count(clarity) %>% 
+  arrange(by = desc(n))
+diamonds$clarity %>% 
+  fct_infreq %>%
+  levels
+```
+
+]
+
+.pull-right[
+* Now create the function:
+```{r}
+sorted_bars <- function(df, var) {
+  df |> 
+    mutate({{ var }} := fct_rev(fct_infreq({{ var }})))  |>
+    ggplot(aes(y = {{ var }})) +
+    geom_bar()
+}
+diamonds |> sorted_bars(clarity)
+```
+* Largest is at bottom, not top - now use `fct_rev()` reverses factor levels.
+
+]
+
+---
+
+### Style
+* Function names should be verbs, arguments should be nouns (typically) 
+* Function names should be descriptive and tell the reader something about them
+```{r, eval=FALSE}
+# Too short
+f()
+
+# Not a verb, or descriptive
+my_awesome_function()
+
+# Long, but clear
+impute_missing()
+collapse_years()
+```
+
+.pull-left[
+* Although R doesn't care about whitespace (unlike Python), it is very helpful to readers to be use consistent spacing conventions
+* 2 space indent after `{}` in functions, and 2 space indent after beginning pipe
+* In R Studio, the command `Ctrl + I` on a given line will indent it correctly (usually)
+]
+
+.pull-right[
+```{r}
+density <- function(color, facets, binwidth = 0.1) {
+diamonds |> 
+ggplot(aes(x = carat, y = after_stat(density), color = {{ color }})) +
+geom_freqpoly(binwidth = binwidth) +
+facet_wrap(vars({{ facets }}))
+}
+```
+
+
+]
+
+---
+
+### Style
+* Function names should be verbs, arguments should be nouns (typically) 
+* Function names should be descriptive and tell the reader something about them
+```{r, eval=FALSE}
+# Too short
+f()
+
+# Not a verb, or descriptive
+my_awesome_function()
+
+# Long, but clear
+impute_missing()
+collapse_years()
+```
+
+.pull-left[
+* Although R doesn't care about whitespace (unlike Python), it is very helpful to readers to be use consistent spacing conventions
+* 2 space indent after `{}` in functions, and 2 space indent after beginning pipe
+* In R Studio, the command `Ctrl + I` on a given line will indent it correctly (usually)
+]
+
+.pull-right[
+```{r}
+density <- function(color, facets, binwidth = 0.1) {
+  diamonds |> 
+    ggplot(aes(x = carat, y = after_stat(density), color = {{ color }})) +
+    geom_freqpoly(binwidth = binwidth) +
+    facet_wrap(vars({{ facets }}))
+}
+```
+
+
+]
+
+---
+
+### Coming lectures
+* In the coming lectures, we'll look at **linear models** and how to perform **inference**
+* A quick refresher on plotting lines:
+  * `y = m x + b`: slope of `m`, intercept of `b` (when `x=0`, `y=b`)
+  * `y - v = m (x - u)`: point slope form.  Line going through `(u, v)` with slope `m`
+  * If you have two points, you can always connect a line through them and find the slope by substituting into first equation above.
