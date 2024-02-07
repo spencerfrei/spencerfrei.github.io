@@ -163,7 +163,445 @@ df |&gt;
 
 ---
 ### `across()`: calling multiple functions 
-* What happens if you want to do multiple 
+.pull-left[ 
+* We may want to apply multiple transformations or have multiple arguments
+* Motivating example: tibble with missing data
+
+```r
+rnorm_na &lt;- function(n, n_na, mean = 0, sd = 1) {
+  sample(c(rnorm(n - n_na, mean = mean, sd = sd), rep(NA, n_na)))
+}
+df_miss &lt;- tibble(
+  a = rnorm_na(5, 1),
+  b = rnorm_na(5, 1),
+  c = rnorm_na(5, 2),
+  d = rnorm(5))
+
+df_miss |&gt; 
+  summarize(
+    across(a:d, median),
+    n = n())
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b     c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1    NA    NA    NA  1.15     5
+```
+
+]
+.pull-right[
+* If we want to pass along argument `na.rm = TRUE` we can create a new function in-line which calls median:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, function(x) median(x, na.rm = TRUE)),
+    n = n()  )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+* R also allows for a shortcut for in-line function creations: `\`:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n()  )
+```
+* Equivalent to:
+
+```r
+df_miss |&gt; 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+```
+
+]
+---
+.pull-left[ 
+* So we can simplify code like ...
+
+```r
+df_miss |&gt; 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+* ... to ...
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n() )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+]
+
+.pull-right[
+* When we remove missing values, may also be interested in how many were removed.  We can do that again using `across()` by using a named list to `.fns` argument:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, list(
+      median = \(x) median(x, na.rm = TRUE),
+      n_miss = \(x) sum(is.na(x))
+    )),
+    n = n()
+  )
+#&gt; # A tibble: 1 × 9
+#&gt;   a_median a_n_miss b_median b_n_miss c_median c_n_miss d_median d_n_miss
+#&gt;      &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1    0.139        1    -1.11        1   -0.387        2     1.15        0
+#&gt; # ℹ 1 more variable: n &lt;int&gt;
+```
+* Columns are named using "glue": `{.col}.{.fn}`, `.col` is name of original column and `.fn` is name of function. 
+* Next: more on how to name columns in the output
+]
+
+---
+
+### Column names
+* Specifying the `.names` column allows for custom output names:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(
+      a:d,
+      list(
+        median = \(x) median(x, na.rm = TRUE),
+        n_miss = \(x) sum(is.na(x))
+      ),
+      .names = "{.fn}_for_{.col}"
+    ),
+    n = n(),
+  )
+#&gt; # A tibble: 1 × 9
+#&gt;   median_for_a n_miss_for_a median_for_b n_miss_for_b median_for_c
+#&gt;          &lt;dbl&gt;        &lt;int&gt;        &lt;dbl&gt;        &lt;int&gt;        &lt;dbl&gt;
+#&gt; 1        0.139            1        -1.11            1       -0.387
+#&gt; # ℹ 4 more variables: n_miss_for_c &lt;int&gt;, median_for_d &lt;dbl&gt;,
+#&gt; #   n_miss_for_d &lt;int&gt;, n &lt;int&gt;
+```
+
+---
+
+### Column names
+* Specifying `.names` is especially important when using `mutate()`, since by default `across()` gives same names as input and thus will replace the original columns.
+
+.pull-left[
+* e.g., `coalesce(x, y)` replaces all appearances of `NA` in `x` with the value `y`
+
+```r
+df_miss |&gt; 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0))
+  )
+#&gt; # A tibble: 5 × 4
+#&gt;        a      b      c     d
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1  0.434 -1.25   0     1.60 
+#&gt; 2  0     -1.43  -0.297 0.776
+#&gt; 3 -0.156 -0.980  0     1.15 
+#&gt; 4 -2.61  -0.683 -0.785 2.13 
+#&gt; 5  1.11   0     -0.387 0.704
+```
+
+
+]
+
+.pull-right[
+* If we wanted to create new columns, use `.names` to give output new names:
+
+```r
+df_miss |&gt; 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0), .names = "{.col}_na_zero")
+  )
+#&gt; # A tibble: 5 × 8
+#&gt;        a      b      c     d a_na_zero b_na_zero c_na_zero d_na_zero
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+#&gt; 1  0.434 -1.25  NA     1.60      0.434    -1.25      0         1.60 
+#&gt; 2 NA     -1.43  -0.297 0.776     0        -1.43     -0.297     0.776
+#&gt; 3 -0.156 -0.980 NA     1.15     -0.156    -0.980     0         1.15 
+#&gt; 4 -2.61  -0.683 -0.785 2.13     -2.61     -0.683    -0.785     2.13 
+#&gt; 5  1.11  NA     -0.387 0.704     1.11      0        -0.387     0.704
+```
+
+]
+
+---
+
+### Filtering
+* `across()` is great with `summarize()` and `mutate()`, but not so much with `filter()` because there we usually combine conditions with `&amp;` / `|`.  
+* dplyr provides two variants: `if_any()` and `if_all()` to help combine logicals across columns
+
+```r
+# same as df_miss |&gt; filter(is.na(a) | is.na(b) | is.na(c) | is.na(d))
+df_miss |&gt; filter(if_any(a:d, is.na))
+#&gt; # A tibble: 4 × 4
+#&gt;        a      b      c     d
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1  0.434 -1.25  NA     1.60 
+#&gt; 2 NA     -1.43  -0.297 0.776
+#&gt; 3 -0.156 -0.980 NA     1.15 
+#&gt; 4  1.11  NA     -0.387 0.704
+
+# same as df_miss |&gt; filter(is.na(a) &amp; is.na(b) &amp; is.na(c) &amp; is.na(d))
+df_miss |&gt; filter(if_all(a:d, is.na))
+#&gt; # A tibble: 0 × 4
+#&gt; # ℹ 4 variables: a &lt;dbl&gt;, b &lt;dbl&gt;, c &lt;dbl&gt;, d &lt;dbl&gt;
+```
+
+---
+
+### `across()` in functions
+* Let's see an example of expanding all date columns into year / month / day columns.
+
+```r
+expand_dates &lt;- function(df) {
+  df |&gt; 
+    mutate(
+      across(where(is.Date), list(year = year, month = month, day = mday))
+    )
+}
+
+df_date &lt;- tibble(
+  name = c("Amy", "Bob"),
+  date = ymd(c("2009-08-03", "2010-01-16"))
+)
+
+df_date |&gt; 
+  expand_dates()
+#&gt; # A tibble: 2 × 5
+#&gt;   name  date       date_year date_month date_day
+#&gt;   &lt;chr&gt; &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1 Amy   2009-08-03      2009          8        3
+#&gt; 2 Bob   2010-01-16      2010          1       16
+```
+
+---
+### `across()` in functions
+.pull-left[ 
+* You can supply multiple columns in a single argument using `c()` in addition to `where()`:
+
+```r
+summarize_means &lt;- function(df, summary_vars = where(is.numeric)) {
+  df |&gt; 
+    summarize(
+      across({{ summary_vars }}, \(x) mean(x, na.rm = TRUE)),
+      n = n(),
+      .groups = "drop")
+}
+```
+]
+.pull-right[
+
+```r
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summarize_means()
+#&gt; # A tibble: 5 × 9
+#&gt;   cut       carat depth table price     x     y     z     n
+#&gt;   &lt;ord&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 Fair      1.05   64.0  59.1 4359.  6.25  6.18  3.98  1610
+#&gt; 2 Good      0.849  62.4  58.7 3929.  5.84  5.85  3.64  4906
+#&gt; 3 Very Good 0.806  61.8  58.0 3982.  5.74  5.77  3.56 12082
+#&gt; 4 Premium   0.892  61.3  58.7 4584.  5.97  5.94  3.65 13791
+#&gt; 5 Ideal     0.703  61.7  56.0 3458.  5.51  5.52  3.40 21551
+
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summarize_means(c(carat, x:z))
+#&gt; # A tibble: 5 × 6
+#&gt;   cut       carat     x     y     z     n
+#&gt;   &lt;ord&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 Fair      1.05   6.25  6.18  3.98  1610
+#&gt; 2 Good      0.849  5.84  5.85  3.64  4906
+#&gt; 3 Very Good 0.806  5.74  5.77  3.56 12082
+#&gt; 4 Premium   0.892  5.97  5.94  3.65 13791
+#&gt; 5 Ideal     0.703  5.51  5.52  3.40 21551
+```
+
+]
+
+---
+
+### `across()` vs `pivot_longer()`
+.pull-left[
+Consider calculating medians/means for all columns:
+
+```r
+df |&gt; 
+  summarize(across(a:d, list(median = median, mean = mean)))
+#&gt; # A tibble: 1 × 8
+#&gt;   a_median a_mean b_median b_mean c_median c_mean d_median d_mean
+#&gt;      &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1   0.0380  0.205  -0.0163 0.0910    0.260 0.0716    0.540  0.508
+```
+
+Alternative way to compute: pivot longer, then group by and summarize:
+
+```r
+long &lt;- df |&gt; 
+  pivot_longer(cols = a:d, names_to = "name", values_to = "value") |&gt;
+  group_by(name) |&gt; 
+  summarize(
+    median = median(value),
+    mean = mean(value)
+  )
+```
+]
+
+.pull-right[
+
+```
+#&gt; # A tibble: 4 × 3
+#&gt;   name   median   mean
+#&gt;   &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1 a      0.0380 0.205 
+#&gt; 2 b     -0.0163 0.0910
+#&gt; 3 c      0.260  0.0716
+#&gt; 4 d      0.540  0.508
+```
+
+* Then pivot wider:
+
+```r
+long %&gt;% pivot_wider(
+  names_from = 'name',
+  values_from = c(median, mean),
+  names_vary = "slowest",
+  names_glue = "{name}_{.value}")
+#&gt; # A tibble: 1 × 8
+#&gt;   a_median a_mean b_median b_mean c_median c_mean d_median d_mean
+#&gt;      &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1   0.0380  0.205  -0.0163 0.0910    0.260 0.0716    0.540  0.508
+```
+* "fastest" varies names_from values fastest, resulting in ⁠value1_name1, value1_name2...
+
+]
+
+---
+.pull-left[
+* This approach is useful when you have groups of columns that you want to compute with simultaneously
+* e.g. suppose df contains both values and weights, and we want to compute a weighted mean. 
+
+```r
+df_paired &lt;- tibble(
+  a_val = rnorm(10),
+  a_wts = runif(10),
+  b_val = rnorm(10),
+  b_wts = runif(10),
+  c_val = rnorm(10),
+  c_wts = runif(10),
+  d_val = rnorm(10),
+  d_wts = runif(10)
+)
+```
+* No way to do with `across`, but easy with `pivot_longer`
+]
+.pull-right[
+
+```r
+( df_long &lt;- df_paired |&gt; 
+  pivot_longer(
+    cols = everything(), 
+    names_to = c("group", ".value"), 
+    names_sep = "_"
+  ) )
+#&gt; # A tibble: 40 × 3
+#&gt;   group    val   wts
+#&gt;   &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 a      0.715 0.518
+#&gt; 2 b     -0.709 0.691
+#&gt; 3 c      0.718 0.216
+#&gt; 4 d     -0.217 0.733
+#&gt; 5 a     -1.09  0.979
+#&gt; 6 b     -0.209 0.675
+#&gt; # ℹ 34 more rows
+df_long |&gt; 
+  group_by(group) |&gt; 
+  summarize(mean = weighted.mean(val, wts))
+#&gt; # A tibble: 4 × 2
+#&gt;   group    mean
+#&gt;   &lt;chr&gt;   &lt;dbl&gt;
+#&gt; 1 a      0.126 
+#&gt; 2 b     -0.0704
+#&gt; 3 c     -0.360 
+#&gt; 4 d     -0.248
+```
+
+]
+
+---
+
+### Examples
+.pull-left[ 
+* Number of unique values in each column of `palmerpenguins::penguins`:
+
+
+```r
+penguins %&gt;% 
+  summarize(across(everything(), \(x) length(unique(x))))
+#&gt; # A tibble: 1 × 8
+#&gt;   species island bill_length_mm bill_depth_mm flipper_length_mm body_mass_g
+#&gt;     &lt;int&gt;  &lt;int&gt;          &lt;int&gt;         &lt;int&gt;             &lt;int&gt;       &lt;int&gt;
+#&gt; 1       3      3            165            81                56          95
+#&gt; # ℹ 2 more variables: sex &lt;int&gt;, year &lt;int&gt;
+```
+* The mean of every column in `mtcars`:
+
+```r
+mtcars %&gt;%
+  summarize(across(everything(), mean))
+#&gt;        mpg    cyl     disp       hp     drat      wt     qsec     vs      am
+#&gt; 1 20.09062 6.1875 230.7219 146.6875 3.596563 3.21725 17.84875 0.4375 0.40625
+#&gt;     gear   carb
+#&gt; 1 3.6875 2.8125
+```
+]
+
+.pull-right[
+* Group diamonds by `cut`, `clarity`, and `color`, then count the number of observations and compute the mean of each numeric column.
+
+```r
+diamonds %&gt;%
+  group_by(cut, clarity, color) %&gt;%
+  summarize(num = n(), across(where(is.numeric), mean))
+#&gt; `summarise()` has grouped output by 'cut', 'clarity'. You can override using
+#&gt; the `.groups` argument.
+#&gt; # A tibble: 276 × 11
+#&gt; # Groups:   cut, clarity [40]
+#&gt;   cut   clarity color   num carat depth table price     x     y     z
+#&gt;   &lt;ord&gt; &lt;ord&gt;   &lt;ord&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 Fair  I1      D         4 1.88   65.6  56.8 7383   7.52  7.42  4.90
+#&gt; 2 Fair  I1      E         9 0.969  65.6  58.1 2095.  6.17  6.06  4.01
+#&gt; 3 Fair  I1      F        35 1.02   65.7  58.4 2544.  6.14  6.04  4.00
+#&gt; 4 Fair  I1      G        53 1.23   65.3  57.7 3187.  6.52  6.43  4.23
+#&gt; 5 Fair  I1      H        52 1.50   65.8  58.4 4213.  6.96  6.86  4.55
+#&gt; 6 Fair  I1      I        34 1.32   65.7  58.4 3501   6.76  6.65  4.41
+#&gt; # ℹ 270 more rows
+```
+
+]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

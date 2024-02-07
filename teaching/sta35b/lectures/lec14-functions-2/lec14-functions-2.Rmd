@@ -148,4 +148,295 @@ df |>
 
 ---
 ### `across()`: calling multiple functions 
-* What happens if you want to do multiple 
+.pull-left[ 
+* We may want to apply multiple transformations or have multiple arguments
+* Motivating example: tibble with missing data
+```{r}
+rnorm_na <- function(n, n_na, mean = 0, sd = 1) {
+  sample(c(rnorm(n - n_na, mean = mean, sd = sd), rep(NA, n_na)))
+}
+df_miss <- tibble(
+  a = rnorm_na(5, 1),
+  b = rnorm_na(5, 1),
+  c = rnorm_na(5, 2),
+  d = rnorm(5))
+
+df_miss |> 
+  summarize(
+    across(a:d, median),
+    n = n())
+```
+
+]
+.pull-right[
+* If we want to pass along argument `na.rm = TRUE` we can create a new function in-line which calls median:
+```{r}
+df_miss |> 
+  summarize(
+    across(a:d, function(x) median(x, na.rm = TRUE)),
+    n = n()  )
+```
+* R also allows for a shortcut for in-line function creations: `\`:
+```{r, eval=FALSE}
+df_miss |> 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n()  )
+```
+* Equivalent to:
+```{r, eval=FALSE}
+df_miss |> 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+```
+
+]
+---
+.pull-left[ 
+* So we can simplify code like ...
+```{r}
+df_miss |> 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+```
+* ... to ...
+```{r}
+df_miss |> 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n() )
+```
+]
+
+.pull-right[
+* When we remove missing values, may also be interested in how many were removed.  We can do that again using `across()` by using a named list to `.fns` argument:
+```{r}
+df_miss |> 
+  summarize(
+    across(a:d, list(
+      median = \(x) median(x, na.rm = TRUE),
+      n_miss = \(x) sum(is.na(x))
+    )),
+    n = n()
+  )
+```
+* Columns are named using "glue": `{.col}.{.fn}`, `.col` is name of original column and `.fn` is name of function. 
+* Next: more on how to name columns in the output
+]
+
+---
+
+### Column names
+* Specifying the `.names` column allows for custom output names:
+```{r}
+df_miss |> 
+  summarize(
+    across(
+      a:d,
+      list(
+        median = \(x) median(x, na.rm = TRUE),
+        n_miss = \(x) sum(is.na(x))
+      ),
+      .names = "{.fn}_for_{.col}"
+    ),
+    n = n(),
+  )
+```
+
+---
+
+### Column names
+* Specifying `.names` is especially important when using `mutate()`, since by default `across()` gives same names as input and thus will replace the original columns.
+
+.pull-left[
+* e.g., `coalesce(x, y)` replaces all appearances of `NA` in `x` with the value `y`
+```{r}
+df_miss |> 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0))
+  )
+```
+
+
+]
+
+.pull-right[
+* If we wanted to create new columns, use `.names` to give output new names:
+```{r}
+df_miss |> 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0), .names = "{.col}_na_zero")
+  )
+```
+
+]
+
+---
+
+### Filtering
+* `across()` is great with `summarize()` and `mutate()`, but not so much with `filter()` because there we usually combine conditions with `&` / `|`.  
+* dplyr provides two variants: `if_any()` and `if_all()` to help combine logicals across columns
+```{r}
+# same as df_miss |> filter(is.na(a) | is.na(b) | is.na(c) | is.na(d))
+df_miss |> filter(if_any(a:d, is.na))
+
+# same as df_miss |> filter(is.na(a) & is.na(b) & is.na(c) & is.na(d))
+df_miss |> filter(if_all(a:d, is.na))
+```
+
+---
+
+### `across()` in functions
+* Let's see an example of expanding all date columns into year / month / day columns.
+```{r}
+expand_dates <- function(df) {
+  df |> 
+    mutate(
+      across(where(is.Date), list(year = year, month = month, day = mday))
+    )
+}
+
+df_date <- tibble(
+  name = c("Amy", "Bob"),
+  date = ymd(c("2009-08-03", "2010-01-16"))
+)
+
+df_date |> 
+  expand_dates()
+```
+
+---
+### `across()` in functions
+.pull-left[ 
+* You can supply multiple columns in a single argument using `c()` in addition to `where()`:
+```{r}
+summarize_means <- function(df, summary_vars = where(is.numeric)) {
+  df |> 
+    summarize(
+      across({{ summary_vars }}, \(x) mean(x, na.rm = TRUE)),
+      n = n(),
+      .groups = "drop")
+}
+```
+]
+.pull-right[
+```{r}
+diamonds |> 
+  group_by(cut) |> 
+  summarize_means()
+
+diamonds |> 
+  group_by(cut) |> 
+  summarize_means(c(carat, x:z))
+```
+
+]
+
+---
+
+### `across()` vs `pivot_longer()`
+.pull-left[
+Consider calculating medians/means for all columns:
+```{r}
+df |> 
+  summarize(across(a:d, list(median = median, mean = mean)))
+```
+
+Alternative way to compute: pivot longer, then group by and summarize:
+```{r}
+long <- df |> 
+  pivot_longer(cols = a:d, names_to = "name", values_to = "value") |>
+  group_by(name) |> 
+  summarize(
+    median = median(value),
+    mean = mean(value)
+  )
+```
+]
+
+.pull-right[
+```{r,echo=FALSE}
+long
+```
+
+* Then pivot wider:
+```{r}
+long %>% pivot_wider(
+  names_from = 'name',
+  values_from = c(median, mean),
+  names_vary = "slowest",
+  names_glue = "{name}_{.value}")
+```
+* "fastest" varies names_from values fastest, resulting in ⁠value1_name1, value1_name2...
+
+]
+
+---
+.pull-left[
+* This approach is useful when you have groups of columns that you want to compute with simultaneously
+* e.g. suppose df contains both values and weights, and we want to compute a weighted mean. 
+```{r}
+df_paired <- tibble(
+  a_val = rnorm(10),
+  a_wts = runif(10),
+  b_val = rnorm(10),
+  b_wts = runif(10),
+  c_val = rnorm(10),
+  c_wts = runif(10),
+  d_val = rnorm(10),
+  d_wts = runif(10)
+)
+```
+* No way to do with `across`, but easy with `pivot_longer`
+]
+.pull-right[
+```{r}
+( df_long <- df_paired |> 
+  pivot_longer(
+    cols = everything(), 
+    names_to = c("group", ".value"), 
+    names_sep = "_"
+  ) )
+df_long |> 
+  group_by(group) |> 
+  summarize(mean = weighted.mean(val, wts))
+```
+
+]
+
+---
+
+### Examples
+.pull-left[ 
+* Number of unique values in each column of `palmerpenguins::penguins`:
+```{r, echo=FALSE}
+library(palmerpenguins)
+```
+```{r}
+penguins %>% 
+  summarize(across(everything(), \(x) length(unique(x))))
+```
+* The mean of every column in `mtcars`:
+```{r}
+mtcars %>%
+  summarize(across(everything(), mean))
+```
+]
+
+.pull-right[
+* Group diamonds by `cut`, `clarity`, and `color`, then count the number of observations and compute the mean of each numeric column.
+```{r}
+diamonds %>%
+  group_by(cut, clarity, color) %>%
+  summarize(num = n(), across(where(is.numeric), mean))
+```
+
+]
