@@ -1,5 +1,5 @@
 ---
-title: "Functions 2"
+title: "Functions 1"
 subtitle: "<br><br> STA35B: Statistical Data Science 2"
 author: "Spencer Frei"
 output:
@@ -19,7 +19,13 @@ output:
 library(tidyverse)
 library(unvotes)
 library(knitr)
-# source("_common.R")
+library(broom)
+library(patchwork)
+library(ggpubr)
+library(scales) # label_dollar 
+library(quantreg) # rq
+library(kableExtra)
+
 hook_output <- knit_hooks$get("output")
 knit_hooks$set(output = function(x, options) {
   lines <- options$output.lines
@@ -43,6 +49,7 @@ knit_hooks$set(output = function(x, options) {
 
 knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
 
+source("../_common.R")
 ```
 
 
@@ -625,7 +632,6 @@ $$ e = y - \hat y = 85.1 - 85.84 = -0.74 $$
 
 * Residuals are often helpfuul when trying to understand how well a linear model fits the data
 * We can visualize this by plotting predicted values on the $x$ axis, and residuals on the $y$-axis
-.pull-left[
 .pull-left[ 
 ```{r, echo=FALSE, message=FALSE}
 mod <- lm(head_l ~ total_l, data = possum)
@@ -666,6 +672,389 @@ ggplot(possum, aes(x = total_l, y = head_l)) +
 ]
 
 .pull-right[
+* Residual plot:
+```{r}
+#| echo: false
+#| message: false
 
+m_head_total <- lm(head_l ~ total_l, data = possum)
+m_head_total_aug <- augment(m_head_total)
+
+ggplot(m_head_total_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.8, size = 2) +
+  labs(
+    x = "Predicted values of head length (mm)",
+    y = "Residuals"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(
+    data = m_head_total_aug |>
+      filter(total_l == 76),
+    shape = "circle open", stroke = 2, size = 4,
+    color = IMSCOL["red", "full"]
+  ) +
+  geom_segment(
+    aes(
+      x = preds[1], y = obs[1] - preds[1] + 0.2,
+      xend = preds[1], yend = 0
+    ),
+    color = IMSCOL["red", "full"], inherit.aes = FALSE
+  ) +
+  geom_point(
+    data = m_head_total_aug |>
+      filter(total_l == 85, head_l == 98.6),
+    shape = "diamond open", stroke = 2, size = 5,
+    color = IMSCOL["gray", "full"]
+  ) +
+  geom_segment(
+    aes(
+      x = preds[2], y = obs[2] - preds[2] - 0.3,
+      xend = preds[2], yend = 0
+    ),
+    color = IMSCOL["gray", "full"], inherit.aes = FALSE
+  ) +
+  geom_point(
+    data = m_head_total_aug |>
+      filter(total_l == 95.5, head_l == 94),
+    shape = "triangle open", stroke = 2, size = 5,
+    color = IMSCOL["pink", "full"]
+  ) +
+  geom_segment(
+    aes(
+      x = preds[3], y = obs[3] - preds[3] + 0.3,
+      xend = preds[3], yend = 0
+    ),
+    color = IMSCOL["pink", "full"], inherit.aes = FALSE
+  )
+```
+
+]
+
+---
+
+### Residual plots
+
+.pull-left[ 
+* Let's look at a few more linear relationships and their corresponding residual plots.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+neg_lin <- simulated_scatter |> filter(group == 6)
+neg_cur <- simulated_scatter |> filter(group == 7)
+random <- simulated_scatter |> filter(group == 8)
+
+neg_lin_mod <- augment(lm(y ~ x, data = neg_lin))
+neg_cur_mod <- augment(lm(y ~ x, data = neg_cur))
+random_mod <- augment(lm(y ~ x, data = random))
+
+p_neg_lin <- ggplot(neg_lin, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_neg_cur <- ggplot(neg_cur, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_random <- ggplot(random, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_neg_lin_res <- ggplot(neg_lin_mod, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_neg_cur_res <- ggplot(neg_cur_mod, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_random_res <- ggplot(random_mod, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "gray", fill = NA, size = 1))
+
+p_neg_lin + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) +
+  p_neg_cur + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_random +
+  p_neg_lin_res + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) +
+  p_neg_cur_res + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_random_res +
+  plot_layout(ncol = 3, heights = c(2, 1))
+```
+
+* What are some observed trends?
+]
+
+--
+
+.pull-right[ 
+* First dataset, no obvious patterns for residuals: they look random around the dashed line
+* Second dataset: looks like some curvature.  Suggests the errors are *not* random, true relationship likely not linear plus noise.
+* Third plot: not clear if underlying relatinoship is linear, but residuals don't appear to show any pattern. 
+]
+
+
+---
+
+### Correlation for describing linear relationships
+
+.pull-left[ 
+* **Correlation** defines the strength of a linear relationship
+* Always valued between -1 and 1, denoted by $r$
+* Correlation for observations $(x_1, y_1), \dots, (x_n, y_n)$:
+$$ r  = \frac{1}{n-1} \sum_{i=1}^n \frac{x_i - \bar x}{s_x} \cdot \frac{y_i - \bar y}{s_y}, $$
+where $\bar x, \bar y$ sample means and $s_x, s_y$ standard deviations for $x_i, y_i$ respectively. 
+* Correlation of +1: positive linear relationship; -1: negative; 0: not linear relationship. 
+]
+
+.pull-right[ 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false 
+
+# library(ggpubr) # Adding here instead of _common.R to avoid collision with ggimage
+
+simulated_scatter |>
+  filter(group %in% c(9:12, 14:17)) |>
+  ggplot(aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  theme_void() +
+  facet_wrap(~group, nrow = 2, scales = "free") +
+  theme(
+    panel.border = element_rect(colour = "gray", fill = NA, linewidth = 1),
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  ggpubr::stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~")))
+```
+]
+---
+
+### Correlation is "scale-invariant"
+.pull-left[ 
+* The definition of correlation:
+$$ r  = \frac{1}{n-1} \sum_{i=1}^n \frac{x_i - \bar x}{s_x} \cdot \frac{y_i - \bar y}{s_y}, $$
+* If we multiply every $x_i$ by a number $\epsilon$, then both the numerator and denominator scale by the same number $\epsilon$, so $r$ is unaffected
+  * Same thing for $y_i$'s
+* E.g. correlation between height/weight using metric or American units is the same
+]
+
+.pull-right[ 
+```{r}
+#| label: fig-bdims-units
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-width: 6
+
+p_1 <- ggplot(bdims, aes(x = hgt, y = wgt)) +
+  geom_point(alpha = 0.8) +
+  labs(x = "Height (cm)", y = "Weight (kg)") +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~")))
+
+p_2 <- bdims |>
+  mutate(
+    hgt = hgt * 0.393701,
+    wgt = wgt * 2.20462
+  ) |>
+  ggplot(aes(x = hgt, y = wgt)) +
+  geom_point(alpha = 0.8) +
+  labs(x = "Height (in)", y = "Weight (lbs)") +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~")))
+
+p_1 + p_2 +
+  plot_annotation(tag_levels = "A")
+```
+]
+
+---
+### Least squares regression
+.pull-left[
+* How do we define the "best" line of fit?
+* We would like the residuals to be small, but many ways to measure residuals.
+* For residuals $e_i = y_i - \hat y_i$, consider these two ways:
+$$ |e_1| + |e_2| + \dots + |e_n|$$
+$$ e_1^2 + e_2^2 + \dots + e_n^2$$
+* We plot the two lines which minimizes either the sum of the absolute values or the sum of the squares on the right
+]
+
+.pull-right[
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+ggplot(elmhurst, aes(x = family_income, y = gift_aid)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, aes(linetype = "Least squares"), color = "blue") + 
+  geom_smooth(method = rq, formula = y ~ x, se = FALSE, aes(linetype = "Absolute value"), color = "blue") +
+  scale_y_continuous(labels = label_dollar(scale = 1, suffix = "K", accuracy = 1)) +
+  scale_x_continuous(labels = label_dollar(scale = 1, suffix = "K", accuracy = 1)) +
+  labs(x = "Family income", y = "Gift aid from university", linetype = "Method") +
+  scale_linetype_manual(values = c("Least squares" = "solid", "Absolute value" = "dashed"))
+```
+* Most commonly used one is least squares, we'll focus on this 
+]
+
+---
+### Fitting least squares lines in R
+.pull-left[
+* Let's consider the `elmhurst` dataset:
+```{r}
+elmhurst
+```
+* Suppose we want to predict amoutn of aid given as a functino of family income.  We want to form predictions
+$$ \widehat{\mathsf{aid}} = \beta_0 + \beta_1 \times \mathsf{familyincome}$$
+]
+.pull-right[
+* To compute line of best fit of variable $y$ given $x$, we use `lm(y ~ x)`:
+```{r}
+lm(gift_aid ~ family_income, data = elmhurst)
+lm(gift_aid ~ family_income, data = elmhurst) %>% broom::tidy()
+```
+* `broom` package takes outputs of messy functions like `lm()` and makes them into tidy tibbles 
+]
+
+---
+.pull-left[
+```{r}
+lm(gift_aid ~ family_income, data = elmhurst)
+lm(gift_aid ~ family_income, data = elmhurst) %>% summary()
+```
+]
+.pull-right[
+```{r}
+lm(gift_aid ~ family_income, data = elmhurst) %>% tidy()
+```
+```{r,echo=FALSE,message=FALSE}
+m_ga_fi <- lm(gift_aid ~ family_income, data = elmhurst) |> tidy()
+m_ga_fi_int <- m_ga_fi |>
+  filter(term == "(Intercept)") |>
+  pull(estimate)
+m_ga_fi_slope <- m_ga_fi |>
+  filter(term == "family_income") |>
+  pull(estimate)
+```
+* How do we interpret these numbers?
+* Intercept and slope estimates for the Elmhurst data are $b_0$ = `r m_ga_fi_int` and $b_1$ = `r m_ga_fi_slope`.
+* Slope: For each additional 1,000 of family income, we expect a student to receive a net difference of $1,000 * (-0.0431) = -43.10$ in aid on average, i.e., 43.10 *less*.
+* This is an **association** not **causal**: increasing a student family's income does nto necessarily cause student aid to drop, just likely
+* Intercept:  $b_0$ = `r m_ga_fi_int` describes the average aid if a student's family had no income, `r format(round(m_ga_fi_int*1000,0), scientific = FALSE, big.mark = ",")`
+* Intercept here is interpretable, but not always
+* p-values provide insight into how "significant" the relationship between variables and response are.  We'll discuss more later. 
+]
+
+---
+
+#### Computing the line of best fit from mean and standard deviations
+.pull-left[ 
+* Two crucial facts for computing line of best fit:
+* (1) Slope of least squares line can be computed by
+$$ b_1 = \frac{s_x}{s_y} \cdot r,$$
+where $r$ is correlation, $s_x, s_y$ are sample standard deviations of predictor and outcome, respectively
+* (2) If $\bar x$ is sample mean of predictor, $\bar y$ sample mean of outcome, then $(\bar x, \bar y)$ is on the least squares line
+
+
+```{r}
+#| label: tbl-summaryStatsElmhurstRegr
+#| tbl-cap: Summary statistics for family income and gift aid.
+#| echo: false
+elmhurst |>
+  select(family_income, gift_aid) |>
+  summarise(
+    fi_m = mean(family_income),
+    fi_s = sd(family_income),
+    ga_m = mean(gift_aid),
+    ga_s = sd(gift_aid),
+    r    = cor(family_income, gift_aid)
+  ) |>
+  kbl(
+    linesep = "", booktabs = TRUE,
+    col.names = c("mean", "sd", "mean", "sd", "r"),
+    align = "ccccc"
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "condensed"),
+    latex_options = c("striped", "hold_position"), full_width = FALSE
+  ) |>
+  add_header_above(c("Family income, x" = 2, "Gift aid, y" = 2, " " = 1))
+```
+]
+
+.pull-right[
+* Compute slope of least squares line:
+$$ b_1 = \frac{s_y}{s_x} \cdot r = \frac{5.46}{63.2} \cdot (-0.499) = -0.0431$$
+* Point slope form of a line: for slope $m$ and point $(x_0, y_0)$ on a line,
+$$ y - y_0 = m \cdot (x - x_0) $$
+* Since $(\bar x, \bar y)$ is on the line with slope $b_1$, we get
+$$ y - \bar y = b_1 (x - \bar y)$$
+* This gives
+$$ y = \bar y - b_1 \bar x + b_1 x \implies $$
+$$ b_0 = \bar y - b_1 \bar x = 19.9 + 0.0431 * 102 = 24.3. $$
+* Results in equation:
+$$ \widehat {\mathsf{aid}} = 24.3 - 0.0431 \times \mathsf{familyincome} $$
+]
+
+---
+* Let's compare our calculated line of best fit with what R returns to us with `lm()`:
+$$ \widehat {\mathsf{aid}} = 24.3 - 0.0431 \times \mathsf{familyincome} $$
+
+```{r}
+lm(gift_aid ~ family_income, data = elmhurst) %>% tidy()
+```
+
+* If we have a senior who is considering Elmhurst College, can they use this to predict her financial aid?
+* They may use it as an *estimate*.  Things can vary year to year, and the estimate is imperfect.  So likely will be errors. 
+
+
+---
+### Extrapolation and its perils
+.pull-left[ 
+* We can make some informed estimates about future predictions of a linear model when the predictors are similar to those we saw before.
+* Consider if we had data which looked like the left, and we tried to make predictions for predictors which are outside of the domain where we have data
+]
+.pull-right[ 
+```{r, echo = FALSE, warning= FALSE, message= FALSE}
+library(ggplot2)
+library(gridExtra) # or library(patchwork)
+
+# Generate linear data
+set.seed(123) # for reproducibility
+x1 <- 1:10
+y1 <- x1 + rnorm(length(x1), mean = 0, sd = 0.3)
+linear_data <- data.frame(x = x1, y = y1)
+
+# Generate quadratic data
+x2 <- 10:15
+# Quadratic equation adjusted for a decrease after the peak
+y2 <- -2*(x2 - 10)^2 + 10 + rnorm(length(x2), mean = 0, sd = 0.3)
+quadratic_data <- data.frame(x = c(x1, x2), y = c(y1, y2))
+
+# Plot 1: Linear data with line of best fit
+p1 <- ggplot(linear_data, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  ggtitle("Linear Data with Best Fit Line")
+
+# Plot 2: Combined data with quadratic trend and y=x line
+p2 <- ggplot(quadratic_data, aes(x = x, y = y)) +
+  geom_point() +
+  geom_line(aes(x = x, y = x), color = "red") +
+  ggtitle("Extrapolation for future data")
+
+p1 + p2 
 ```
 ]

@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Functions 1</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec14-functions-2_v0_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec14-functions-2_v0_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec14-functions-2_v0_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="lec14-functions-2_v0_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec14-functions-2_v0_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Functions 1
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+
+  
+
+
+
+### Iteration
+* We've already seen a few ways to do computations repeatedly in a clean / easy way:
+  - `facet_grid()` and `facet_wrap()`, drawing plots for each group
+  - `group_by()` + `summarize()` for summarys tatistics for each group
+  - creating custom functions
+  
+* We'll see what other ways R allows for us to flexibly do calculations and save time
+
+---
+
+###  Modifying multiple columns
+
+.pull-left[
+* Consider a simple tibble (`runif(n)`: n independent standard normals), and that we want to compute median of every column:
+
+```r
+df &lt;- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+df |&gt; summarize(
+  n = n(),
+  a = median(a),
+  b = median(b),
+  c = median(c),
+  d = median(d),
+)
+#&gt; # A tibble: 1 × 5
+#&gt;       n      a      b       c     d
+#&gt;   &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1    10 -0.246 -0.287 -0.0567 0.144
+```
+
+]
+
+.pull-right[
+* Should never be copying+pasting more than twice (what if we had 500 columns!)
+* Helpful function: `across()`:
+
+```r
+df %&gt;%
+  summarize(
+    n = n(),
+    across(a:d, median)
+  )
+#&gt; # A tibble: 1 × 5
+#&gt;       n      a      b       c     d
+#&gt;   &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1    10 -0.246 -0.287 -0.0567 0.144
+```
+* In coming slides, we'll see `across` works and how to modify this behavior.
+* Three especially important arguments to `across()`:
+  - `.cols`: which columns to iterate over
+  - `.fns`: what to do (function) ofr each column
+  - `.names`: name output of each column
+]
+
+---
+
+### `across()`: Selecting columns with `.cols`
+
+.pull-left[
+* For `.cols`, we can use same things we used for `select()`:
+
+```r
+df %&gt;% summarize(across(-a, median))
+#&gt; # A tibble: 1 × 3
+#&gt;        b       c     d
+#&gt;    &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 -0.287 -0.0567 0.144
+df %&gt;% summarize(across(c(a,c), median))
+#&gt; # A tibble: 1 × 2
+#&gt;        a       c
+#&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 -0.246 -0.0567
+```
+* Two additional arguments which are helpful: `everything()` and `where()`. 
+
+```r
+df %&gt;% summarize(across(everything(), median))
+#&gt; # A tibble: 1 × 4
+#&gt;        a      b       c     d
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 -0.246 -0.287 -0.0567 0.144
+```
+
+]
+.pull-right[
+* `everything()` computes summaries for every non-grouping variable
+* `where()` allows for selecting columns based on type, e.g. `where(is.numeric)` for numbers, `where(is.character)` for strings, `where(is.logical)` for logicals, etc.
+
+```r
+df &lt;- tibble(
+  grp = sample(2, 10, replace = TRUE), # either 1 or 2
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10))
+df |&gt; 
+  group_by(grp) |&gt; 
+  summarize(across(everything(), median))
+#&gt; # A tibble: 2 × 5
+#&gt;     grp       a       b     c     d
+#&gt;   &lt;int&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1     1 -0.0935 -0.0163 0.363 0.364
+#&gt; 2     2  0.312  -0.0576 0.208 0.565
+```
+
+]
+
+---
+
+### `across()`: calling a single function
+* `.fns` says how we want data to be transformed
+* We are passing the *function* to `across()`, we are not calling the function itself. 
+  - Never add the `()` after the function when you pass to across, otherwise you get an error.
+
+```r
+df |&gt; 
+  group_by(grp) |&gt; 
+  summarize(across(everything(), median()))
+#&gt; Error in `summarize()`:
+#&gt; ℹ In argument: `across(everything(), median())`.
+#&gt; Caused by error in `median.default()`:
+#&gt; ! argument "x" is missing, with no default
+```
+* Same reason why calling `median()` in console will result in an error, since it has no input.
+
+---
+### `across()`: calling multiple functions 
+.pull-left[ 
+* We may want to apply multiple transformations or have multiple arguments
+* Motivating example: tibble with missing data
+
+```r
+rnorm_na &lt;- function(n, n_na, mean = 0, sd = 1) {
+  sample(c(rnorm(n - n_na, mean = mean, sd = sd), rep(NA, n_na)))
+}
+df_miss &lt;- tibble(
+  a = rnorm_na(5, 1),
+  b = rnorm_na(5, 1),
+  c = rnorm_na(5, 2),
+  d = rnorm(5))
+
+df_miss |&gt; 
+  summarize(
+    across(a:d, median),
+    n = n())
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b     c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1    NA    NA    NA  1.15     5
+```
+
+]
+.pull-right[
+* If we want to pass along argument `na.rm = TRUE` we can create a new function in-line which calls median:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, function(x) median(x, na.rm = TRUE)),
+    n = n()  )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+* R also allows for a shortcut for in-line function creations: `\`:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n()  )
+```
+* Equivalent to:
+
+```r
+df_miss |&gt; 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+```
+
+]
+---
+.pull-left[ 
+* So we can simplify code like ...
+
+```r
+df_miss |&gt; 
+  summarize(
+    a = median(a, na.rm = TRUE),
+    b = median(b, na.rm = TRUE),
+    c = median(c, na.rm = TRUE),
+    d = median(d, na.rm = TRUE),
+    n = n()   )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+* ... to ...
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, \(x) median(x, na.rm = TRUE)),
+    n = n() )
+#&gt; # A tibble: 1 × 5
+#&gt;       a     b      c     d     n
+#&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 0.139 -1.11 -0.387  1.15     5
+```
+]
+
+.pull-right[
+* When we remove missing values, may also be interested in how many were removed.  We can do that again using `across()` by using a named list to `.fns` argument:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(a:d, list(
+      median = \(x) median(x, na.rm = TRUE),
+      n_miss = \(x) sum(is.na(x))
+    )),
+    n = n()
+  )
+#&gt; # A tibble: 1 × 9
+#&gt;   a_median a_n_miss b_median b_n_miss c_median c_n_miss d_median d_n_miss
+#&gt;      &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1    0.139        1    -1.11        1   -0.387        2     1.15        0
+#&gt; # ℹ 1 more variable: n &lt;int&gt;
+```
+* Columns are named using "glue": `{.col}.{.fn}`, `.col` is name of original column and `.fn` is name of function. 
+* Next: more on how to name columns in the output
+]
+
+---
+
+### Column names
+* Specifying the `.names` column allows for custom output names:
+
+```r
+df_miss |&gt; 
+  summarize(
+    across(
+      a:d,
+      list(
+        median = \(x) median(x, na.rm = TRUE),
+        n_miss = \(x) sum(is.na(x))
+      ),
+      .names = "{.fn}_for_{.col}"
+    ),
+    n = n(),
+  )
+#&gt; # A tibble: 1 × 9
+#&gt;   median_for_a n_miss_for_a median_for_b n_miss_for_b median_for_c
+#&gt;          &lt;dbl&gt;        &lt;int&gt;        &lt;dbl&gt;        &lt;int&gt;        &lt;dbl&gt;
+#&gt; 1        0.139            1        -1.11            1       -0.387
+#&gt; # ℹ 4 more variables: n_miss_for_c &lt;int&gt;, median_for_d &lt;dbl&gt;,
+#&gt; #   n_miss_for_d &lt;int&gt;, n &lt;int&gt;
+```
+
+---
+
+### Column names
+* Specifying `.names` is especially important when using `mutate()`, since by default `across()` gives same names as input and thus will replace the original columns.
+
+.pull-left[
+* e.g., `coalesce(x, y)` replaces all appearances of `NA` in `x` with the value `y`
+
+```r
+df_miss |&gt; 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0))
+  )
+#&gt; # A tibble: 5 × 4
+#&gt;        a      b      c     d
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1  0.434 -1.25   0     1.60 
+#&gt; 2  0     -1.43  -0.297 0.776
+#&gt; 3 -0.156 -0.980  0     1.15 
+#&gt; 4 -2.61  -0.683 -0.785 2.13 
+#&gt; 5  1.11   0     -0.387 0.704
+```
+
+
+]
+
+.pull-right[
+* If we wanted to create new columns, use `.names` to give output new names:
+
+```r
+df_miss |&gt; 
+  mutate(
+    across(a:d, \(x) coalesce(x, 0), .names = "{.col}_na_zero")
+  )
+#&gt; # A tibble: 5 × 8
+#&gt;        a      b      c     d a_na_zero b_na_zero c_na_zero d_na_zero
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+#&gt; 1  0.434 -1.25  NA     1.60      0.434    -1.25      0         1.60 
+#&gt; 2 NA     -1.43  -0.297 0.776     0        -1.43     -0.297     0.776
+#&gt; 3 -0.156 -0.980 NA     1.15     -0.156    -0.980     0         1.15 
+#&gt; 4 -2.61  -0.683 -0.785 2.13     -2.61     -0.683    -0.785     2.13 
+#&gt; 5  1.11  NA     -0.387 0.704     1.11      0        -0.387     0.704
+```
+
+]
+
+---
+
+### Filtering
+* `across()` is great with `summarize()` and `mutate()`, but not so much with `filter()` because there we usually combine conditions with `&amp;` / `|`.  
+* dplyr provides two variants: `if_any()` and `if_all()` to help combine logicals across columns
+
+```r
+# same as df_miss |&gt; filter(is.na(a) | is.na(b) | is.na(c) | is.na(d))
+df_miss |&gt; filter(if_any(a:d, is.na))
+#&gt; # A tibble: 4 × 4
+#&gt;        a      b      c     d
+#&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1  0.434 -1.25  NA     1.60 
+#&gt; 2 NA     -1.43  -0.297 0.776
+#&gt; 3 -0.156 -0.980 NA     1.15 
+#&gt; 4  1.11  NA     -0.387 0.704
+
+# same as df_miss |&gt; filter(is.na(a) &amp; is.na(b) &amp; is.na(c) &amp; is.na(d))
+df_miss |&gt; filter(if_all(a:d, is.na))
+#&gt; # A tibble: 0 × 4
+#&gt; # ℹ 4 variables: a &lt;dbl&gt;, b &lt;dbl&gt;, c &lt;dbl&gt;, d &lt;dbl&gt;
+```
+
+---
+
+### `across()` in functions
+* Let's see an example of expanding all date columns into year / month / day columns.
+
+```r
+expand_dates &lt;- function(df) {
+  df |&gt; 
+    mutate(
+      across(where(is.Date), list(year = year, month = month, day = mday))
+    )
+}
+
+df_date &lt;- tibble(
+  name = c("Amy", "Bob"),
+  date = ymd(c("2009-08-03", "2010-01-16"))
+)
+
+df_date |&gt; 
+  expand_dates()
+#&gt; # A tibble: 2 × 5
+#&gt;   name  date       date_year date_month date_day
+#&gt;   &lt;chr&gt; &lt;date&gt;         &lt;dbl&gt;      &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1 Amy   2009-08-03      2009          8        3
+#&gt; 2 Bob   2010-01-16      2010          1       16
+```
+
+---
+### `across()` in functions
+.pull-left[ 
+* You can supply multiple columns in a single argument using `c()` in addition to `where()`:
+
+```r
+summarize_means &lt;- function(df, summary_vars = where(is.numeric)) {
+  df |&gt; 
+    summarize(
+      across({{ summary_vars }}, \(x) mean(x, na.rm = TRUE)),
+      n = n(),
+      .groups = "drop")
+}
+```
+]
+.pull-right[
+
+```r
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summarize_means()
+#&gt; # A tibble: 5 × 9
+#&gt;   cut       carat depth table price     x     y     z     n
+#&gt;   &lt;ord&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 Fair      1.05   64.0  59.1 4359.  6.25  6.18  3.98  1610
+#&gt; 2 Good      0.849  62.4  58.7 3929.  5.84  5.85  3.64  4906
+#&gt; 3 Very Good 0.806  61.8  58.0 3982.  5.74  5.77  3.56 12082
+#&gt; 4 Premium   0.892  61.3  58.7 4584.  5.97  5.94  3.65 13791
+#&gt; 5 Ideal     0.703  61.7  56.0 3458.  5.51  5.52  3.40 21551
+
+diamonds |&gt; 
+  group_by(cut) |&gt; 
+  summarize_means(c(carat, x:z))
+#&gt; # A tibble: 5 × 6
+#&gt;   cut       carat     x     y     z     n
+#&gt;   &lt;ord&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+#&gt; 1 Fair      1.05   6.25  6.18  3.98  1610
+#&gt; 2 Good      0.849  5.84  5.85  3.64  4906
+#&gt; 3 Very Good 0.806  5.74  5.77  3.56 12082
+#&gt; 4 Premium   0.892  5.97  5.94  3.65 13791
+#&gt; 5 Ideal     0.703  5.51  5.52  3.40 21551
+```
+
+]
+
+---
+
+### `across()` vs `pivot_longer()`
+.pull-left[
+Consider calculating medians/means for all columns:
+
+```r
+df |&gt; 
+  summarize(across(a:d, list(median = median, mean = mean)))
+#&gt; # A tibble: 1 × 8
+#&gt;   a_median a_mean b_median b_mean c_median c_mean d_median d_mean
+#&gt;      &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1   0.0380  0.205  -0.0163 0.0910    0.260 0.0716    0.540  0.508
+```
+
+Alternative way to compute: pivot longer, then group by and summarize:
+
+```r
+long &lt;- df |&gt; 
+  pivot_longer(cols = a:d, names_to = "name", values_to = "value") |&gt;
+  group_by(name) |&gt; 
+  summarize(
+    median = median(value),
+    mean = mean(value)
+  )
+```
+]
+
+.pull-right[
+
+```
+#&gt; # A tibble: 4 × 3
+#&gt;   name   median   mean
+#&gt;   &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1 a      0.0380 0.205 
+#&gt; 2 b     -0.0163 0.0910
+#&gt; 3 c      0.260  0.0716
+#&gt; 4 d      0.540  0.508
+```
+
+* Then pivot wider:
+
+```r
+long %&gt;% pivot_wider(
+  names_from = 'name',
+  values_from = c(median, mean),
+  names_vary = "slowest",
+  names_glue = "{name}_{.value}")
+#&gt; # A tibble: 1 × 8
+#&gt;   a_median a_mean b_median b_mean c_median c_mean d_median d_mean
+#&gt;      &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1   0.0380  0.205  -0.0163 0.0910    0.260 0.0716    0.540  0.508
+```
+* "fastest" varies names_from values fastest, resulting in ⁠value1_name1, value1_name2...
+
+]
+
+---
+.pull-left[
+* This approach is useful when you have groups of columns that you want to compute with simultaneously
+* e.g. suppose df contains both values and weights, and we want to compute a weighted mean. 
+
+```r
+df_paired &lt;- tibble(
+  a_val = rnorm(10),
+  a_wts = runif(10),
+  b_val = rnorm(10),
+  b_wts = runif(10),
+  c_val = rnorm(10),
+  c_wts = runif(10),
+  d_val = rnorm(10),
+  d_wts = runif(10)
+)
+```
+* No way to do with `across`, but easy with `pivot_longer`
+]
+.pull-right[
+
+```r
+( df_long &lt;- df_paired |&gt; 
+  pivot_longer(
+    cols = everything(), 
+    names_to = c("group", ".value"), 
+    names_sep = "_"
+  ) )
+#&gt; # A tibble: 40 × 3
+#&gt;   group    val   wts
+#&gt;   &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 a      0.715 0.518
+#&gt; 2 b     -0.709 0.691
+#&gt; 3 c      0.718 0.216
+#&gt; 4 d     -0.217 0.733
+#&gt; 5 a     -1.09  0.979
+#&gt; 6 b     -0.209 0.675
+#&gt; # ℹ 34 more rows
+df_long |&gt; 
+  group_by(group) |&gt; 
+  summarize(mean = weighted.mean(val, wts))
+#&gt; # A tibble: 4 × 2
+#&gt;   group    mean
+#&gt;   &lt;chr&gt;   &lt;dbl&gt;
+#&gt; 1 a      0.126 
+#&gt; 2 b     -0.0704
+#&gt; 3 c     -0.360 
+#&gt; 4 d     -0.248
+```
+
+]
+
+---
+
+### Examples
+.pull-left[ 
+* Number of unique values in each column of `palmerpenguins::penguins`:
+
+
+```r
+penguins %&gt;% 
+  summarize(across(everything(), \(x) length(unique(x))))
+#&gt; # A tibble: 1 × 8
+#&gt;   species island bill_length_mm bill_depth_mm flipper_length_mm body_mass_g
+#&gt;     &lt;int&gt;  &lt;int&gt;          &lt;int&gt;         &lt;int&gt;             &lt;int&gt;       &lt;int&gt;
+#&gt; 1       3      3            165            81                56          95
+#&gt; # ℹ 2 more variables: sex &lt;int&gt;, year &lt;int&gt;
+```
+* The mean of every column in `mtcars`:
+
+```r
+mtcars %&gt;%
+  summarize(across(everything(), mean))
+#&gt;        mpg    cyl     disp       hp     drat      wt     qsec     vs      am
+#&gt; 1 20.09062 6.1875 230.7219 146.6875 3.596563 3.21725 17.84875 0.4375 0.40625
+#&gt;     gear   carb
+#&gt; 1 3.6875 2.8125
+```
+]
+
+.pull-right[
+* Group diamonds by `cut`, `clarity`, and `color`, then count the number of observations and compute the mean of each numeric column.
+
+```r
+diamonds %&gt;%
+  group_by(cut, clarity, color) %&gt;%
+  summarize(num = n(), across(where(is.numeric), mean))
+#&gt; `summarise()` has grouped output by 'cut', 'clarity'. You can override using
+#&gt; the `.groups` argument.
+#&gt; # A tibble: 276 × 11
+#&gt; # Groups:   cut, clarity [40]
+#&gt;   cut   clarity color   num carat depth table price     x     y     z
+#&gt;   &lt;ord&gt; &lt;ord&gt;   &lt;ord&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 Fair  I1      D         4 1.88   65.6  56.8 7383   7.52  7.42  4.90
+#&gt; 2 Fair  I1      E         9 0.969  65.6  58.1 2095.  6.17  6.06  4.01
+#&gt; 3 Fair  I1      F        35 1.02   65.7  58.4 2544.  6.14  6.04  4.00
+#&gt; 4 Fair  I1      G        53 1.23   65.3  57.7 3187.  6.52  6.43  4.23
+#&gt; 5 Fair  I1      H        52 1.50   65.8  58.4 4213.  6.96  6.86  4.55
+#&gt; 6 Fair  I1      I        34 1.32   65.7  58.4 3501   6.76  6.65  4.41
+#&gt; # ℹ 270 more rows
+```
+
+]
+
+
+---
+
+### Coming lectures
+* Done with R4DS book now; moving to Introduction to Modern Statistics (IMS). 
+* We'll use `library(openintro)`.
+
+
+* In the coming lectures, we'll look at **linear models** and how to perform **inference**
+* A quick refresher on plotting lines:
+  * `y = m x + b`: slope of `m`, intercept of `b` (when `x=0`, `y=b`)
+  * `y - v = m (x - u)`: point slope form.  Line going through `(u, v)` with slope `m`
+  * If you have two points, you can always connect a line through them and find the slope by substituting into first equation above.
+
+---
+
+### Basic single-variable linear model
+* The basic structure of a linear model:
+$$ y = b_0 + b_1 x + \epsilon $$
+* `\(b_0\)` is **intercept**, `\(b_1\)` is **slope**, `\(\epsilon\)` is an **error term**
+* We call `\(x\)` the **predictor**, `\(y\)` the **response** or **outcome**.
+* The error term can be small or large - its size relative to the slope determines how useful the linear model is 
+
+&lt;div class="figure"&gt;
+&lt;img src="lec14-functions-2_v0_files/figure-html/fig-imperfLinearModel-1.png" alt="Three scatterplots with fabricated data.  The first panel shows a strong negative linear relationship.  The second panel shows a moderate positive linear relationship.  The last panel shows no relationship between the x and y variables." width="288" /&gt;&lt;img src="lec14-functions-2_v0_files/figure-html/fig-imperfLinearModel-2.png" alt="Three scatterplots with fabricated data.  The first panel shows a strong negative linear relationship.  The second panel shows a moderate positive linear relationship.  The last panel shows no relationship between the x and y variables." width="288" /&gt;&lt;img src="lec14-functions-2_v0_files/figure-html/fig-imperfLinearModel-3.png" alt="Three scatterplots with fabricated data.  The first panel shows a strong negative linear relationship.  The second panel shows a moderate positive linear relationship.  The last panel shows no relationship between the x and y variables." width="288" /&gt;
+&lt;p class="caption"&gt;Three datasets where a linear model may be useful even though the data do
+not all fall exactly on the line.
+&lt;/p&gt;
+&lt;/div&gt;
+
+---
+### Linear regression for predicting possum head lengths
+.pull-left[ 
+* We'll look into a dataset which has measurements of possum body lengths and head lengths
+* We want to see if we can predict the head length given the body length
+* Let's examine a scatterplot of this data (`possum` is in `openintro` library)
+
+```r
+possum
+#&gt; # A tibble: 104 × 8
+#&gt;    site pop   sex     age head_l skull_w total_l tail_l
+#&gt;   &lt;int&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1     1 Vic   m         8   94.1    60.4    89     36  
+#&gt; 2     1 Vic   f         6   92.5    57.6    91.5   36.5
+#&gt; 3     1 Vic   f         6   94      60      95.5   39  
+#&gt; 4     1 Vic   f         6   93.2    57.1    92     38  
+#&gt; 5     1 Vic   f         2   91.5    56.3    85.5   36  
+#&gt; 6     1 Vic   f         1   93.1    54.8    90.5   35.5
+#&gt; # ℹ 98 more rows
+```
+]
+.pull-right[
+* Let's visualize the relationship between total length and head length:
+
+
+```r
+ggplot(possum, aes(x = total_l, y = head_l)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(
+    x = "Total Length (cm)",
+    y = "Head Length (mm)"
+  )
+```
+
+&lt;div class="figure"&gt;
+&lt;img src="lec14-functions-2_v0_files/figure-html/fig-scattHeadLTotalL-1.png" alt="A scatterplot with total length on the x-axis and head length on the y-axis.  The variables show a moderately strong positive linear relationship. A single observation is circled in red with coordinates of approximately 84cm of total length and 87mm of head length." width="432" /&gt;
+&lt;p class="caption"&gt;A scatterplot showing head length against total length for 104 brushtail
+possums. A point representing a possum with head length 86.7 mm and total
+length 84 cm is highlighted.
+&lt;/p&gt;
+&lt;/div&gt;
+]
+
+---
+.pull-left[
+* We can try and fit a line which roughly fits the data well by taking two points and then drawing the line between them.  
+
+```r
+ggplot(possum, aes(x = total_l, y = head_l)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(
+    x = "Total Length (cm)",
+    y = "Head Length (mm)"
+  ) +
+  geom_point(data = sample_n(possum, 2), aes(x = total_l, y = head_l), color = "red", size = 5, shape = "circle open", stroke = 2)
+```
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-35-1.png" width="432" /&gt;
+* Not ideal
+]
+
+.pull-right[
+* A more reasonable line:
+
+
+```r
+ggplot(possum, aes(x = total_l, y = head_l)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(
+    x = "Total Length (cm)",
+    y = "Head Length (mm)"
+  ) +
+  geom_smooth(method = "lm", se = FALSE)
+#&gt; `geom_smooth()` using formula = 'y ~ x'
+```
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-36-1.png" width="432" /&gt;
+]
+
+
+---
+### Residuals
+* Suppose we have data `\((x_i, y_i)_{i=1}^n\)`, and we fit a line using the data, and we make a prediction `\(\hat{y}(x_i) = \hat y_i\)`.  
+* The **residual** for the `\(i\)`-th observation `\((x_i, y_i)\)` is the difference between observed outcome and predicted outcome:
+$$ e_i := y_i - \hat y_i .$$
+
+.pull-left[ 
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-37-1.png" width="432" /&gt;
+
+]
+
+.pull-right[
+* We plot a linear model on the left for getting possum head length vs. possum body length.  
+* The length of the lines from the black line to the circled points is the residual; if the dot is above the line, it is positive, if it is below the line, it is negative.
+* Suppose the line is given by the equation
+$$ \hat y = 41 + 0.59 x $$
+* What is the residual for the observation (76.0, 85.1)?
+$$ \hat y = 41 + 0.59 \times 85.1 = 85.84 $$
+$$ e = y - \hat y = 85.1 - 85.84 = -0.74 $$
+]
+
+---
+
+### Residual plots
+
+* Residuals are often helpfuul when trying to understand how well a linear model fits the data
+* We can visualize this by plotting predicted values on the `\(x\)` axis, and residuals on the `\(y\)`-axis
+.pull-left[ 
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-38-1.png" width="432" /&gt;
+]
+
+.pull-right[
+* Residual plot:
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-39-1.png" width="432" /&gt;
+
+]
+
+---
+
+### Residual plots
+
+.pull-left[ 
+* Let's look at a few more linear relationships and their corresponding residual plots.
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-40-1.png" width="432" /&gt;
+
+* What are some observed trends?
+]
+
+--
+
+.pull-right[ 
+* First dataset, no obvious patterns for residuals: they look random around the dashed line
+* Second dataset: looks like some curvature.  Suggests the errors are *not* random, true relationship likely not linear plus noise.
+* Third plot: not clear if underlying relatinoship is linear, but residuals don't appear to show any pattern. 
+]
+
+
+---
+
+### Correlation for describing linear relationships
+
+.pull-left[ 
+* **Correlation** defines the strength of a linear relationship
+* Always valued between -1 and 1, denoted by `\(r\)`
+* Correlation for observations `\((x_1, y_1), \dots, (x_n, y_n)\)`:
+$$ r  = \frac{1}{n-1} \sum_{i=1}^n \frac{x_i - \bar x}{s_x} \cdot \frac{y_i - \bar y}{s_y}, $$
+where `\(\bar x, \bar y\)` sample means and `\(s_x, s_y\)` standard deviations for `\(x_i, y_i\)` respectively. 
+* Correlation of +1: positive linear relationship; -1: negative; 0: not linear relationship. 
+]
+
+.pull-right[ 
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-41-1.png" width="432" /&gt;
+]
+---
+
+### Correlation is "scale-invariant"
+.pull-left[ 
+* The definition of correlation:
+$$ r  = \frac{1}{n-1} \sum_{i=1}^n \frac{x_i - \bar x}{s_x} \cdot \frac{y_i - \bar y}{s_y}, $$
+* If we multiply every `\(x_i\)` by a number `\(\epsilon\)`, then both the numerator and denominator scale by the same number `\(\epsilon\)`, so `\(r\)` is unaffected
+  * Same thing for `\(y_i\)`'s
+* E.g. correlation between height/weight using metric or American units is the same
+]
+
+.pull-right[ 
+&lt;img src="lec14-functions-2_v0_files/figure-html/fig-bdims-units-1.png" width="432" /&gt;
+]
+
+---
+### Least squares regression
+.pull-left[
+* How do we define the "best" line of fit?
+* We would like the residuals to be small, but many ways to measure residuals.
+* For residuals `\(e_i = y_i - \hat y_i\)`, consider these two ways:
+$$ |e_1| + |e_2| + \dots + |e_n|$$
+$$ e_1^2 + e_2^2 + \dots + e_n^2$$
+* We plot the two lines which minimizes either the sum of the absolute values or the sum of the squares on the right
+]
+
+.pull-right[
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-43-1.png" width="432" /&gt;
+* Most commonly used one is least squares, we'll focus on this 
+]
+
+---
+### Fitting least squares lines in R
+.pull-left[
+* Let's consider the `elmhurst` dataset:
+
+```r
+elmhurst
+#&gt; # A tibble: 50 × 3
+#&gt;   family_income gift_aid price_paid
+#&gt;           &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
+#&gt; 1         92.9      21.7      14.3 
+#&gt; 2          0.25     27.5       8.53
+#&gt; 3         53.1      27.8      14.2 
+#&gt; 4         50.2      27.2       8.78
+#&gt; 5        138.       18        24   
+#&gt; 6         48.0      18.5      23.5 
+#&gt; # ℹ 44 more rows
+```
+* Suppose we want to predict amoutn of aid given as a functino of family income.  We want to form predictions
+$$ \widehat{\mathsf{aid}} = \beta_0 + \beta_1 \times \mathsf{familyincome}$$
+]
+.pull-right[
+* To compute line of best fit of variable `\(y\)` given `\(x\)`, we use `lm(y ~ x)`:
+
+```r
+lm(gift_aid ~ family_income, data = elmhurst)
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = gift_aid ~ family_income, data = elmhurst)
+#&gt; 
+#&gt; Coefficients:
+#&gt;   (Intercept)  family_income  
+#&gt;      24.31933       -0.04307
+lm(gift_aid ~ family_income, data = elmhurst) %&gt;% broom::tidy()
+#&gt; # A tibble: 2 × 5
+#&gt;   term          estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 (Intercept)    24.3       1.29       18.8  8.28e-24
+#&gt; 2 family_income  -0.0431    0.0108     -3.98 2.29e- 4
+```
+* `broom` package takes outputs of messy functions like `lm()` and makes them into tidy tibbles 
+]
+
+---
+.pull-left[
+
+```r
+lm(gift_aid ~ family_income, data = elmhurst)
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = gift_aid ~ family_income, data = elmhurst)
+#&gt; 
+#&gt; Coefficients:
+#&gt;   (Intercept)  family_income  
+#&gt;      24.31933       -0.04307
+lm(gift_aid ~ family_income, data = elmhurst) %&gt;% summary()
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = gift_aid ~ family_income, data = elmhurst)
+#&gt; 
+#&gt; Residuals:
+#&gt;      Min       1Q   Median       3Q      Max 
+#&gt; -10.1128  -3.6234  -0.2161   3.1587  11.5707 
+#&gt; 
+#&gt; Coefficients:
+#&gt;               Estimate Std. Error t value Pr(&gt;|t|)    
+#&gt; (Intercept)   24.31933    1.29145  18.831  &lt; 2e-16 ***
+#&gt; family_income -0.04307    0.01081  -3.985 0.000229 ***
+#&gt; ---
+#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#&gt; 
+#&gt; Residual standard error: 4.783 on 48 degrees of freedom
+#&gt; Multiple R-squared:  0.2486,	Adjusted R-squared:  0.2329 
+#&gt; F-statistic: 15.88 on 1 and 48 DF,  p-value: 0.0002289
+```
+]
+.pull-right[
+
+```r
+lm(gift_aid ~ family_income, data = elmhurst) %&gt;% tidy()
+#&gt; # A tibble: 2 × 5
+#&gt;   term          estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 (Intercept)    24.3       1.29       18.8  8.28e-24
+#&gt; 2 family_income  -0.0431    0.0108     -3.98 2.29e- 4
+```
+
+* How do we interpret these numbers?
+* Intercept and slope estimates for the Elmhurst data are `\(b_0\)` = 24.319329 and `\(b_1\)` = -0.0430717.
+* Slope: For each additional 1,000 of family income, we expect a student to receive a net difference of `\(1,000 * (-0.0431) = -43.10\)` in aid on average, i.e., 43.10 *less*.
+* This is an **association** not **causal**: increasing a student family's income does nto necessarily cause student aid to drop, just likely
+* Intercept:  `\(b_0\)` = 24.319329 describes the average aid if a student's family had no income, 24,319
+* Intercept here is interpretable, but not always
+* p-values provide insight into how "significant" the relationship between variables and response are.  We'll discuss more later. 
+]
+
+---
+
+#### Computing the line of best fit from mean and standard deviations
+.pull-left[ 
+* Two crucial facts for computing line of best fit:
+* (1) Slope of least squares line can be computed by
+$$ b_1 = \frac{s_x}{s_y} \cdot r,$$
+where `\(r\)` is correlation, `\(s_x, s_y\)` are sample standard deviations of predictor and outcome, respectively
+* (2) If `\(\bar x\)` is sample mean of predictor, `\(\bar y\)` sample mean of outcome, then `\((\bar x, \bar y)\)` is on the least squares line
+
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Family income, x&lt;/div&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Gift aid, y&lt;/div&gt;&lt;/th&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:center;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; sd &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; sd &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; r &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; 101.7785 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 63.20645 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 19.93556 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 5.460581 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; -0.4985561 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+]
+
+.pull-right[
+* Compute slope of least squares line:
+$$ b_1 = \frac{s_y}{s_x} \cdot r = \frac{5.46}{63.2} \cdot (-0.499) = -0.0431$$
+* Point slope form of a line: for slope `\(m\)` and point `\((x_0, y_0)\)` on a line,
+$$ y - y_0 = m \cdot (x - x_0) $$
+* Since `\((\bar x, \bar y)\)` is on the line with slope `\(b_1\)`, we get
+$$ y - \bar y = b_1 (x - \bar y)$$
+* This gives
+$$ y = \bar y - b_1 \bar x + b_1 x \implies $$
+$$ b_0 = \bar y - b_1 \bar x = 19.9 + 0.0431 * 102 = 24.3. $$
+* Results in equation:
+$$ \widehat {\mathsf{aid}} = 24.3 - 0.0431 \times \mathsf{familyincome} $$
+]
+
+---
+* Let's compare our calculated line of best fit with what R returns to us with `lm()`:
+$$ \widehat {\mathsf{aid}} = 24.3 - 0.0431 \times \mathsf{familyincome} $$
+
+
+```r
+lm(gift_aid ~ family_income, data = elmhurst) %&gt;% tidy()
+#&gt; # A tibble: 2 × 5
+#&gt;   term          estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 (Intercept)    24.3       1.29       18.8  8.28e-24
+#&gt; 2 family_income  -0.0431    0.0108     -3.98 2.29e- 4
+```
+
+* If we have a senior who is considering Elmhurst College, can they use this to predict her financial aid?
+* They may use it as an *estimate*.  Things can vary year to year, and the estimate is imperfect.  So likely will be errors. 
+
+
+---
+### Extrapolation and its perils
+.pull-left[ 
+* We can make some informed estimates about future predictions of a linear model when the predictors are similar to those we saw before.
+* Consider if we had data which looked like the left, and we tried to make predictions for predictors which are outside of the domain where we have data
+]
+.pull-right[ 
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-51-1.png" width="432" /&gt;
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
