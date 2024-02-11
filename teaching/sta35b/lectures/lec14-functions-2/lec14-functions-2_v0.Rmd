@@ -1,5 +1,5 @@
 ---
-title: "Functions 1"
+title: "Functions and Intro to Linear Regression"
 subtitle: "<br><br> STA35B: Statistical Data Science 2"
 author: "Spencer Frei"
 output:
@@ -1057,4 +1057,443 @@ p2 <- ggplot(quadratic_data, aes(x = x, y = y)) +
 
 p1 + p2 
 ```
+]
+
+---
+
+### Describing the strength of a fit
+.pull-left[
+* Previously evaluated strength of linear relationship between two variables using correlation $r$
+* More common to describe this using $R^2$: "R-squared"
+* Roughly: describes amount of variation in outcome variable explained by the least-squares line
+* $R^2$ is called the **coefficient of determination**
+* $R^2$ is equal to *square of correlation*: $R^2 = (r)^2$. 
+* e.g. if $r=-0.5$, $R^2 = 0.25$. 
+* Since $r\in [-1,1]$, $R^2 \in [0,1]$. 
+]
+.pull-right[
+* $R^2$ can be calculated in terms of the *total sum of squares* SST and the *sum of squared errors/residuals* SSE. 
+$$ \mathsf{SST} = (y_1 - \bar y)^2 + \cdots + (y_n - \bar y)^2, $$
+$$ \mathsf{SSE} = (y_1 - \hat y_1)^2 + \cdots + (y_n - \hat y)^2 = e_1^2 + \cdots + e_n^2.$$
+$$R^2 = \frac{\mathsf{SST} - \mathsf{SSE}}{\mathsf{SST}} = 1 - \frac{\mathsf{SSE}}{\mathsf{SST}}.$$
+]
+
+---
+
+### Categorical predictors with two levels
+.pull-left[ 
+* Let's consider dataset `mariokart`, which has outcomes for Ebay auctions for Mario Kart for Nintendo Wii.
+  * Final price of auction and condition of game were recorded
+```{r}
+mariokart
+```
+
+* To deal with binary categorical variables, we record one of the values as a 0 and the other as a 1
+* By default, R coerces factors into numerics corresponding to the level of the factor.
+```{r}
+levels(mariokart$cond)
+```
+]
+
+.pull-right[
+```{r}
+head(mariokart)$cond %>% as.numeric
+```
+* To convert to 0/1, we want to subtract one.
+```{r}
+#| 
+mariokart |>
+  filter(total_pr < 100) |>
+  ggplot(aes(x = as.numeric(cond) - 1, y = total_pr)) +
+  geom_jitter(alpha = 0.8, position = position_jitter(width = 0.05)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  scale_x_continuous(
+    breaks = c(0, 1),
+    minor_breaks = c(0, 1),
+    limits = c(-0.2, 1.2),
+    labels = c("0\n(new)", "1\n(used)")
+  ) +
+  labs(
+    x = "Condition",
+    y = "Total price"
+  )
+```
+
+]
+
+---
+
+.pull-left[
+```{r, eval=FALSE}
+#| 
+mariokart |>
+  filter(total_pr < 100) |>
+  ggplot(aes(x = as.numeric(cond) - 1, y = total_pr)) +
+  geom_jitter(alpha = 0.8, position = position_jitter(width = 0.05)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  scale_x_continuous(
+    breaks = c(0, 1),
+    minor_breaks = c(0, 1),
+    limits = c(-0.2, 1.2),
+    labels = c("0\n(new)", "1\n(used)")
+  ) +
+  labs(
+    x = "Condition",
+    y = "Total price"
+  )
+
+```
+We are forming a linear model for
+$$
+\widehat{\texttt{price}} = b_0 + b_1 \times \texttt{condnew}
+$$
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+#| 
+mariokart |>
+  filter(total_pr < 100) |>
+  ggplot(aes(x = as.numeric(cond) - 1, y = total_pr)) +
+  geom_jitter(alpha = 0.8, position = position_jitter(width = 0.05)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  scale_x_continuous(
+    breaks = c(0, 1),
+    minor_breaks = c(0, 1),
+    limits = c(-0.2, 1.2),
+    labels = c("0\n(new)", "1\n(used)")
+  ) +
+  labs(
+    x = "Condition",
+    y = "Total price"
+  )
+```
+```{r}
+lm(total_pr ~ cond, data = mariokart) %>% tidy
+```
+* We thus see the estimated linear model is
+$$\widehat{\texttt{price}} = 53.8 - 6.62 \times \texttt{condnew}$$
+]
+
+---
+
+### Outliers in linear regression
+.pull-left[
+* Least squares line is determined by minimizing the sum of the squares of the residuals:
+$$ e_1^2 + \dots + e_n^2.$$
+* If one point is very far from the rest of the points, the least squares line will be highly affected by this point.
+
+```{r}
+#| label: fig-outlier-plots-1
+#| echo: false
+#| message: false
+#| warning: false
+#| out-width: 100%
+#| fig-width: 8
+#| fig-asp: 0.6
+
+d1 <- simulated_scatter |>
+  filter(group == 24) |>
+  mutate(outlier = if_else(y == min(y), TRUE, FALSE))
+d2 <- simulated_scatter |>
+  filter(group == 25) |>
+  mutate(outlier = if_else(y == min(y), TRUE, FALSE))
+d3 <- simulated_scatter |>
+  filter(group == 26) |>
+  mutate(outlier = if_else(y == max(y), TRUE, FALSE))
+
+m1_aug <- augment(lm(y ~ x, data = d1)) |>
+  mutate(outlier = if_else(y == min(y), TRUE, FALSE))
+
+m2_aug <- augment(lm(y ~ x, data = d2)) |>
+  mutate(outlier = if_else(y == min(y), TRUE, FALSE))
+
+m3_aug <- augment(lm(y ~ x, data = d3)) |>
+  mutate(outlier = if_else(y == max(y), TRUE, FALSE))
+
+p_1 <- ggplot(d1, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(
+    data = d1 |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["red", "full"], stroke = 2
+  ) +
+  labs(title = "A") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(expand = expansion(mult = 0.12))
+
+
+p_1_res <- ggplot(m1_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.7, size = 2) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(
+    data = m1_aug |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["red", "full"], stroke = 2
+  ) +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(limits = c(-8, 8), expand = expansion(mult = 0.12))
+
+p_2 <- ggplot(d2, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(
+    data = d2 |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["green", "full"], stroke = 2
+  ) +
+  labs(title = "B") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(expand = expansion(mult = 0.12))
+
+p_2_res <- ggplot(m2_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(
+    data = m2_aug |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["green", "full"], stroke = 2
+  ) +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(limits = c(-8, 8), expand = expansion(mult = 0.12))
+
+p_3 <- ggplot(d3, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(
+    data = d3 |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["pink", "full"], stroke = 2
+  ) +
+  labs(title = "C") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(expand = expansion(mult = 0.12))
+
+p_3_res <- ggplot(m3_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(
+    data = m3_aug |> filter(outlier),
+    size = 5, shape = "circle open",
+    color = IMSCOL["pink", "full"], stroke = 2
+  ) +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(limits = c(-8, 8), expand = expansion(mult = 0.12))
+
+p_1 + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) +
+  p_2 + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_3 +
+  p_1_res + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) +
+  p_2_res + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_3_res +
+  plot_layout(ncol = 3, heights = c(2, 1))
+```
+]
+--
+
+.pull-right[
+* Example A: clear outlier but doesn't have a large influence on the line
+* Example B: an outlier, but appears to be on trend with behavior of non-outlier points
+* Example C: outlier, pulls the least squares line up and causes residuals to be more negative as x increases. 
+]
+
+
+---
+
+### Outliers in linear regression 
+.pull-left[
+
+```{r}
+#| label: fig-outlier-plots-2
+#| echo: false
+#| message: false
+#| warning: false
+#| out-width: 100%
+
+d4 <- simulated_scatter |>
+  filter(group == 27)
+
+d5 <- simulated_scatter |> filter(group == 28)
+d6 <- simulated_scatter |> filter(group == 29)
+
+m4_aug <- augment(lm(y ~ x, data = d4))
+m5_aug <- augment(lm(y ~ x, data = d5))
+m6_aug <- augment(lm(y ~ x, data = d6))
+
+p_4 <- ggplot(d4, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  labs(title = "D")
+
+p_4_res <- ggplot(m4_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  ylim(-4, 4)
+
+p_5 <- ggplot(d5, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  labs(title = "E")
+
+p_5_res <- ggplot(m5_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.7, size = 2) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  ylim(-4, 4)
+
+p_6 <- ggplot(d6, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  labs(title = "F")
+
+p_6_res <- ggplot(m6_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Predicted y", y = "Residual") +
+  theme(
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "gray", fill = NA, size = 1)
+    ) +
+  ylim(-4, 4)
+
+
+  p_5 + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_6 +
+  p_5_res + theme(plot.margin = unit(c(0, 10, 5, 0), "pt")) + p_6_res +
+  plot_layout(ncol = 2, heights = c(2, 1))
+```
+]
+
+.pull-right[
+* In E, there is no obvious trend in 99.9% of the data per residuals, but the outlier makes it appear like there is a strong positive correlation
+* In F, there is one outlier far from cloud but is close to least squares line so doesn't have much influence 
+]
+
+---
+
+### Examples
+.pull-left[
+
+* For these scatterplots, for each, describe in words what those plots would look like, and sketch out a residual plot. 
+
+```{r}
+#| fig-asp: 0.5
+#| echo: false
+#| message: false
+#| warning: false 
+library(openintro)
+library(tidyverse)
+
+set.seed(84628)
+
+df <- tibble(
+  x = seq(1, 100, 1),
+  y_linear = 3 * x + 5 + rnorm(length(x), mean = 0, sd = 20),
+  y_fan_back = 4 * x + 5 + rnorm(length(x), mean = 0, sd = sort(1.3 * x,     decreasing = TRUE))
+) %>%
+  pivot_longer(cols = -x, names_to = "type", values_to = "y") %>%
+  arrange(type) %>%
+  mutate(type_label = if_else(type == "y_linear", "(a)", "(b)"))
+
+ggplot(df, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 0.8) +
+  facet_wrap(~type_label) +
+  theme(axis.text = element_blank()) +
+  labs(x = NULL, y = NULL)
+```
+(Residual plot sketch made in class)
+]
+
+.pull-right[
+* Consider the following two residual plots for linear model fit to two different sets of data
+* Describe what type of data would generate such a plot, and whether a linear model would be a good fit for these data
+
+```{r}
+#| fig-asp: 0.5
+#| echo: false
+#| message: false
+#| warning: false 
+
+set.seed(8313)
+
+df <- tibble(
+  x = seq(1:300),
+  y_fan = 4*x + 5 + rnorm(length(x), mean = 0, sd = sort(1.3*x)),
+  y_log = log(x) + rnorm(300, mean = 0, sd = 0.5)
+)
+
+m_fan_aug <- augment(lm(y_fan ~ x, data = df)) %>% mutate(type = "fan")
+m_log_aug <- augment(lm(y_log ~ x, data = df)) %>% mutate(type = "log")
+df        <- bind_rows(m_fan_aug, m_log_aug) %>%
+  select(x = .fitted, y = .resid, type) %>%
+  mutate(type_label = if_else(type == "fan", "(a)", "(b)"))
+
+ggplot(df, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~type_label, scales = "free") +
+  theme(axis.text = element_blank()) +
+  labs(x = "Predicted values", y = "Residuals")
+```
+(Data sketch made in class)
 ]

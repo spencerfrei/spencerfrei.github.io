@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Functions 1</title>
+    <title>Functions and Intro to Linear Regression</title>
     <meta charset="utf-8" />
     <meta name="author" content="Spencer Frei" />
     <script src="lec14-functions-2_v0_files/header-attrs-2.25/header-attrs.js"></script>
@@ -15,7 +15,7 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Functions 1
+# Functions and Intro to Linear Regression
 ]
 .subtitle[
 ## <br><br> STA35B: Statistical Data Science 2
@@ -997,6 +997,187 @@ lm(gift_aid ~ family_income, data = elmhurst) %&gt;% tidy()
 ]
 .pull-right[ 
 &lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-51-1.png" width="432" /&gt;
+]
+
+---
+
+### Describing the strength of a fit
+.pull-left[
+* Previously evaluated strength of linear relationship between two variables using correlation `\(r\)`
+* More common to describe this using `\(R^2\)`: "R-squared"
+* Roughly: describes amount of variation in outcome variable explained by the least-squares line
+* `\(R^2\)` is called the **coefficient of determination**
+* `\(R^2\)` is equal to *square of correlation*: `\(R^2 = (r)^2\)`. 
+* e.g. if `\(r=-0.5\)`, `\(R^2 = 0.25\)`. 
+* Since `\(r\in [-1,1]\)`, `\(R^2 \in [0,1]\)`. 
+]
+.pull-right[
+* `\(R^2\)` can be calculated in terms of the *total sum of squares* SST and the *sum of squared errors/residuals* SSE. 
+$$ \mathsf{SST} = (y_1 - \bar y)^2 + \cdots + (y_n - \bar y)^2, $$
+$$ \mathsf{SSE} = (y_1 - \hat y_1)^2 + \cdots + (y_n - \hat y)^2 = e_1^2 + \cdots + e_n^2.$$
+`$$R^2 = \frac{\mathsf{SST} - \mathsf{SSE}}{\mathsf{SST}} = 1 - \frac{\mathsf{SSE}}{\mathsf{SST}}.$$`
+]
+
+---
+
+### Categorical predictors with two levels
+.pull-left[ 
+* Let's consider dataset `mariokart`, which has outcomes for Ebay auctions for Mario Kart for Nintendo Wii.
+  * Final price of auction and condition of game were recorded
+
+```r
+mariokart
+#&gt; # A tibble: 143 × 12
+#&gt;             id duration n_bids cond  start_pr ship_pr total_pr ship_sp   
+#&gt;          &lt;dbl&gt;    &lt;int&gt;  &lt;int&gt; &lt;fct&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;     
+#&gt; 1 150377422259        3     20 new       0.99    4        51.6 standard  
+#&gt; 2 260483376854        7     13 used      0.99    3.99     37.0 firstClass
+#&gt; 3 320432342985        3     16 new       0.99    3.5      45.5 firstClass
+#&gt; 4 280405224677        3     18 new       0.99    0        44   standard  
+#&gt; 5 170392227765        1     20 new       0.01    0        71   media     
+#&gt; 6 360195157625        3     19 new       0.99    4        45   standard  
+#&gt; # ℹ 137 more rows
+#&gt; # ℹ 4 more variables: seller_rate &lt;int&gt;, stock_photo &lt;fct&gt;, wheels &lt;int&gt;, …
+```
+
+* To deal with binary categorical variables, we record one of the values as a 0 and the other as a 1
+* By default, R coerces factors into numerics corresponding to the level of the factor.
+
+```r
+levels(mariokart$cond)
+#&gt; [1] "new"  "used"
+```
+]
+
+.pull-right[
+
+```r
+head(mariokart)$cond %&gt;% as.numeric
+#&gt; [1] 1 2 1 1 1 1
+```
+* To convert to 0/1, we want to subtract one.
+
+```r
+mariokart |&gt;
+  filter(total_pr &lt; 100) |&gt;
+  ggplot(aes(x = as.numeric(cond) - 1, y = total_pr)) +
+  geom_jitter(alpha = 0.8, position = position_jitter(width = 0.05)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  scale_x_continuous(
+    breaks = c(0, 1),
+    minor_breaks = c(0, 1),
+    limits = c(-0.2, 1.2),
+    labels = c("0\n(new)", "1\n(used)")
+  ) +
+  labs(
+    x = "Condition",
+    y = "Total price"
+  )
+#&gt; `geom_smooth()` using formula = 'y ~ x'
+```
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-55-1.png" width="432" /&gt;
+
+]
+
+---
+
+.pull-left[
+
+```r
+mariokart |&gt;
+  filter(total_pr &lt; 100) |&gt;
+  ggplot(aes(x = as.numeric(cond) - 1, y = total_pr)) +
+  geom_jitter(alpha = 0.8, position = position_jitter(width = 0.05)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  scale_x_continuous(
+    breaks = c(0, 1),
+    minor_breaks = c(0, 1),
+    limits = c(-0.2, 1.2),
+    labels = c("0\n(new)", "1\n(used)")
+  ) +
+  labs(
+    x = "Condition",
+    y = "Total price"
+  )
+
+```
+We are forming a linear model for
+$$
+\widehat{\texttt{price}} = b_0 + b_1 \times \texttt{condnew}
+$$
+
+]
+
+.pull-right[
+
+```
+#&gt; `geom_smooth()` using formula = 'y ~ x'
+```
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-57-1.png" width="432" /&gt;
+
+```r
+lm(total_pr ~ cond, data = mariokart) %&gt;% tidy
+#&gt; # A tibble: 2 × 5
+#&gt;   term        estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 (Intercept)    53.8       3.33     16.2  7.04e-34
+#&gt; 2 condused       -6.62      4.34     -1.52 1.30e- 1
+```
+* We thus see the estimated linear model is
+`$$\widehat{\texttt{price}} = 53.8 - 6.62 \times \texttt{condnew}$$`
+]
+
+---
+
+### Outliers in linear regression
+.pull-left[
+* Least squares line is determined by minimizing the sum of the squares of the residuals:
+$$ e_1^2 + \dots + e_n^2.$$
+* If one point is very far from the rest of the points, the least squares line will be highly affected by this point.
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/fig-outlier-plots-1-1.png" width="100%" /&gt;
+]
+--
+
+.pull-right[
+* Example A: clear outlier but doesn't have a large influence on the line
+* Example B: an outlier, but appears to be on trend with behavior of non-outlier points
+* Example C: outlier, pulls the least squares line up and causes residuals to be more negative as x increases. 
+]
+
+
+---
+
+### Outliers in linear regression 
+.pull-left[
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/fig-outlier-plots-2-1.png" width="100%" /&gt;
+]
+
+.pull-right[
+* In E, there is no obvious trend in 99.9% of the data per residuals, but the outlier makes it appear like there is a strong positive correlation
+* In F, there is one outlier far from cloud but is close to least squares line so doesn't have much influence 
+]
+
+---
+
+### Examples
+.pull-left[
+
+* For these scatterplots, for each, describe in words what those plots would look like, and sketch out a residual plot. 
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-61-1.png" width="432" /&gt;
+(Residual plot sketch made in class)
+]
+
+.pull-right[
+* Consider the following two residual plots for linear model fit to two different sets of data
+* Describe what type of data would generate such a plot, and whether a linear model would be a good fit for these data
+
+&lt;img src="lec14-functions-2_v0_files/figure-html/unnamed-chunk-62-1.png" width="432" /&gt;
+(Data sketch made in class)
 ]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
