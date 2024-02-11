@@ -121,7 +121,7 @@ loans_var_def <- tribble(
 * We saw previously how to fit a linear regression model with a single predictor, e.g.
 
 $$
-\widehat{\texttt{interest\_rate}} = b_0 + b_1 \times \texttt{bankruptcy}
+\widehat{\texttt{interest_rate}} = b_0 + b_1 \times \texttt{bankruptcy}
 $$
 * Bankruptcy is 0 if no history of bankruptcy, 1 if there is
 * Let's inspect the least-squares linear model resulting from this
@@ -176,8 +176,331 @@ $$
 * When `verified_income` takes value `Source Verified`, then the corresponding variable takes a value of 1 while the other is 0:
 
 $$
-\widehat{\texttt{interest\_rate}} = 11.10 + 1.42 \times 1 + 3.25 \times 0 = 12.52
+\widehat{\texttt{interest_rate}} = 11.10 + 1.42 \times 1 + 3.25 \times 0 = 12.52
 $$
 
 * Average interest rate for these borrowers is 12.52%.
+]
+
+
+---
+
+
+.pull-left[
+### Multiple predictors in a linear model
+* Let's suppose we want to construct model for interest rate accounting for not just bankruptcy, but also other variables:
+
+
+$$
+\begin{aligned}
+&\widehat{\texttt{interest_rate}} = b_0 \\
+&+ b_1 \times \texttt{verified_income}_{\texttt{Source Verified}} \\
+&+ b_2 \times \texttt{verified_income}_{\texttt{Verified}} \\
+&+ b_3 \times \texttt{debt_to_income} \\
+&+ b_4 \times \texttt{credit_util} \\
+&+ b_5 \times \texttt{bankruptcy} \\
+&+ b_6 \times \texttt{term} \\
+&+ b_9 \times \texttt{credit_checks} \\
+&+ b_7 \times \texttt{issue_month}_{\texttt{Jan-2018}} \\
+&+ b_8 \times \texttt{issue_month}_{\texttt{Mar-2018}}
+\end{aligned}
+$$
+
+]
+
+.pull-right[
+
+* Just as before, we find those $b_0, \cdots, b_8$ such that the sum of squared residuals is small,
+
+$$
+\begin{aligned}
+SSE = e_1^2 + \cdots + e_{10000}^2 = \sum_{i=1}^n e_i^2.
+\end{aligned}
+$$
+
+* We can use `lm()` just as before.  But now, we use `lm(response ~ .)` to mean we use ALL predictors in the data except for `response` to fit a linear model.
+
+
+```{r}
+m_full <- lm(interest_rate ~ ., data = loans)
+m_full |>
+  tidy() 
+```
+
+]
+
+---
+
+.pull-left[
+* The fitted model from previous slide has following form:
+
+$$
+\begin{aligned}
+&\widehat{\texttt{interest_rate}} = 1.89 \\
+&+ 1.00 \times \texttt{verified_income}_{\texttt{Source Verified}} \\
+&+ 2.56 \times \texttt{verified_income}_{\texttt{Verified}} \\
+&+ 0.02 \times \texttt{debt_to_income} \\
+&+ 4.90 \times \texttt{credit_util} \\
+&+ 0.39 \times \texttt{bankruptcy} \\
+&+ 0.15 \times \texttt{term} \\
+&+ 0.23 \times \texttt{credit_checks} \\
+&+ 0.05 \times \texttt{issue_month}_{\texttt{Jan-2018}} \\
+&- 0.04 \times \texttt{issue_month}_{\texttt{Mar-2018}}
+\end{aligned}
+$$
+]
+
+.pull-right[
+* Note that `verified_income` and `issue_month` are individual categorical predictors, but we have *two* coefficients for each.  
+* If a categorical predictor has $p$ different levels, we get an additional $p-1$ terms in a multiple regression model
+* So effective number of predictors grows with more and more levels in a categorical variable.
+* Seven total variables (verified income, debt to income, bankruptcy, term, credit checks, issue month) but a total of NINE predictors because of the extra levels in the categorical variables. 
+* Note that the intercept term here is *not* interpretable, since we cannot set `term` (=length of loan) to 0 in a meaningful way.  
+]
+
+---
+
+
+### Multiple regression vs. single linear regression
+* When we looked at `lm(interest_rate ~ bankruptcy)`, we found a coefficient of 0.74, while for `lm(interest rate ~ .)`, we found a coefficient of 0.386 for bankruptcy.
+* This is because some of the variables are **correlated**: when just modeling interest rate as a function of bankruptcy, we didn't account for role of income verification, debt to income ratio, etc.
+* In general, correlation between variables complicates linear regression analyses and interpretation. 
+
+---
+
+### Adjusted R squared
+
+.pull-left[
+* We saw in single-variable linear regression that $R^2$ helps determine amount of variability in response explained by the model
+
+$$
+\begin{aligned}
+R^2 &= 1 - \frac{\text{variability in residuals}}{\text{variability in the outcome}}\\
+    &= 1 - \frac{Var(e_i)}{Var(y_i)}
+\end{aligned}
+$$ 
+
+* For multiple linear regression, we prefer the *adjusted* $R^2$.  If there are $k$ predictor variables in the model,
+
+$$
+\begin{aligned}
+  R_{adj}^{2}
+    &= 1 - \frac{s_{\text{residuals}}^2 / (n-k-1)}
+        {s_{\text{outcome}}^2 / (n-1)} \\
+    &= 1 - \frac{s_{\text{residuals}}^2}{s_{\text{outcome}}^2}
+        \times \frac{n-1}{n-k-1}
+\end{aligned}
+$$
+($p$-levels of categorical $\implies p-1$ predictor vars)
+
+]
+
+.pull-left[
+* Adjusted $R^2$ is smaller than unadjusted $R^2$
+* One can show that just by adding additional variables to a linear regression model, you can increase the unadjusted $R^2$
+* The adjusted $R^2$ tries to account for this to normalize by the number of predictors you're using
+]
+
+
+---
+
+### Model selection
+.pull-left[ 
+* How do we decide which variables to include when devising a linear model?
+* Generally referred to as "model selection"
+* Main idea: **stepwise selection**.  Either start from a large model and reduce variables one-by-one (*backward elminiation*), or to start from a small model and add variables one-by-one (*forward selection*)
+* Different criteria can be used to estimate whether to add/eliminate variables
+* We'll mainly use adjusted R-squared - improvement = larger adjusted R-squared
+]
+
+.pull-right[
+* Example: using `lm(interest_rate ~ ., data = loans)` results in a linear model with adjusted $R^2$ of 0.2597, using variables    "verified_income", "debt_to_income", "credit_util", "bankruptcy", "term", "credit_checks", "issue_month".  
+* We then create new linear models where we remove exactly one variable, and we report adjusted $R^2$ as:
+  * Excluding verified_income: 0.2238
+  * Excluding debt_to_income: 0.2557
+  * Excluding credit_util: 0.1916
+  * Excluding bankruptcy: 0.2589
+  * Excluding term: 0.1468
+  * Excluding credit_checks: 0.2484
+  * Excluding issue_month: 0.2598
+* Since removing issue_month has adjusted $R^2$ of 0.2598 > 0.2597, we drop issue_month from the model. 
+* We can then continue and see if we remove both issue_month and another variable results in better adjusted $R^2$. 
+]
+
+---
+### Model selection: forward selection
+.pull-left[
+* Let's now see how to build a model using forward selection, adding one predictor at a time
+* Start with a model with no predictors.  This always has $R^2_{adj}=0$.  Compare to models with a single variable each, which have $R^2_{adj}$ of:
+    - Including verified_income: 0.05926
+    - Including debt_to_income: 0.01946
+    - Including credit_util: 0.06452
+    - Including bankruptcy: 0.00222
+    - Including term: 0.12855
+    - Including credit_checks: -0.0001
+    - Including issue_month: 0.01711
+* "term" has largest $R^2_{adj}$, so we add this variable to the model
+]
+
+.pull-right[
+* Now let's try adding a second variable in addition to "term"
+* Two predictor models with "term" and their adjusted $R^2$:
+    - Including term and verified_income: 0.16851
+    - Including term and debt_to_income: 0.14368
+    - Including term and credit_util: 0.20046
+    - Including term and bankruptcy: 0.13070
+    - Including term and credit_checks: 0.12840
+    - Including term and issue_month: 0.14294
+* Adding "credit_util" yields highest increase in $R^2_{adj}$, and this is higher than the baseline level of 0.12855, so we add the model as a predictor
+* We can continue this way until we do not see improvement in adjusted $R^2$
+]
+
+---
+.pull-left[
+### Example: housing prices
+* Let's look at `duke_forest` dataset from `openintro` - first few rows look like this 
+
+```{r}
+#| label: tbl-duke-data-frame
+#| echo: false
+
+duke_forest |>
+  select(price, bed, bath, area, year_built, cooling, lot) |>
+  slice_head(n = 4) |>
+  kbl(
+    linesep = "", booktabs = TRUE,
+    row.names = FALSE, format.args = list(big.mark = ",")
+  ) |>
+  kable_styling(
+    bootstrap_options = c("striped", "condensed"),
+    latex_options = c("striped", "hold_position")
+  )
+```
+]
+.pull-right[
+* Variables and their descriptions:
+```{r, echo=FALSE}
+duke_forest_var_def <- tribble(
+  ~variable, ~description,
+  "price", "Sale price, in USD",
+  "bed", "Number of bedrooms",
+  "bath", "Number of bathrooms",
+  "area", "Area of home, in square feet",
+  "year_built", "Year the home was built",
+  "cooling", "Cooling system: central or other (other is baseline)",
+  "lot", "Area of the entire property, in acres"
+)
+
+duke_forest_var_def |>
+  kbl(linesep = "", booktabs = TRUE,
+      col.names = c("Variable", "Description")) |>
+  kable_styling(
+    bootstrap_options = c("striped", "condensed"),
+    latex_options = c("striped", "hold_position"),
+    full_width = FALSE
+  ) |>
+  column_spec(1, width = "15em", monospace = TRUE) |>
+  column_spec(2, width = "25em")
+```
+
+]
+
+---
+
+.pull-left[
+* Let's do some exploratory data analysis 
+
+```{r, eval=FALSE}
+pr_bed <- ggplot(duke_forest, aes(x = bed, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Number of bedrooms",
+    y = "Sale price (USD)"
+  ) +  
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+
+pr_bath <- ggplot(duke_forest, aes(x = bath, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Number of bathrooms",
+    y = "Sale price (USD)"
+  ) +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+```
+
+]
+
+.pull-right[
+
+```{r}
+#| label: fig-single-scatter
+#| out-width: 100%
+#| fig-asp: 1.0
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-width: 10
+
+pr_bed <- ggplot(duke_forest, aes(x = bed, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Number of bedrooms",
+    y = "Sale price (USD)"
+  ) +  
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+
+pr_bath <- ggplot(duke_forest, aes(x = bath, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Number of bathrooms",
+    y = "Sale price (USD)"
+  ) +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+pr_area <- ggplot(duke_forest, aes(x = area, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Area of home (in square feet)",
+    y = "Sale price (USD)"
+  ) + 
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+pr_year <- ggplot(duke_forest, aes(x = year_built, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Year built",
+    y = "Sale price (USD)"
+  ) +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+pr_cool <- ggplot(duke_forest, aes(x = cooling, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Cooling type",
+    y = "Sale price (USD)"
+  ) +
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+pr_lot <- ggplot(duke_forest, aes(x = lot, y = price)) +
+  geom_point(alpha = 0.8) +
+    labs(
+    x = "Area of property (in acres)",
+    y = "Sale price (USD)"
+  ) + 
+  stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+
+pr_bed + pr_bath + pr_area + pr_year + pr_cool + pr_lot +
+  plot_layout(ncol = 2) 
+```
+
 ]
