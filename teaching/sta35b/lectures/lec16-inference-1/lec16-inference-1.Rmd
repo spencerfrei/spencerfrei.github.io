@@ -1,0 +1,96 @@
+---
+title: "Inference I"
+subtitle: "<br><br> STA35B: Statistical Data Science 2"
+author: "Spencer Frei"
+output:
+  xaringan::moon_reader:
+    # lib_dir: libs
+    nature:
+      ratio: "16:9"
+      # highlightLines: true
+      # highlightStyle: solarized-light
+      countIncrementalSlides: false
+---
+  
+
+
+  
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(unvotes)
+library(knitr)
+library(broom)
+library(patchwork)
+library(ggpubr)
+library(scales) # label_dollar 
+library(quantreg) # rq
+library(kableExtra)
+library(openintro)
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options))  # pass to default hook
+  }
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  if (length(lines)==1) {        # first n lines
+    if (length(x) > lines) {
+      # truncate the output, but add ....
+      x <- c(head(x, lines), more)
+    }
+  } else {
+    x <- c(more, x[lines], more)
+  }
+  # paste these lines together
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(comment = NA) # makes it so the ## doesnt appear in output for chunks
+
+source("../_common.R")
+```
+.pull-left[ 
+* *Statistical inference* is concerned with understanding and quantifying *uncertainty* in estimation
+* We'll first discuss the *hypothesis testing* framework: allows for formally evaluating claims about populations
+* Notation: $p$ to denote population proportion (e.g. proportion of population supporting some policy), $\hat p$ to dentoe *sample* proportion (e.g. taking a survey  of 1,000 people on whether they support a policy)
+* $\mu$ denotes population mean (e.g., average height of all US citizens) and $\bar x$ to denote sample mean (e.g., average height of students in this classroom)
+
+]
+
+.pull-right[
+* The goal of inference is to quantify how likely certain outcomes are due to random chance vs. due to real differences.
+* Think through what would happen if we repeatedly took different surveys of people's opinions on support for some political policy.
+* Sample to sample, there is going to be some natural variation, but if there is a big difference in support for vs. against the policy, this randomness will be drowned out by the true difference in the population preference.
+* We will be formalizing this in the coming lectures.
+]
+
+
+---
+.pull-left[ 
+### 1970s Discrimination Study
+* We will look at a study investigating sex discrimination in the 1970s
+* Question we investigate: "Are individuals who identify as female discriminated against in promotion decisions made by their managers who identify as male?"
+```{r}
+openintro::sex_discrimination
+table(sex_discrimination)
+```
+
+]
+
+.pull-right[
+<!-- * Note that we only have a single variable, and this is *observational data*.  Without a truly randomized study, with care taken to ensure that the two groups (here: male/female) are equal among other characteristics (e.g. seniority, number of years worked, etc.) our statistical inference may not be valid.  But let us -->
+* We can formulate two competing claims about the relationship between sex and promotions:
+  - $H_0$, **Null hypothesis**: variables `sex` and `decision` are independent.  Any observed differences in proportions promoted are due to natural variability   
+  - $H_A$, **Alternative hypothesis**: variables `sex` and `decision` are *dependent*.  Observed differences in proportions are due to dependence between the two variables.
+* Note that we only have a single variable, and this is *observational data*.  Without a truly randomized study, with care taken to ensure that the two groups (here: male/female) are equal among other characteristics (e.g. seniority, number of years worked, etc.), we cannot say that sex *caused* differences in hiring outcomes.  
+]
+
+---
+.pull-left[
+
+### Variability in statistics
+* 
+]

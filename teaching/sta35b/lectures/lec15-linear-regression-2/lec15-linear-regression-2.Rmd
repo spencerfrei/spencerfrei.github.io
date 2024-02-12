@@ -1,5 +1,5 @@
 ---
-title: "Functions and Intro to Linear Regression"
+title: "Linear Regression"
 subtitle: "<br><br> STA35B: Statistical Data Science 2"
 author: "Spencer Frei"
 output:
@@ -451,7 +451,8 @@ pr_bed <- ggplot(duke_forest, aes(x = bed, y = price)) +
     y = "Sale price (USD)"
   ) +  
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 
 pr_bath <- ggplot(duke_forest, aes(x = bath, y = price)) +
@@ -461,7 +462,8 @@ pr_bath <- ggplot(duke_forest, aes(x = bath, y = price)) +
     y = "Sale price (USD)"
   ) +
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 pr_area <- ggplot(duke_forest, aes(x = area, y = price)) +
   geom_point(alpha = 0.8) +
@@ -470,7 +472,8 @@ pr_area <- ggplot(duke_forest, aes(x = area, y = price)) +
     y = "Sale price (USD)"
   ) + 
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 pr_year <- ggplot(duke_forest, aes(x = year_built, y = price)) +
   geom_point(alpha = 0.8) +
@@ -479,7 +482,8 @@ pr_year <- ggplot(duke_forest, aes(x = year_built, y = price)) +
     y = "Sale price (USD)"
   ) +
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 pr_cool <- ggplot(duke_forest, aes(x = cooling, y = price)) +
   geom_point(alpha = 0.8) +
@@ -488,7 +492,8 @@ pr_cool <- ggplot(duke_forest, aes(x = cooling, y = price)) +
     y = "Sale price (USD)"
   ) +
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 pr_lot <- ggplot(duke_forest, aes(x = lot, y = price)) +
   geom_point(alpha = 0.8) +
@@ -497,10 +502,154 @@ pr_lot <- ggplot(duke_forest, aes(x = lot, y = price)) +
     y = "Sale price (USD)"
   ) + 
   stat_cor(aes(label = paste("r", ..r.., sep = "~`=`~"))) +
-  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) + 
+  theme(text = element_text(size = 18))
 
 pr_bed + pr_bath + pr_area + pr_year + pr_cool + pr_lot +
   plot_layout(ncol = 2) 
 ```
+* Seems that all variables are positively associated with price
 
 ]
+
+---
+
+.pull-left[
+* Let's now look at trying to predict `price` from `area`: single linear regression
+```{r}
+price_from_area <- lm(price ~ area, data = duke_forest)
+price_from_area %>% tidy
+```
+* This gives the predictive model
+$$ \widehat{\mathsf{price}} = 116,652 + 159\times \mathsf{area}$$
+* Increasing the area by a single square foot is expected to increase price by $159 
+* Residual plot:
+]
+.pull-right[
+```{r}
+#| label: fig-price-resid-slr
+#| echo: false
+#| out-width: 70%
+
+duke_forest |>
+  lm(price ~ area, data = _) |>
+  augment() |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(
+    x = "Predicted values of sale price (in USD)",
+    y = "Residuals"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+```
+* Does appear to be a linear relationship, but residuals for expensive homes are quite large.  Not clear that a linear model is the best model for large/expensive homes, need more advanced methods
+]
+
+---
+.pull-left[
+### Modeling price with multiple variables
+* Let's now see model price with multiple variables
+```{r, output.lines=15}
+m_full <- lm(price ~ area + bed + bath + year_built + cooling + lot, data = duke_forest)
+m_full %>% tidy()
+```
+* This forms the predictive model
+
+
+$$
+\begin{aligned}
+\widehat{\texttt{price}} &= -2,910,715 + 102 \times \texttt{area} - 13,692 \times \texttt{bed} \\
+&+ 41,076 \times \texttt{bath} + 1,459 \times \texttt{year_built}\\
+&+ 84,065 \times \texttt{cooling}_{\texttt{central}} + 356,141 \times \texttt{lot}
+\end{aligned}
+$$
+]
+
+.pull-right[
+* Residual plot: 
+
+```{r}
+#| label: fig-price-resid-mlr-nobed
+#| out-width: 70%
+#| echo: false
+
+m_full |>
+  augment() |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(
+    x = "Predicted values of house price (in USD)",
+    y = "Residuals"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(labels = label_dollar(scale = 1/1000, suffix = "K")) +
+  scale_y_continuous(labels = label_dollar(scale = 1/1000, suffix = "K"))
+```
+
+* Residuals appear to be randomly scattered around zero, but again pretty large residuals for expensive homes
+* One apparent outlier at -750k predicted value. 
+]
+
+---
+.pull-left[
+### Backward elimination
+* Let's see if excluding certain variables helps to improve the model's adjusted $R^2$
+* Helpful function in R: `update()`
+* Takes in the output of `lm()` and allows for you to specify what changes you'd like to make
+```{r}
+m_full <- lm(price ~ area + bed + bath + year_built + cooling + lot, data = duke_forest)
+m_area_r_sq_adj <- update(m_full, . ~ . - area, data = duke_forest)
+m_area_r_sq_adj %>% tidy()
+```
+* ". ~ . - variable" <--> use same formula as before, but now remove "variable" from the formula
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+#| label: backward-step-1
+m_full_r_sq_adj <-  glance(m_full)$adj.r.squared |> round(4)
+m_area_r_sq_adj <- update(m_full, . ~ . - area, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+m_bed_r_sq_adj <- update(m_full, . ~ . - bed, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+m_bath_r_sq_adj <- update(m_full, . ~ . - bath, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+m_year_built_r_sq_adj <- update(m_full, . ~ . - year_built, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+m_cooling_r_sq_adj <- update(m_full, . ~ . - cooling, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+m_lot_r_sq_adj <- update(m_full, . ~ . - lot, data = duke_forest) |> glance() |> pull(adj.r.squared) |> round(4)
+```
+* Baseline adjusted $R^2$ from the full model is `r m_full_r_sq_adj`, and we need to determine whether dropping a predictor will improve the adjusted $R^2$.
+To check, we fit models that each drop a different predictor, and we record the adjusted $R^2$:
+  -   Excluding `area`: `r m_area_r_sq_adj`
+  -   Excluding `bed`: `r m_bed_r_sq_adj`
+  -   Excluding `bath`: `r m_bath_r_sq_adj`
+  -   Excluding `year_built`: `r m_year_built_r_sq_adj`
+  -   Excluding `cooling`: `r m_cooling_r_sq_adj`
+  -   Excluding `lot`: `r m_lot_r_sq_adj`
+* Excluding bed improves adjusted $R^2$, so we eliminate this
+  - Excluding bed and area: 0.51
+  - Excluding bed and bath: 0.586
+  - Excluding bed and year_built: 0.586
+  - Excluding bed and cooling: 0.563
+  - Excluding bed and lot: 0.493
+* None of these improve on the (new) baseline adjusted $R^2$ of $0.593$, so we don't change the model any more 
+]
+
+---
+
+
+* Removing bed, we have the following model:
+```{r}
+m_full <- lm(price ~ area + bed + bath + year_built + cooling + lot, data = duke_forest)
+m_bed_r_sq_adj <- update(m_full, . ~ . - bed, data = duke_forest)
+m_bed_r_sq_adj %>% tidy()
+```
+* Results in the following linear model:
+
+$$ 
+\begin{aligned}
+\widehat{\texttt{price}} &= -2,952,641 + 99 \times \texttt{area}\\ 
+&+ 36,228 \times \texttt{bath} + 1,466 \times \texttt{year\_built}\\
+&+ 83,856 \times \texttt{cooling}_{\texttt{central}} + 357,119 \times \texttt{lot}
+\end{aligned}
+$$

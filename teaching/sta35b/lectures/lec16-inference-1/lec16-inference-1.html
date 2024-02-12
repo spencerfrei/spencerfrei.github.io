@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inference I</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei" />
+    <script src="lec16-inference-1_files/header-attrs-2.25/header-attrs.js"></script>
+    <link href="lec16-inference-1_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lec16-inference-1_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inference I
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei
+]
+
+---
+
+  
+
+
+  
+
+.pull-left[ 
+* *Statistical inference* is concerned with understanding and quantifying *uncertainty* in estimation
+* We'll first discuss the *hypothesis testing* framework: allows for formally evaluating claims about populations
+* Notation: `\(p\)` to denote population proportion (e.g. proportion of population supporting some policy), `\(\hat p\)` to dentoe *sample* proportion (e.g. taking a survey  of 1,000 people on whether they support a policy)
+* `\(\mu\)` denotes population mean (e.g., average height of all US citizens) and `\(\bar x\)` to denote sample mean (e.g., average height of students in this classroom)
+
+]
+
+.pull-right[
+* The goal of inference is to quantify how likely certain outcomes are due to random chance vs. due to real differences.
+* Think through what would happen if we repeatedly took different surveys of people's opinions on support for some political policy.
+* Sample to sample, there is going to be some natural variation, but if there is a big difference in support for vs. against the policy, this randomness will be drowned out by the true difference in the population preference.
+* We will be formalizing this in the coming lectures.
+]
+
+
+---
+.pull-left[ 
+### 1970s Discrimination Study
+* We will look at a study investigating sex discrimination in the 1970s
+* Question we investigate: "Are individuals who identify as female discriminated against in promotion decisions made by their managers who identify as male?"
+
+```r
+openintro::sex_discrimination
+#&gt; # A tibble: 48 × 2
+#&gt;   sex   decision
+#&gt;   &lt;fct&gt; &lt;fct&gt;   
+#&gt; 1 male  promoted
+#&gt; 2 male  promoted
+#&gt; 3 male  promoted
+#&gt; 4 male  promoted
+#&gt; 5 male  promoted
+#&gt; 6 male  promoted
+#&gt; # ℹ 42 more rows
+table(sex_discrimination)
+#&gt;         decision
+#&gt; sex      promoted not promoted
+#&gt;   male         21            3
+#&gt;   female       14           10
+```
+
+]
+
+.pull-right[
+&lt;!-- * Note that we only have a single variable, and this is *observational data*.  Without a truly randomized study, with care taken to ensure that the two groups (here: male/female) are equal among other characteristics (e.g. seniority, number of years worked, etc.) our statistical inference may not be valid.  But let us --&gt;
+* We can formulate two competing claims about the relationship between sex and promotions:
+  - `\(H_0\)`, **Null hypothesis**: variables `sex` and `decision` are independent.  Any observed differences in proportions promoted are due to natural variability   
+  - `\(H_A\)`, **Alternative hypothesis**: variables `sex` and `decision` are *dependent*.  Observed differences in proportions are due to dependence between the two variables.
+* Note that we only have a single variable, and this is *observational data*.  Without a truly randomized study, with care taken to ensure that the two groups (here: male/female) are equal among other characteristics (e.g. seniority, number of years worked, etc.), we cannot say that sex *caused* differences in hiring outcomes.  
+]
+
+---
+.pull-left[
+
+### Variability in statistics
+* 
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
