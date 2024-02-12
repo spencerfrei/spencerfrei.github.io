@@ -1,0 +1,41 @@
+---
+title: 'Lab 5'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(nycflights13)
+library(ggthemes) 
+```
+
+
+ 
+
+Refer to the dataset 'flights',
+
+(1) Create a function 'filter_severe', which takes a dataset as an argument 'df' and returns a tibble which only keeps delayed flights (i.e., dep_delay > 0) but removes rows with missing values (2 pts).
+
+(2) Use `across` to create a function 'grouped_mean', which takes a dataset as an argument 'df', also takes 'group_var' and 'mean_vars' as arguments, and returns a tibble which grouped by 'group_var', also calculates the mean of 'mean_vars' with missing values removed  and the number of flights. Also, name the summarized columns as "{.fn}\_for\_{.col}" and 'n' (3 pts).
+
+(3) Apply 'filter_severe' and 'grouped_mean' to 'flights' data set sequentially. Let 'group_var' be origin, 'mean_vars' be 'dep_time' and 'air_time' (1 pt).
+
+(4) Create a function 'hist', which takes a dataset as an argument 'df', in addition to the arguments 'x' and 'binwidth. The function returns a histogram of 'x' with the given binwidth using `geom_histogram` (2 pts).
+
+(5) Create a function 'linearity_check', which takes a dataset as an argument 'df', two arguments 'x' and 'y'. The function returns a scatterplot between 'x' and 'y' with `geom_point()` and a line between 'x' and 'y' with `geom_smooth()` (2 pts).
+
+(6) Apply 'filter_severe' to flights first, and apply 'hist' to the 'dep_time' column of 'flights' with binwidth as 1 (2 pts).
+
+(7) Apply 'filter_severe' to flights first, and apply 'linearity_check' to the 'x' = 'air_time' and 'y' = 'dep_time' columns of 'flights' (2 pts).
+
+(8) Fit a linear model of 'dep_time' given 'air_time' and check its summary (1 pt).
