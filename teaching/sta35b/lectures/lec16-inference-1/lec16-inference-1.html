@@ -83,8 +83,30 @@ table(sex_discrimination)
 ---
 .pull-left[
 
-### Variability in statistics
-* 
+### Variability of the statistic
+* `\(H_0\)`, **Null hypothesis**: variables `sex` and `decision` are independent.  Any observed differences in proportions promoted are due to natural variability   
+* We can examine whether this hypothesis is true by using a **permutation test**.
+* If the two variables were independent, then if we shuffled all of the labels of "male" and "female", then the proportion with each `decision` would be the same
+* If the proportion within each decision are very different than in the sample that we saw, then there is evidence that the null hypothesis is *not* true
+
+```r
+table(sex_discrimination)
+#&gt;         decision
+#&gt; sex      promoted not promoted
+#&gt;   male         21            3
+#&gt;   female       14           10
+```
+
+]
+
+.pull-right[
+
+
+```r
+knitr::include_graphics("/home/spencer/Dropbox/documents/website_local/spencerfrei.github.io/teaching/sta35b/lectures/images/sex-rand-02-shuffle-1.png")
+```
+
+&lt;img src="../images/sex-rand-02-shuffle-1.png" width="50%" /&gt;
 ]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
