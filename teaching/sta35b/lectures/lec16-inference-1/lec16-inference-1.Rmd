@@ -614,3 +614,117 @@ ggplot(bsprop_med, aes(x = bsprop)) +
 * Since our interval of 0-11.3% *includes* 10%, we cannot say that the consultant's work was associated with a lower risk of complications -- it could just be randomness
 * Even if the interval did not include 10%, we could not make a claim about causality. 
 ]
+
+---
+
+.pull-left[
+#### Example: tappers and listeners
+* Consider this study: a person conducts an experiment using the "tapper-listener" game.
+* Goal: pick a simple, well-known song; tap the tune on your desk; and see if the other person can guess the song
+* Data: 120 tappers, 120 listeners, 50% of tappers expected the listener would be able to guess the song.
+  - Is 50% a reasonable guess?
+  - In study, 3 / 120 ($\hat p = 0.025$) listeners were able to guess the song
+  - Given this, what are typical values one could expect for the proportion?
+* We can use bootstrapping as before: imagine we have a jar with 120 marbles, 3 are green (guessed correctly) and 117 are red (could not guess the song)
+]
+.pull-right[
+* Bootstrapping corresponds to shuffling the jar, grabbing a marble, recording the response, then putting the marble back in, and repeating; e.g. the first 5 times we get
+
+|   W   |   W   |   W   |    R    |   W   |
+|:-----:|:-----:|:-----:|:-------:|:-----:|
+| Wrong | Wrong | Wrong | Correct | Wrong |
+
+
+* We repeat this 10,000 times and visualize: 
+
+```{r}
+#| label: fig-tappers-bs-sim
+#| echo: false
+#| 
+bsprop_tap <- tibble(
+  bsprop = rbinom(10000, size = 120, prob = (3 / 120)) / 120
+)
+
+bsprop_tap_summary <- bsprop_tap |>
+  summarise(
+    bsprop_025 = quantile(bsprop, 0.025),
+    bsprop_975 = quantile(bsprop, 0.975),
+  )
+
+ggplot(bsprop_tap, aes(x = bsprop)) +
+  geom_histogram(binwidth = 0.0045) +
+  gghighlight(bsprop <= bsprop_tap_summary$bsprop_025 | bsprop >= bsprop_tap_summary$bsprop_975) +
+  annotate("segment",
+    x = bsprop_tap_summary$bsprop_025, y = 0,
+    xend = bsprop_tap_summary$bsprop_025, yend = 1000,
+    linetype = "dashed"
+  ) +
+  annotate("segment",
+    x = bsprop_tap_summary$bsprop_975, y = 0,
+    xend = bsprop_tap_summary$bsprop_975, yend = 1000,
+    linetype = "dashed"
+  ) +
+  annotate("text", x = bsprop_tap_summary$bsprop_025, y = 1200, label = "2.5th\npercentile") +
+  annotate("text", x = bsprop_tap_summary$bsprop_975, y = 1200, label = "97.5th\npercentile") +
+  labs(
+    x = "Bootstrapped proportion of listeners who guessed correctly",
+    y = "Count",
+    title = "10,000 bootstrapped proportions"
+  )
+```
+* Expect between 0-5.83% are able to guess tapper's tune 
+
+
+]
+
+---
+.pull-left[
+#### Bootstrap confidence interval
+* **Confidence interval**: plausible range of values for population parameter $p$
+* Bootstrap procedure: if we have $n$ samples, responses in two categories, with initial estimated proportion $\hat p$ for proportion in category #1
+  - Randomly sample $n$ examples **with replacement** (think of a jar of marbles, colored according to response, shuffling and taking out a single marble then replacing it, repeat $n$ times)
+  - Each time we randomly sample $n$ observations with replacement, we get the $i$-th "bootstrap sample", each one with a different estimate $\hat p_{boot, i}$
+  - We examine the **distribution** of the $\hat p_{boot, i}$ (dot plot, histogram, ...)
+]
+
+.pull-right[
+  - All the $\hat p_{boot,i}$ will be centered around baseline $\hat p$
+  - Original $\hat p$ is centered around the population $p$
+  - Thus interval estimate for $p$ can be computed using $\hat p_{boot, i}$
+* More formally, the 95% bootstrap confidence interval for parameter $p$ can be estimated using the (ordered) $\hat p_{boot, i}$ values
+* Call $a$= 2.5% bootstrapped proportion, $b$= 97.5% bootstrapped proportion
+* 95% bootstrapped confidence interval: $(a, b)$ = those values between $a$ and $b$
+]
+
+---
+
+.pull-left[
+#### Example: Youtube Videos
+* Want to estimate proportion of YouTube videos taking place outdoors
+* We sample 128 videos and find 37 take place outdoors
+* Want to estimate proportion of all youtube videos which take place outside via bootstrap confidence interval; we get the following
+```{r}
+#| echo: false
+tibble(videos = c(rep("inside", 91), rep("outdoors", 37))) %>%
+  specify(response = videos, success = "outdoors") %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "prop") %>%
+  ggplot(aes(x = stat)) +
+  geom_histogram(binwidth = 0.0125, fill = IMSCOL["green", "full"]) +
+  labs(
+    x = "Bootstrapped proportion of outdoors videos", 
+    y = "Count",
+    title = "1,000 bootstrapped proportions"
+  )
+```
+
+]
+
+.pull-right[
+* What is the relevant statistic and parameter for this problem?
+  - Statistic: sample proportion $\hat p = 37/128 \approx 0.289$; parameter: population proportion ($p$; unknown)
+* If we want to be 90% confident that between $a$% and $b$% of YouTube videos that take place outdoors, how should we find $a$ and $b$?
+  - We want 5% of values to be below $a$, and 5% of values to be above $b$
+  - The interval should be centered at $\hat p \approx 0.289$ (so, $\hat p = (a + b)/2$)
+  - From the graph, we see that $a\approx 0.22$ and $b\approx 0.35$ is correct. 
+]
