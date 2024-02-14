@@ -77,7 +77,7 @@ If your code is correct, running `summary_stats(flights, dep_time)` should retur
 
 ### Part (b): 5 points
 
-Using `across()` and `summary_stats()` from above, compute the minimum, median, and maximum for each of the columns `lifeExp`, `pop`, and `gdpPercap` per year and per continent (i.e., min/median/max of each of these variables per year and per continent - you are doing these operations over different countries in every year-continent pair.).   Save the resulting tibble as `gapminder_summary`, and print the first few rows of the tibble by writing `gapminder_summary`. 
+Using `across()`, compute the minimum, median, and maximum for each of the columns `lifeExp`, `pop`, and `gdpPercap` per year and per continent (i.e., min/median/max of each of these variables per year and per continent - you are doing these operations over different countries in every year-continent pair.).   Save the resulting tibble as `gapminder_summary`, and print the first few rows of the tibble by writing `gapminder_summary`. 
 ```{r}
 # code here
 ```
