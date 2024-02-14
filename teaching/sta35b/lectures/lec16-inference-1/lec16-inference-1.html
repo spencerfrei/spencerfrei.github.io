@@ -3,10 +3,11 @@
   <head>
     <title>Inference I</title>
     <meta charset="utf-8" />
-    <meta name="author" content="Spencer Frei" />
+    <meta name="author" content="Spencer Frei   Figures taken from [IMS], Cetinkaya-Rundel and Hardin text" />
     <script src="lec16-inference-1_files/header-attrs-2.25/header-attrs.js"></script>
-    <link href="lec16-inference-1_files/remark-css-0.0.1/default.css" rel="stylesheet" />
-    <link href="lec16-inference-1_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="lec16-inference-1_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec16-inference-1_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
@@ -19,7 +20,7 @@ class: center, middle, inverse, title-slide
 ## <br><br> STA35B: Statistical Data Science 2
 ]
 .author[
-### Spencer Frei
+### Spencer Frei <br> Figures taken from [IMS], Cetinkaya-Rundel and Hardin text
 ]
 
 ---
@@ -52,17 +53,10 @@ class: center, middle, inverse, title-slide
 * Question we investigate: "Are individuals who identify as female discriminated against in promotion decisions made by their managers who identify as male?"
 
 ```r
-openintro::sex_discrimination
-#&gt; # A tibble: 48 × 2
-#&gt;   sex   decision
-#&gt;   &lt;fct&gt; &lt;fct&gt;   
-#&gt; 1 male  promoted
-#&gt; 2 male  promoted
-#&gt; 3 male  promoted
-#&gt; 4 male  promoted
-#&gt; 5 male  promoted
-#&gt; 6 male  promoted
-#&gt; # ℹ 42 more rows
+openintro::sex_discrimination %&gt;% str
+#&gt; tibble [48 × 2] (S3: tbl_df/tbl/data.frame)
+#&gt;  $ sex     : Factor w/ 2 levels "male","female": 1 1 1 1 1 1 1 1 1 1 ...
+#&gt;  $ decision: Factor w/ 2 levels "promoted","not promoted": 1 1 1 1 1 1 1 1 1 1 ...
 table(sex_discrimination)
 #&gt;         decision
 #&gt; sex      promoted not promoted
@@ -101,12 +95,428 @@ table(sex_discrimination)
 
 .pull-right[
 
+&lt;img src="sex-rand-02-shuffle-1.png" width="80%" /&gt;
+* In this simulation, we have fixed the number of males and females, as well as number of promoted / not promoted, but shuffled the labels of male/female
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;decision&lt;/div&gt;&lt;/th&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; sex &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; promoted &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; not promoted &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Total &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; male &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 18 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 6 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 24 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 17 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 7 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 24 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; Total &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 35 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 13 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 48 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+]
+
+---
+.pull-left[
+### Observed statistic vs. null statistics
+* We can continue to do different simulations of the data to see what is the general distribution of the null statistic
+
+
 
 ```r
-knitr::include_graphics("/home/spencer/Dropbox/documents/website_local/spencerfrei.github.io/teaching/sta35b/lectures/images/sex-rand-02-shuffle-1.png")
+knitr::include_graphics("sex-rand-03-shuffle-1-sort.png")
 ```
 
-&lt;img src="../images/sex-rand-02-shuffle-1.png" width="50%" /&gt;
+&lt;img src="sex-rand-03-shuffle-1-sort.png" width="100%" /&gt;
+]
+
+.pull-right[
+&lt;div class="figure"&gt;
+&lt;img src="lec16-inference-1_files/figure-html/fig-sex-rand-dot-plot-1.png" alt="A stacked dot plot of the 100 simulated differences between the proportion of male and female files recommended for promotion.  The differences were simulated under the null hypothesis that there was no discrimination. Two of the 100 simulations had a difference of 29.2% and are colored in blue to indicate that they are as or more extreme than the observed difference." width="100%" /&gt;
+&lt;p class="caption"&gt;A stacked dot plot of differences from 100 simulations produced under
+the null hypothesis, `\(H_0,\)` where the simulated sex and decision are
+independent. Two of the 100 simulations had a difference of at least
+29.2%, the difference observed in the study, and are shown as solid dots.
+&lt;/p&gt;
+&lt;/div&gt;
+* Under null hypothesis, expect average of 0 diff.
+* The 0.292 observed is unlikely, suggests that hiring and sex were *not* independent 
+]
+
+---
+
+.pull-left[
+### Example: college student savings
+* Let's consider a study where we ask whether telling a college student that they can save money for later purchases will make them spend less now
+-   `\(H_0:\)` **Null hypothesis**. Reminding students that they can save money for later purchases will not have any impact on students' spending decisions.
+-   `\(H_A:\)` **Alternative hypothesis**. Reminding students that they can save money for later purchases will reduce the chance they will continue with a purchase.
+* Dataset: `opportunity_cost` in *openintro*
+
+```r
+opportunity_cost
+#&gt; # A tibble: 150 × 2
+#&gt;   group   decision 
+#&gt;   &lt;fct&gt;   &lt;fct&gt;    
+#&gt; 1 control buy video
+#&gt; 2 control buy video
+#&gt; 3 control buy video
+#&gt; 4 control buy video
+#&gt; 5 control buy video
+#&gt; 6 control buy video
+#&gt; # ℹ 144 more rows
+```
+
+]
+
+.pull-right[
+*"Imagine that you have been saving some extra money on the side to make some purchases, and on your most recent visit to the video store you come across a special sale on a new video. This video is one with your favorite actor or actress, and your favorite type of movie (such as a comedy, drama, thriller, etc.). This particular video that you are considering is one you have been thinking about buying for a long time. It is available for a special sale price of $14.99. What would you do in this situation? Please circle one of the options below."*
+
+Half of the 150 students were randomized into a control group and given the following options:
+
+&gt; (A) Buy this entertaining video.
+
+&gt; (B) Not buy this entertaining video.
+
+Remaining 75 students were placed in treatment group, they saw: 
+
+&gt; (A) Buy this entertaining video.
+
+&gt; (B) Not buy this entertaining video. Keep the $14.99 for other purchases.
+
+
+```r
+table(opportunity_cost)
+#&gt;            decision
+#&gt; group       buy video not buy video
+#&gt;   control          56            19
+#&gt;   treatment        41            34
+```
+
+]
+
+---
+.pull-left[
+
+
+```
+#&gt;            decision
+#&gt; group       buy video not buy video
+#&gt;   control          56            19
+#&gt;   treatment        41            34
+```
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;decision&lt;/div&gt;&lt;/th&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; group &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buy video &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; not buy video &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Total &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; control &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 0.7466667 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 0.2533333 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; treatment &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 0.5466667 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 0.4533333 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 1 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;img src="lec16-inference-1_files/figure-html/unnamed-chunk-9-1.png" width="432" /&gt;
+
+]
+
+.pull-right[
+* We see that under treatment, about 20 percentage points higher choose not to buy the video
+* How much variability would one expect if the treatment had no effect?  
+* We can do the same type of analysis from the previous setting
+  - Assume we have 53 people labeled "not buy video", 97 labeled "buy video"
+  - Imagine we have index cards with these labels, then we shuffle them and divide into two stacks of 75 people each
+  - We imagine each stack is a new "control" and "treatment" group
+  - Any difference between proportions of "buy" and "not buy" cards will be due entirely to random chance 
+  - We should generally expect each stack to have `\(53/2\approx 26\)` "not buy" cards each
+  
+]
+
+---
+
+.pull-left[
+* Let's look at a single randomization
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;decision&lt;/div&gt;&lt;/th&gt;
+&lt;th style="empty-cells: hide;border-bottom:hidden;" colspan="1"&gt;&lt;/th&gt;
+&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; group &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buy video &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; not buy video &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Total &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; control &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 46 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 29 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 75 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; treatment &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 51 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 24 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 75 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; Total &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 97 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 53 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 7em; "&gt; 150 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+From this table, we can compute a difference that occurred from the first shuffle of the data (i.e., from chance alone):
+
+`$$\hat{p}_{T, shfl1} - \hat{p}_{C, shfl1} = \frac{24}{75} - \frac{29}{75} = - 0.067$$`
+* Compare this to the 20 percentage points (0.2) that we saw before.
+* We can repeat 1000x times and plot the results on the right.
+]
+
+.pull-right[
+
+&lt;div class="figure"&gt;
+&lt;img src="lec16-inference-1_files/figure-html/fig-opportunity-cost-rand-hist-1.png" alt="A histogram of 1,000 chance differences produced under the null hypothesis." width="432" /&gt;
+&lt;p class="caption"&gt;A histogram of 1,000 chance differences produced under the null hypothesis.&lt;/p&gt;
+&lt;/div&gt;
+* Thus getting differences of 0.2 are very unlikely if the "buy" and "not buy" outcomes were independent of the treatment (being reminded that you can save money for later)
+* Only 6 of the 1,000 randomizations had as extreme a result 
+]
+
+
+
+---
+
+.pull-left[
+### Hypothesis testing
+* In previous problems, we described a *hypothesis test*:
+  - **Null hypothesis**: default assumption, skeptical, belief that things could have happened due to change
+  - **Alternative hypothesis**: hypothesis that there is some relationship between variables
+  
+* Way to think about it: trial by jury
+  - Null hypothesis is not guilty.
+  - Alternative hypothesis of guilty is only put forward if there is significant evidence in favor of this claim.
+  - Failure to reject the null does NOT mean null is true, just that we don't have enough evidence to reject the null
+]
+
+.pull-right[
+### p-values and statistical significance
+* `\(p\)`-value represents the probability that, if the null hypothesis is true and a linear model is the correct model of the data, that we would obtain data that is at least as extreme as the result actually observed
+* Think back to the example about sex discrimination: when we took 100 randomizations of the data, we got only 2/100 simulations which resulted in promotion rates as extreme as what we observed in the original data
+&lt;img src="lec16-inference-1_files/figure-html/unnamed-chunk-12-1.png" width="288" /&gt;
+
+]
+
+---
+.pull-left[
+### p-values and statistical significance
+* `\(p\)`-value represents the probability that, if the null hypothesis is true and a linear model is the correct model of the data, that we would obtain data that is at least as extreme as the result actually observed
+* When the `\(p\)`-value is smaller than a threshold (**significance level** `\(\alpha\)`), then we say results are *statistically significant at level `\(\alpha\)`*), and we reject the null hypothesis in favor of the alternative
+* Example: in video experiment, we showed that participants had a 20% drop in likelihood of purchasing if we remind about saving money.
+  - Only 6/1,000 had as extreme a result --&gt; p value of 0.006 &lt; 0.05. 
+  - Statistically significant at level 0.01
+]
+
+--
+.pull-right[
+### Randomization tests summary
+* Frame research qeustion in terms of hypotheses
+  - Null hypothesis `\(H_0\)`: skeptical of any relationship between variables
+  - Alternative hypothesis `\(H_A\)`: posits a relationship between variables
+* Collect data
+* Model randomness that would occur if null hypothesis were true
+  - Randomize treatments
+* Analyze data and identify `\(p\)`-value
+* Form conclusion about hypotheses using `\(p\)`-value 
+]
+
+---
+
+.pull-left[
+#### Examples
+* Let's describe null and alternative hypotheses in words and symbols for the following:
+  - Starting in 2008, chain restaurants in Calif. have displayed calorie coutns for each menu item
+  - Before 2008, we randomly sampled restaurants and recorded whether a person consumed &gt; 2000 calories at the chain restaurant
+  - After 2008, we returned and again randomly sampled restaurants and recorded whether a person consumed &gt; 2000 calories at the chain restaurant
+  - We want to see if the data provide convincing evidence of a difference in average calorie intake
+]
+
+--
+
+.pull-right[
+* **Null hypothesis** `\(H_0\)`: calorie intake is the independent of whether we display number of calories per item.
+* **Alternative hypothesis** `\(H_A\)`: calorie intake is affected by display of number of calories per item.
+
+Let's suppose we had data as follows:
+
+|  | No cal. display | Cal. display | Total |
+| -------- | --------- | ------- | ----- |
+| &gt;2000 cal | 825 | 350 | 1175 |
+| &lt;2000 cal | 1605 | 1800 | 3605 | 
+| Total | 2430 | 2150 | 4580 |
+
+
+Convert this into proportions:
+
+|  | No calorie display | Calorie display | 
+| -------- | --------- | ------- |
+| &gt;2000 cal | 0.339 | 0.163 | 
+| &lt;2000 cal | 0.661 | 0.837 | 
+
+* *Treatment* here is having calorie display
+]
+
+---
+
+.pull-left[
+
+|  | No calorie display | Calorie display | 
+| -------- | --------- | ------- |
+| &gt;2000 cal | 0.339 | 0.163 | 
+| &lt;2000 cal | 0.661 | 0.837 | 
+
+* *Treatment* here is having calorie display
+* We see a difference in proportion eating &gt;2000 calories as:
+$$ 0.163 - 0.339 = -0.176 $$
+* How likely would this have happened if the calorie display did not affect how much people ate?
+]
+
+.pull-right[
+* We simulate below 200 different randomizations of the data, keeping the total number of &gt;2000 and &lt;2000 cal fixed but randomly assigning "no calorie display" and "display" to the groups.
+&lt;img src="lec16-inference-1_files/figure-html/unnamed-chunk-13-1.png" width="360" /&gt;
+
+* We see that the typical difference in proportions is never as much as what we observed (-0.176), so there is significant evidence to reject the null hypothesis
+* The simulation has 200 instances and none of them result in differences &lt; -0.176, so we can say the p value is &lt; 1/200 = 0.005. 
+]
+
+---
+
+### Confidence intervals with bootstrapping
+.pull-left[
+* We'll now talk a bit about *confidence intervals*: core idea is to use a sample proportion to estimate a population proportion
+* Provides a plausible range of values where we expect to find the true population proportion
+* We saw how to use randomization to see whether difference in sample proportions was due to chance  -- useful for yes/no questions, like
+  -- Does this vaccine make it less likely to get a disease
+  -- Does drinking caffeine affect athletic performance
+  
+* We will now talk about how to *estimate* the value of an unknown parameter, e.g.
+  -- How much less likely am I to get a disease if I get a vaccine
+  -- How much faster can I run if I have caffeine
+
+]
+
+.pull-right[
+* The technique we'll focus on is called **bootstrapping*
+* Goal is to understand the variability inherent in a statistic (e.g., the sample mean)
+* If we can understand how different sample means are from the population mean, then we can make decisions about what was due to random chance vs. what is a true property of the population
+
+]
+
+---
+
+.pull-left[ 
+#### Medical consultant study
+* Let's consider the following setting: People seek out a medical consultant for navigating the donation of a liver.
+* One consultant claims that although the average complication rate for liver donor surgeries is 10%, her clients have only had 3 complications in the 62 liver surgeries she has facilitated
+* Is this strong evidence that her work meaningfully contributes to reduced complications?
+* Let `\(p\)` = true complication rate for liver donors working with the consultant
+* We estimate `\(p\)` using data, label estimate as `\(\hat p\)`
+* In this sample, complication rate is `\(3/62 = 0.048 = \hat p\)`. 
+]
+
+.pull-right[
+* It is NOT possible to assess the consultant's claim using this data.
+* The claim is about a *causal* connection, but we are only looking at *observational data*.
+* There could be confounders (e.g. she refuses to take patients that are likely to have failed surgeries; or those which have medical consultants are richer / healthier and result in fewer complications)
+* What we *can* do is to get a sense of the consultant's true rate of complications.
+]
+
+---
+
+.pull-left[
+#### Bootstrapping: the main idea
+* Suppose we have `\(x_1, \dots, x_n\)` as a random sample from a population
+* If we **resample** subsets of these examples (with replacement), this "mimics" as if we sample from the true population
+* For the medical consultant setting, this means imagining we have a big bucket of index cards, with 3 that say "complication" and 59 that say "no complication"
+* We shuffle the bucket, reach in, record what it says, then put the card *back into the bucket*, and continue
+* Since we are randomly sampling from our *subsample*, and the initial subsample was a random sample, we can get an idea of sample-to-sample randomness
+]
+
+.pull-right[
+![](boot1prop2.png)&lt;!-- --&gt;
+]
+
+---
+
+
+
+&lt;img src="boot1propboth.png" width="80%" /&gt;
+
+
+---
+
+.pull-left[
+* So let's look at what happens if we take 10,000 bootstrap samples of the medical consultant data.
+* Remember that original data had 62 observations, 3 of which had "complications"; `\(\hat p = 3/62 \approx 0.0484\)`. 
+
+
+&lt;img src="lec16-inference-1_files/figure-html/fig-MedConsBSSim-1.png" width="432" /&gt;
+
+]
+
+.pull-right[
+* Since the 2.5% percentile is at 0, 97.5th percentile at 0.113, we are confident that in the population, the true probability of a complication from the medical consultant is between 0% and 11.3%.
+* We were asked to compare this to the national rate of 10%.
+* Since our interval of 0-11.3% *includes* 10%, we cannot say that the consultant's work was associated with a lower risk of complications -- it could just be randomness
+* Even if the interval did not include 10%, we could not make a claim about causality. 
 ]
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
