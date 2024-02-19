@@ -1,0 +1,47 @@
+---
+title: 'Lab 6'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(MASS)
+library(ggthemes) 
+```
+
+
+ 
+### Question 1
+
+Refer to the dataset 'iris',
+
+(1) Use `str`, find the data types of variables in iris.
+
+(2) Use `levels`, find the levels of 'Species' variable in iris.
+
+(3) Fit a linear model 'm.full' of 'Sepal.Length' on all remaining variables and get the summary. 
+
+(4) Use 'update' to do backward elimination.  Is there a smaller model with better adjusted R squared?  What is the final model after using backward elimination? 
+
+
+### Question 2
+
+(1) Use `rnorm` to generate 100 samples from $$N(0,1)$$, and name it as 'sple'.
+
+(2) Calculate the mean of 'sple', and name it as 'm'.
+
+(3) Draw 100 bootstrap samples and calculate their means. Name the means as 'ms'.
+
+(4) Use 'ggplot' to draw a histogram of 'ms'.
+
+(5) Using these 100 bootstrap samples, provide an estimate for the 95% bootstrap confidence interval for the population mean.
