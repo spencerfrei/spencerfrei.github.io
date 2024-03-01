@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inference for a single mean</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei   Figures taken from [IMS], Cetinkaya-Rundel and Hardin text" />
+    <script src="lec20-inference-single-mean_files/header-attrs-2.25/header-attrs.js"></script>
+    <script src="lec20-inference-single-mean_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec20-inference-single-mean_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inference for a single mean
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei <br> Figures taken from [IMS], Cetinkaya-Rundel and Hardin text
+]
+
+---
+
+  
+
+
+  
+
+.pull-left[
+* We will see how to use the bootstrap to develop confidence intervals for a single mean
+* We want to know the average price of cars on a lot by taking a random sample
+* Suppose we have a sample of five cars, with prices
+  - $18,300; $20,100; $9,600; $10,700; $27,000
+  - Sample mean: $17,140
+  - Standard deviation:
+  
+  $$
+  \begin{align}
+  s^2 &amp;= \frac{1}{5-1} \Big( (18300-17140)^2 +\dots \newline \\
+  &amp;\quad + (20100-17140)^2 + ... + (27000-17140)^2 \Big) \newline \\
+  &amp;\quad\implies s = \$7,170.29
+  \end{align}
+  $$
+  
+* How much can we expect the sample mean to change from sample to sample?
+]
+
+.pull-right[
+* If we don't have the ability to sample more from the population, we can use the bootstrap to estimate this
+
+&lt;img src="bootpop1mean.png" width="100%" /&gt;
+
+]
+
+---
+.pull-left[
+* For each bootstrapped re-sample, we get a new subsample that we can calculate a sample mean for
+* The variability across sample means across bootstrap re-samples gives us an estimate for the variability of the sample mean from the population
+
+&lt;img src="bootmeans1mean.png" width="200%" /&gt;
+]
+
+.pull-right[
+* Let's suppose we took 1,000 bootstrap samples, and for each bootstrap sample we calculate the sample mean.  It would result in a plot as follows 
+
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-carsbsmean-1.png" width="100%" /&gt;
+* To develop bootstrap confidence interval for the population mean at e.g. 90% confidence level, we can simply calculate the values corresponding to the 5% and 95% percentile of the bootstrapped statistics
+]
+
+---
+
+.pull-left[
+#### Computing bootstrap means and confidence intervals
+* Let's build a function which takes in a sample (a vector of numerics), and then computes a desired number of bootstrap re-samples and returns the sample means for each bootstrap re-sample.
+
+```r
+bootstrap_samp_means &lt;- function(observations, num_resample = 500) {
+  means &lt;- numeric(num_resample)
+  num_observations &lt;- length(observations)
+  for(i in 1:num_resample) {
+    resampled &lt;- sample(observations, size = num_observations, replace = TRUE)
+    means[i] &lt;- mean(resampled, na.rm=TRUE)
+  }
+  return(means)
+}
+```
+
+]
+
+.pull-right[
+* For the car example, here's how we could do this:
+
+```r
+obs &lt;- c(18300, 20100, 9600, 10700, 27000)
+bs_means &lt;- bootstrap_samp_means(obs, num_resample = 500)
+mean(obs)
+#&gt; [1] 17140
+bs_means[1:5]
+#&gt; [1] 13300 17360 16560 20620 22360
+```
+* If we want to construct a 90% confidence interval, want to find 5th percentile and 95th percentile
+
+```r
+(qs &lt;- quantile(bs_means, probs = c(0.05, 0.95)))
+#&gt;    5%   95% 
+#&gt; 12000 22140
+```
+* We are 90% confident true average is between $12000 and $22140
+* We can also see variability across bootstrap samples:
+
+```r
+quantile(bootstrap_samp_means(obs, num_resample = 100), probs = c(0.05, 0.95))
+#&gt;    5%   95% 
+#&gt; 12360 20980
+```
+
+
+]
+
+---
+.pull-left[
+#### Bootstrap percentile confidence interval for a standard deviation
+* We have thus far focused on trying to understand the **mean** or average of a population
+* We are also often interested in the standard deviation `\(\sigma\)` of the variable - this represents the natural variability of the population value `\(\mu\)`
+* We have constructed point estimate using samples via
+
+$$ s^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar x)^2 $$
+* Then we have that `\(s^2\)` is a good approximation for `\(\sigma^2\)`
+* If we want to construct a *confidence interval* for `\(\sigma\)`, then we can use bootstrap idea as before.
+]
+
+--
+
+.pull-right[
+* Recall for constructing confidence interval for population mean using bootstrap:
+  - Take bootstrap re-samples of dataset
+  - Compute **sample mean** for each bootstrap sample
+  - Create histogram of **sample means** across each bootstrap sample
+  - Use the percentiles of the histogram to get confidence intervals
+* Same idea for confidence intervals for population variance `\(\sigma^2\)` / s.d. `\(\sigma\)`:
+  - Take bootstrap re-samples of dataset
+  - Compute **sample variance `\(s^2\)`** for each bootstrap sample
+  - Create histogram of **sample variances** across each bootstrap sample
+  - Use the percentiles of the histogram to get confidence intervals
+]
+
+---
+
+.pull-left[
+* Results of bootstrap *standard deviations*: 
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-carsbssd-1.png" width="100%" /&gt;
+* Very high variability
+* This is due to the very small sample size - only 5 observations
+* As we increase the original dataset sample size, the bootstrap gets better
+* Precise characterization of how sample size / number bootstrap trials affect the accuracy of the bootstrap is beyond this course -- subject of current research
+]
+
+--
+
+.pull-right[
+#### Mathematical model for a mean
+* Recall that we previously used Central Limit Theorem to show that the variability of sample proportion is well-described by normal distribution
+* For proportions, the single parameter `\(p\in [0,1]\)` determines the variance `\(p(1-p)\)` (and thus s.d. `\(\sqrt{p(1-p)}\)`) 
+* Thus the only source of uncertainty is in measuring `\(p\)`
+* For numerical variables, there are two sources of uncertainty:
+  - The average/mean `\(\mu\)` - typical value
+  - The standard deviation `\(\sigma\)` - typical variability in the parameter
+* Thus we need a slightly different approach
+]
+
+---
+.pull-left[
+#### Mathematical model for a mean
+* Central Limit Theorem for the sample mean:
+  - If sufficiently large number of `\(n\)` independent samples from population with mean `\(\mu\)`, s.d. `\(\sigma\)`, then:
+  - Sampling distribution of `\(\bar x_n\)` is `\(\approx N(\mu, \sigma / \sqrt n)\)` - approximately normal with mean `\(\mu\)` and standard deviation `\(\sigma/\sqrt n\)`. 
+  - However, generally do not know population-level `\(\sigma\)` - we have to estimate `\(\sigma\)`
+  - When you have to estimate `\(\sigma\)`, the sampling distribution of `\(\bar x_n\)` is not approximately normal, but is what's called a "t distribution"
+]
+
+--
+
+.pull-right[
+* The `\(t\)` distribution is defined in terms of **degrees of freedom** `df`. 
+* Has a similar bell-shaped curve to normal, but has "thicker tails" -- allows for more extreme events to occur than normal
+
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-tDistCompareToNormalDist-1.png" width="90%" /&gt;
+* This shows `\(t\)` distribution with 1 d.o.f.
+* For normal, very little data beyond 2.5, while for t distribution, relatively more 
+]
+
+---
+
+.pull-left[
+* When looking at a dataset with `\(n\)` samples, we will typically use the `\(t\)` distribution with `\(n-1\)` degrees of freedom
+* As degrees of freedom increases, the `\(t\)` distribution gets thinner tails and looks more like a standard normal 
+* When d.o.f. `\(&gt;30\)`, almost indistinguishable from standard normal 
+* Intuition: height/thickness represents how likely values are; when d.o.f. ($n-1$) is small, we are more uncertain and so more extreme values are more likely
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-tDistConvergeToNormalDist-1.png" width="432" /&gt;
+
+]
+
+.pull-right[
+* Recall in R, to calculate probabilities under normal, we used 
+  - `pnorm(val, mean, sd)` to calculate probability that `\(N(\mu, \sigma)\)` is `\(&lt;= \text{val}\)`
+  - `qnorm(quantile, mean, sd)` to calculate value corresponding to `quantile`
+* Similarly, for `\(t\)`-distribution, we use
+  - `pt(val, df)` to calculate probability that `\(t\)` distr. with `df` degrees of freedom is `\(&lt;= \text{val}\)`
+  - `qt(quantile, df)` to calculate value corresponding to `quantile` for `\(t\)` distr. with `df` degrees of freedom 
+  
+
+
+```r
+pnorms
+#&gt; # A tibble: 7 × 5
+#&gt;     val   pnorm   pt_2   pt_5   pt_30
+#&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1    -3 0.00135 0.0477 0.0150 0.00269
+#&gt; 2    -2 0.0228  0.0918 0.0510 0.0273 
+#&gt; 3    -1 0.159   0.211  0.182  0.163  
+#&gt; 4     0 0.5     0.5    0.5    0.5    
+#&gt; 5     1 0.841   0.789  0.818  0.837  
+#&gt; 6     2 0.977   0.908  0.949  0.973  
+#&gt; # ℹ 1 more row
+```
+
+
+]
+
+---
+
+.pull-left[
+### `\(t\)` distribution calculations
+* Probability that `\(t\)` distribution with 20 degrees of freedom is less than -1.5?
+
+
+```r
+# use pt() to find probability under the $t$-distribution
+pt(-1.5, df = 18)
+#&gt; [1] 0.07547523
+```
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-tDistDF18LeftTail2Point10-1.png" width="100%" /&gt;
+]
+
+.pull-right[
+
+* Probability that `\(t\)` distribution with 11 degrees of freedom is bigger than 2.5?
+
+```r
+1 - pt(2.5, df = 11)
+#&gt; [1] 0.01475319
+```
+
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/unnamed-chunk-16-1.png" width="80%" /&gt;
+
+]
+
+---
+.pull-left[
+* Probability that `\(t\)` distribution with 2 degrees of freedom is more than 3 units away from the mean?
+
+
+```r
+# use pt() to find probability under the $t$-distribution
+pt(-3, df = 2) + (1 - pt(3, df = 2))
+#&gt; [1] 0.09546597
+```
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/fig-tDistDF23UnitsFromMean-1.png" width="80%" /&gt;
+* `\(t\)` distribution is symmetric around 0, so could also do
+
+```r
+2*pt(-3, df = 2)
+#&gt; [1] 0.09546597
+```
+
+]
+
+--
+.pull-right[
+* Compare with what happens with standard normal: 68-95-99.7 rule says that only 0.3% (=0.003) would be more than 3 units from the mean.
+* Since `\(t\)` distribution has fatter tails, it assigns greater probability to extreme values, so we get significantly more area for `\(t\)` distribution. 
+* As degrees of freedom increase, this becomes less and less the case. 
+]
+
+---
+### Conditions needed for using `\(t\)`-distr. confidence intervals
+* Previously: *if* we have independent samples and sufficiently large dataset where population has mean `\(\mu\)` and s.d. `\(\sigma\)`, then `\(\bar x_n\)` is approximately normal, with mean `\(\mu\)` and s.d. `\(\sigma/\sqrt n\)`. 
+* However, we don't know `\(\sigma\)`, and if we want to use the sample estimate `\(s\)` for `\(\sigma\)` then we can't say that `\(\bar x_n\)` is approximately normal, but will instead be `\(t\)` distribution with `\(n-1\)` d.o.f. under certain conditions
+* Conditions needed:
+  - Independent sample observations (satisfied w/ random sample)
+  - Normality of samples - each `\(x_i\)` is from a normal distribution (or approximately).  How to check?
+    * If `\(n&lt;30\)` and no clear outliers, then OK.
+    * If `\(n\geq 30\)` and no particularly *extreme* outliers, then OK
+* If these assumptions hold, then the confidence interval for the mean is
+
+&lt;img src="t.png" width="25%" /&gt;
+* `\(t^*_{df}\)` found same way as for `\(z^*\)`: `\(t^*_{df}\)` is s.t. the proportion of `\(t\)` distr with `\(df\)` d.o.f. within a distance `\(t^*_{df}\)` of 0 matches confidence level of interest 
+
+---
+.pull-left[ 
+### One sample t-intervals
+
+&lt;img src="t.png" width="50%" /&gt;
+
+
+* `\(t^*_{df}\)` found same way as for `\(z^*\)`: `\(t^*_{df}\)` is s.t. the proportion of `\(t\)` distr with `\(df\)` d.o.f. within a distance `\(t^*_{df}\)` of 0 matches confidence level
+* Recall if we wanted to find `\(z^*\)` corresponding to 95% confidence level, we could calculate
+  - `qnorm(1 - 0.05/2) = qnorm(0.97.5)` `\(= 1.95 \approx 2\)`
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/unnamed-chunk-22-1.png" width="65%" /&gt;
+]
+
+--
+
+.pull-right[
+* Same idea holds for finding `\(t^*_{df}\)`: to get confidence level of `\(1-\alpha\)`, we use
+  - `qt(1 - alpha/2, df = df)`
+* E.g. if d.o.f. = 5 and we want 95% confidence level,
+
+```r
+qt(1 - 0.05/2, df = 5)
+#&gt; [1] 2.570582
+```
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/unnamed-chunk-24-1.png" width="75%" /&gt;
+]
+
+---
+.pull-left[
+#### Example: mercury in tuna
+* Let's consider problem of measuring the amount of mercury in tuna
+* High mercury concentrations can be dangerous for the tuna and humans that eat them
+* Suppose we have a random sample of 19 tunas, with measurements as follows; measurements in micrograms mercury / gram tuna
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Min &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Max &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 19 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 4.4 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 2.3 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 1.7 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 9.2 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+* Conditions for applying `\(t\)` distr. satisfied?   
+  - Independent since random sample
+  - `\(n&lt;30\)` and summary stats suggest no clear outliers.
+  - All good
+]
+
+--
+
+.pull-right[
+* Let's calculate 95% confidence interval
+* Calculate standard error:
+$$ SE = \frac{s}{\sqrt n} = \frac{2.3}{\sqrt{19}} = 0.528$$
+* Since d.o.f. is `\(n-1=19-1\)`, calculate `\(t^*_{19-1}\)` for `\(1-0.05\)` confidence level:
+
+```r
+qt(1-0.05/2, df = 18)
+#&gt; [1] 2.100922
+```
+* Thus 95% confidence interval is 
+
+$$
+\begin{aligned}
+\bar{x} \ &amp;\pm\  t^{\star}_{18} \times SE \newline \\
+4.4 \ &amp;\pm\  2.10 \times 0.528 \newline \\
+(3.29 \  &amp;, \ 5.51)
+\end{aligned} 
+$$
+* We are 95% confident that average mercury content in tunas is between 3.29 and 5.51 micrograms per gram of tuna - very high. 
+]
+
+---
+
+.pull-left[
+#### One sample `\(t\)`-tests 
+* We now know how to calculate a `\(t\)`-distribution based confidence interval
+* Let's look now at hypothesis tests for the mean
+* **T score** is a ratio of how the sample mean differs from the hypothesized mean as compared to how the observations vary.
+
+$$ T = \frac{\bar{x} - \mbox{null value}}{s/\sqrt{n}} $$
+
+* When the null hypothesis is true and the conditions are met, T has a t-distribution with `\(df = n - 1.\)` Conditions:
+  -   Independent observations.
+  -   Large samples and no extreme outliers.
+]
+
+--
+
+.pull-right[
+* Example: testing whether runners in Washington, DC races are getting slower or faster over time
+* In 2006, DC Cherry Blossom Race (10 miles) had average of 93.29 minutes
+* Will use data from 100 participants from 2017 to determine whether runners are getting faster or slower (vs. possiblity of no change)
+  - Null hypothesis `\(H_0\)`: average 10 mile time is same in 2006 as in 2017, so `\(\mu = 93.29\)`
+  - Alternative hypothesis `\(H_A\)`: average 10 mile run time is different in 2017; `\(\mu \neq 93.29\)`
+* Data looks like:
+
+&lt;img src="lec20-inference-single-mean_files/figure-html/unnamed-chunk-27-1.png" width="60%" /&gt;
+* Large enough samples, no extreme outliers, can proceed 
+]
+
+---
+.pull-left[
+* To do the hypothesis test, same procedure as before
+  - Normal setting: find Z-score using observed value, null value, standard error, then use normal distribution to calculate tail area / p value
+  - This setting: T-score using observed value, null value, standard error, then use **t distribution** to calculate tail area / p value
+* For sample of 100 runners, 2017 data had average of 98.78 and s.d. of 16.59; average run time in 2006 was 93.29
+* First calculate standard error:
+
+$$ SE = \frac{s}{\sqrt{n}} = \frac{16.59}{\sqrt{100}} = 1.66$$
+
+* T score:
+
+$$ T = \frac{\text{observed}-\text{null}}{SE} = \frac{98.8 - 93.29}{1.66} = 3.32$$
+]
+
+--
+
+.pull-right[
+* We have `\(n=100\)` observations, so `\(df=100-1=99\)`.
+&lt;img src="lec20-inference-single-mean_files/figure-html/unnamed-chunk-28-1.png" width="75%" /&gt;
+* We can use `pt` to find this; by symmetry, area to right of 3.32 is same as area to left of -3.32, so
+
+```r
+pt(-3.32, df = 99)
+#&gt; [1] 0.0006305322
+```
+* Double this to get the p-value - 0.00126. 
+* Since `\(p\)`-value is `\(&lt;0.05\)`, we can reject the null hypothesis at 95% confidence level.
+  - Can reject at even 99% confidence level. 
+  - Thus average run time in 2017 is different than 2006. 
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
