@@ -147,6 +147,9 @@ Determine which is which, and explain your reasoning.
 ```{r}
 #| echo: false
 #| out.width: 100%
+
+# NOTE to students: you do not have this image, so 
+# you can just comment out the following line when you are writing your hw.
 knitr::include_graphics("t_dist.png")
 ```
 
