@@ -97,6 +97,8 @@ Summary statistics for how students performed on these two exams are shown below
 
 ]
 
+--
+
 .pull-right[
 
 &lt;img src="lec21-inference-two-means_files/figure-html/fig-boxplotTwoVersionsOfExams-1.png" width="432" /&gt;
@@ -133,6 +135,8 @@ Summary statistics for how students performed on these two exams are shown below
 * In the actual data we got, we have sample mean of 75.1 in group A, 72.0 in group B, difference of 3.1 - highlighted above. 
 * We see that `\(\approx 60+25 = 85\)` out of 1,000 bootstrap trials result in difference greater than 3.1, similarly around 85/1,000 result in negative difference of more than -3.1 
 ]
+
+--
 
 .pull-right[
 * We therefore get a p-value of approximately `\(0.17 = 2*85/1,000\)`.  
@@ -391,6 +395,8 @@ Conditions:
 
 ]
 
+--
+
 .pull-right[
 
 * We want to model the difference in sample means using `\(t\)`-distribution; need to check assumptions necessary for this
@@ -442,6 +448,9 @@ $$ T = \frac{\bar x_1 - \bar x_2 - 0}{SE} = \frac{6.68-7.27}{0.155} = -3.69$$
 &lt;img src="lec21-inference-two-means_files/figure-html/unnamed-chunk-15-1.png" width="100%" /&gt;
 
 ]
+
+--
+
 .pull-right[ 
 
 * degrees of freedom = `\(\min(n_1-1, n_2-1) = 113\)`
@@ -477,6 +486,8 @@ Degrees of freedom: `\(\min(n_1-1, n_2-1)\)`
 
 ]
 
+--
+
 .pull-right[
 
 The margin of error for `\(\bar{x}_1 - \bar{x}_2\)` can be directly obtained from `\(SE(\bar{x}_1 - \bar{x}_2).\)`
@@ -503,6 +514,15 @@ $$
 
 95% confident that heart pumping function in sheep that received ESC cells is between 3.32% and 12.34% higher than for sheep that did not receive ESC
 ]
+
+---
+
+#### Practice problems
+* IMS 20.5(a)
+* IMS 20.12(b), (c)
+* Take 3 minutes to think about the problem, discuss with your neighbors
+* I'll call on one of you and ask what your thoughts are for how to approach the problem
+* Not expecting you to have the right answer!  Just want to hear how you approach the problem, then help guide you through thinking about the next steps 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
