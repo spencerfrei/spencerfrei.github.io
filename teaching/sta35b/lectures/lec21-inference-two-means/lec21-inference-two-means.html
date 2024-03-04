@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inference for comparing two means</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei   Figures taken from [IMS], Cetinkaya-Rundel and Hardin text" />
+    <script src="lec21-inference-two-means_files/header-attrs-2.25/header-attrs.js"></script>
+    <script src="lec21-inference-two-means_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec21-inference-two-means_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inference for comparing two means
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei <br> Figures taken from [IMS], Cetinkaya-Rundel and Hardin text
+]
+
+---
+
+  
+
+
+  
+
+.pull-left[
+
+* We saw last class how to use the bootstrap to develop confidence intervals and hypothesis tests for a single mean `\(\mu\)` - e.g. we want to understand a single numeric value about a population (height, speed, etc)
+* We'll now see how to develop confidence intervals and hypothesis tests for the *difference* of two means, `\(\mu_1 - \mu_2\)`; mean of two different populations (e.g. average height of Americans vs. Canadians)
+  - Point estimate for single mean: `\(\bar x\)`
+  - Point estimate for difference `\(\mu_1-\mu_2\)`: `\(\bar x_1 - \bar x_2\)`, where `\(\bar x_i\)` is sample mean from population `\(i\)`
+* Many of the ideas we explored for understanding two proportions will carry over
+  - Randomization tests
+  - Bootstrap for difference of means
+  - Mathematical approach (Central Limit)
+]
+
+--
+
+.pull-right[
+* Examples of settings where we may want to understand difference of means in two populations:
+  - Seeing whether pregnant women who are smokers vs. non-smokers have differences in baby weight
+  - Examining whether there is significant evidence that one exam was harder than another
+  - Seeing whether Americans or Canadians have different heights
+]
+
+---
+
+.pull-left[
+### Randomization test for difference in means
+
+* An instructor decided to run two slight variations of the same exam.
+* Prior to passing out the exams, they shuffled the exams together to ensure each student received a random version.
+* Anticipating complaints from students who took Version B, they would like to evaluate whether the difference observed in the groups is so large that it provides convincing evidence that Version B was more difficult (on average) than Version A.
+
+Summary statistics for how students performed on these two exams are shown below.
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:center;"&gt; Group &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Min &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Max &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; A &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 58 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 75.10345 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.86867 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 44 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; B &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 55 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 71.96364 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.77056 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 38 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+]
+
+.pull-right[
+
+&lt;img src="lec21-inference-two-means_files/figure-html/fig-boxplotTwoVersionsOfExams-1.png" width="432" /&gt;
+* Hypotheses to evaluate whether observed difference in sample means is likely to have happened due to chance:
+  - `\(H_0\)`: exams are equally difficult on average; `\(\mu_A - \mu_B=0\)`.
+  - `\(H_A\)`: one exam is more difficult than other; `\(\mu_A - \mu_B \neq 0\)`
+* Observations regarding the setup:
+  - Independence *within* each group and *between* groups since exams shuffled and randomly passed out
+  - min/max values suggest no outliers 
+]
+
+---
+.pull-left[
+#### Variability of the statistic
+* Previously: variability of difference in proportions `\(\hat p_1 - \hat p_2\)` estimated by randomly assigning treatment to each observation
+* Here we do similarly: we take all exam scores and then randomly assign whether they are in group A or group B, then look at what the difference `\(\bar x_{A,sim1} - \bar x_{B,sim1}\)` is
+* We are simulating the null hypothesis, which is that `\(\mu_A=\mu_B\)`, so treating each person as group A or group B doesn't matter
+
+&lt;img src="rand2means.png" width="95%" /&gt;
+]
+--
+.pull-right[
+* When we repeat this 1,000 times, we get an estimate of what the natural variability in `\(\bar x_A - \bar x_B\)` is when there is no actual dependence between group and score on the exam.
+
+&lt;img src="lec21-inference-two-means_files/figure-html/fig-randexamspval-1.png" width="432" /&gt;
+* In the actual data we got, we have sample mean of 75.1 in group A, 72.0 in group B, difference of 3.1 - highlighted above. 
+* We see that `\(\approx 60+25 = 85\)` out of 1,000 bootstrap trials result in difference greater than 3.1, similarly around 85/1,000 result in negative difference of more than -3.1 
+]
+
+---
+
+.pull-left[
+&lt;img src="lec21-inference-two-means_files/figure-html/unnamed-chunk-5-1.png" width="432" /&gt;
+* In the actual data we got, we have sample mean of 75.1 in group A, 72.0 in group B, difference of 3.1 - highlighted above. 
+* We see that `\(\approx 60+25 = 85\)` out of 1,000 bootstrap trials result in difference greater than 3.1, similarly around 85/1,000 result in negative difference of more than -3.1 
+]
+
+.pull-right[
+* We therefore get a p-value of approximately `\(0.17 = 2*85/1,000\)`.  
+* If we used an `\(\alpha = 0.05\)` threshold, we would not be able to reject the null hypothesis
+* Put another way: the type of difference in the performance on these exams that we saw was fairly likely to occur due to random chance.
+]
+
+---
+
+.pull-left[
+#### Bootstrap confidence interval for difference in means
+* Let's refresh how we did bootstrap confidence interval for difference in *proportions* 
+]
+
+
+.pull-right[
+* We now have samples from two different groups, and we will re-sample from each group to calculate bootstrap proportions `\(\hat p_{1,boot1}, \hat p_{2,boot2}\)` from each group.
+* We use this to tally up different estimates of the proportions in each bootstrap sample, which gives us an estimate of how much variability there is in the sample proportions (and thus the difference in sample proportions)
+]
+
+&lt;img src="boot2propresamps.png" width="110%" /&gt;
+
+---
+
+.pull-left[
+#### Bootstrap confidence interval for difference in means
+* Let's now think of a setting where we have two random samples from different groups with a numeric variable of interest
+* E.g. assessing 2 car lots, seeing which one has a cheaper average, using a sample from each
+
+]
+
+.pull-right[
+* We take *bootstrap samples* from **each** group
+* then calculate sample means in each bootstrap sample, `\(\bar x_{1, boot1}\)` and `\(\bar x_{2, boot2}\)`,
+* then use these to calculate estimated difference in means `\(\bar x_{1,boot1} - \bar x_{2, boot2}\)`
+]
+
+&lt;img src="bootmeans2means.png" width="70%" /&gt;
+
+---
+
+.pull-left[
+#### Case study
+* Consider the following experiment that seeks to examine whether using embryonic stem cells (ESC) help improve heart function following a heart attack
+* In experiment, people are randomly assigned to treatment (ESC) and control groups, and then heart pumping capacity was measured in a study
+* We want to identify 95% confidence interval for effect of ESC on change in heart pumping capacity
+* Summary statistics from experiment:
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Group &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 6em; "&gt; ESC &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 3.50 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 5.17 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 6em; "&gt; Control &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; -4.33 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 2.76 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+]
+
+--
+.pull-right[
+* Point estimate of the difference in heart pumping:  difference in the sample means.
+
+`$$\bar{x}_{esc} - \bar{x}_{control}\   =\ 3.50 - (-4.33)\   =\ 7.83$$`
+
+* We now want to use bootstrap to estimate the variability of difference in sample means when taking repeated samples
+* We take bootstrap samples (sample with replacement) within each group, then use this to compute a bootstrap-estimated difference in sample means
+
+`$$\bar x_{esc,i} - \bar x_{control,i}$$`
+
+* This produces a bootstrap distribution of sample means 
+]
+
+---
+
+.pull-left[
+
+* Summary statistics from data:
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Group &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 6em; "&gt; ESC &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 3.50 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 5.17 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 6em; "&gt; Control &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; -4.33 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 6em; "&gt; 2.76 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+* Results of 1,000 bootstrap trials: 
+&lt;img src="lec21-inference-two-means_files/figure-html/fig-bootexamsci-1.png" width="432" /&gt;
+
+]
+
+--
+
+.pull-left[
+* We see that the difference in the bootstrapped means at a 90% confidence level does not include 0, so we can conclude that ESC substantially increases heart pumping capacity
+* If the 90% confidence interval did include 0, then we would not have enough evidence to conclude that ESC substantially increases heart pumping capacity
+  - Note that we *do not* say that "we have evidence that ESC does not change heart pumping capacity"
+]
+
+---
+
+.pull-left[
+### Mathematical model for testing difference in means
+* We'll now describe a mathematical approach for testing difference in means
+* Running dataset that we'll use: `births14` dataset in **openintro** package.  Consists of randomly sampled survey of mothers in the US.  First few rows below.
+* Want to know: is there evidence that newborns from smokers have different birth weight than non-smokers?
+]
+
+
+.pull-right[
+* Setting up hypotheses:
+  - `\(H_0\)`: no difference in average birthweight for newborns from smoking vs. non-smoking mothers; `\(\mu_n - \mu_s =0\)`, where `\(\mu_n\)`: avg birthweight of non-smokers, `\(\mu_s\)`: smokers. 
+  - `\(H_A\)`: There is some difference, `\(\mu_n -\mu_s \neq 0\)`. 
+* Summary statistics from the data:
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Habit &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; nonsmoker &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 867 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 7.27 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 1.23 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; smoker &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 114 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 6.68 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 1.60 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+]
+
+
+&lt;table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:center;"&gt; fage &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; mage &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; weeks &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; visits &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; gained &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; weight &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; sex &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; habit &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; 34 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 34 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 37 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 14 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 28 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 6.96 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; nonsmoker &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; 36 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 31 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 41 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 12 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 41 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 8.86 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; nonsmoker &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; 37 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 36 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 37 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 28 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 7.51 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; nonsmoker &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:center;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 16 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 38 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 29 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 6.19 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; nonsmoker &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+---
+.pull-left[
+#### Variability of the statistic
+* The **test statistic for comparing two means** is a T score
+
+T score is a ratio of how the groups differ as compared to how the observations within a group vary.
+
+`$$T = \frac{\text{point est.} - \text{null}}{SE} = \frac{(\bar{x}_1 - \bar{x}_2) - 0}{\sqrt{s_1^2/n_1 + s_2^2/n_2}}$$`
+
+When the null hypothesis is true and the conditions are met, T has a t-distribution with `\(df = min(n_1 - 1, n_2 -1).\)`
+
+Conditions:
+
+-   Independent observations within and between groups.
+-   Large samples and no extreme outliers.
+
+]
+
+.pull-right[
+
+* We want to model the difference in sample means using `\(t\)`-distribution; need to check assumptions necessary for this
+  1. **Independence**: since randomly sampled, samples are independent
+  2. **Nearly-normal data**: both groups have `\(&gt;30\)` observations, so we need to look at data to see if there are any extreme outliers
+
+&lt;img src="lec21-inference-two-means_files/figure-html/fig-babySmokePlotOfTwoGroupsToExamineSkew-1.png" width="432" /&gt;
+
+* No apparent extreme outliers, so all conditions needed to satisfy `\(t\)` distribution assumptions hold
+* So we can proceed with the analysis
+]
+
+---
+
+.pull-left[
+* Let's now complete the hypothesis test from previous data
+* Let's assume `\(\alpha=0.05\)` (95% significance level)
+* Summary statistics from before: 
+
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Habit &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; nonsmoker &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 867 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 7.27 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 1.23 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 7em; "&gt; smoker &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 114 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 6.68 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 7em; "&gt; 1.60 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+$$ SE = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}} = \sqrt{\frac{1.23^2}{867} + \frac{1.60^2}{114}} = 0.155$$
+$$ T = \frac{\bar x_1 - \bar x_2 - 0}{SE} = \frac{6.68-7.27}{0.155} = -3.69$$
+&lt;img src="lec21-inference-two-means_files/figure-html/unnamed-chunk-15-1.png" width="100%" /&gt;
+
+]
+.pull-right[ 
+
+* degrees of freedom = `\(\min(n_1-1, n_2-1) = 113\)`
+* Compute the one-sided tail area: 
+
+```r
+pt(-3.69, df = 113)
+#&gt; [1] 0.0001733097
+```
+* Doubling this gives p-value of 0.00034.
+* The p-value is much smaller than the significance value, 0.05, so we reject the null
+hypothesis. The data provide is convincing evidence of a difference in the average
+weights of babies born to mothers who smoked during pregnancy and those who did
+not.
+]
+
+---
+
+.pull-left[
+#### Mathematical model for estimating difference in means
+**Using the** `\(t\)`**-distribution for a difference in means.**
+
+* The `\(t\)`-distribution can be used for inference when working with the standardized difference of two means if
+  -   *Independence* (extended). The data are independent within and between the two groups, e.g., the data come from independent random samples or from a randomized experiment.
+  -   *Normality*. We check the outliers for each group separately.
+
+The standard error may be computed as
+
+`$$SE = \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}$$`
+
+Degrees of freedom: `\(\min(n_1-1, n_2-1)\)` 
+
+
+]
+
+.pull-right[
+
+The margin of error for `\(\bar{x}_1 - \bar{x}_2\)` can be directly obtained from `\(SE(\bar{x}_1 - \bar{x}_2).\)`
+
+$$ \text{Margin of error} = t^\star_{df} \times \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}},$$
+
+`\(t^\star_{df}\)`: calculated from percentile of t-distr w/ *df* d.o.f.
+
+* 95% confidence interval for effect of ESC on change in heart pump capacity: 
+
+`$$\begin{aligned}
+\bar{x}_{esc} - \bar{x}_{control} &amp;= 7.83 \\
+SE &amp;= \sqrt{\frac{5.17^2}{9} + \frac{2.76^2}{9}} = 1.95
+\end{aligned}$$`
+
+Critical value of `\(t^{\star}_{8} = 2.31\)` for a 95% conf. interval: `qt(0.025, 8)` returns -2.31
+
+$$
+\begin{aligned}
+\text{point estimate} \ &amp;\pm\ t^{\star} \times SE \implies 
+7.83 \ \pm\ 2.31\times 1.95
+\end{aligned} 
+$$
+
+95% confident that heart pumping function in sheep that received ESC cells is between 3.32% and 12.34% higher than for sheep that did not receive ESC
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
