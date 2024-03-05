@@ -1,0 +1,58 @@
+---
+title: 'Lab 7'
+author: ''
+output:
+  pdf_document
+---
+
+
+```{r set-up, echo = FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      echo = TRUE, 
+                      message = FALSE)
+```
+
+
+```{r load-packages, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(ggthemes) 
+```
+
+
+ 
+### Question 1
+
+One consultant says US average complication rate for surgeries is 30%, but out of his 62 patients, his complication rate is 4.84%. He claims that his complication rate is not 30%.
+
+(1) Formulate a hypothesis test, specifying the null and the alternative hypothesis. (1 pt).
+
+(2) Use `rbinom` to generate 10000 binomial random samples with 62 trials ($n = 62$) and  success probability of 0.3 ($p = 0.3$). Name these samples as 'num_successes' (1 pt).
+
+(3) Calculate the proportion of each sample. Save the proportions as a tibble 'bin.prop' (1 pt).
+
+(4) Plot a histogram of 'bin.prop'(1 pt).
+
+(5) Is success-failure condition satisfied (1 pt)?
+
+(6) Calculate the $SE(\hat{p})$ in hypothesis testing, and save it as 'se' (1 pt).
+
+(7) Calculate the z-score of $\hat{p}$, and save it as 'z' (1 pt).
+
+(8) Calculate the $p-value$, and save it as 'p' (2 pts).
+
+(9) Can we reject the null hypothesis at significance level of 0.05 (1 pt)?
+
+\newpage 
+
+### Question 2
+In 2006, DC Cherry Blossom Race (10 miles) had average of 100 minutes. Will use data from 100 participants from 2017 to determine whether runners are getting faster. For sample of 100 runners, 2017 data had average of 101 and s.d. of 16.59.
+
+(1) Formulate a hypothesis test, explaining what the null hypothesis and alternative hypothesis are. 
+
+(2) What distribution shall we use for the test statistic for the hypothesis test (1 pt)?
+
+(3) Calculate a T-score, and save it as 't' (1 pt).
+
+(4) Use `pt` to calculate the p-value and name it as 'p'(1 pt).
+
+(5) Can we reject at level 0.05 (1 pt)?
