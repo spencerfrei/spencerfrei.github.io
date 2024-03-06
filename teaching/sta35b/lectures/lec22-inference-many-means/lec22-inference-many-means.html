@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inference for comparing many means</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei   Figures taken from [IMS], Cetinkaya-Rundel and Hardin text" />
+    <script src="lec22-inference-many-means_files/header-attrs-2.25/header-attrs.js"></script>
+    <script src="lec22-inference-many-means_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec22-inference-many-means_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inference for comparing many means
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei <br> Figures taken from [IMS], Cetinkaya-Rundel and Hardin text
+]
+
+---
+
+  
+
+
+  
+
+.pull-left[
+* We saw last class how to compare population means of two different populations 
+* Suppose we want to compare means across many populations (SAT scores by city, e.g.)
+* We could imagine doing all pairwise comparisons: LA vs SF, SF vs San Jose, Davis vs San Jose, ... 
+* However, as we do more and more comparisons, likely that we will see differences in data that are solely due to random chance
+* This is the goal of the **analysis of variance** (ANOVA) technique which we will talk about today
+]
+
+.pull-right[
+* ANOVA uses a *single* hypothesis test to check whether means across many groups are equal.  If `\(k\)` groups,
+
+-   `\(H_0:\)` The mean outcome is the same across all groups: `\(\mu_1 = \mu_2 = \cdots = \mu_k\)` where `\(\mu_j\)` represents the mean of the outcome for observations in category `\(j.\)`
+-   `\(H_A:\)` At least one mean is different.
+
+Must check three conditions on the data before performing ANOVA:
+
+-   the observations are independent within and between groups,
+-   the responses within each group are nearly normal, and
+-   the variability across the groups is about equal.
+]
+
+---
+
+.pull-left[
+### Example
+* College departments commonly run multiple sections of the same introductory course each semester because of high demand.
+* Consider a statistics department that runs three sections of an introductory statistics course.
+* We might like to determine whether there are substantial differences in first exam scores in these three classes (Section A, Section B, and Section C).
+* Describe appropriate hypotheses to determine whether there are any differences between the three classes.
+
+]
+
+--
+.pull-right[
+The hypotheses may be written in the following form:
+
+-   `\(H_0:\)` The average score is identical in all sections, `\(\mu_A = \mu_B = \mu_C\)`. Assuming each class is equally difficult, the observed difference in the exam scores is due to chance.
+-   `\(H_A:\)` The average score varies by class. We would reject the null hypothesis in favor of the alternative hypothesis if there were larger differences among the class averages than what we might expect from chance alone.
+]
+
+---
+
+.pull-left[
+* Strong evidence favoring the alternative hypothesis in ANOVA typically comes from unusualyl large differences in the group means
+* Key to assessing this is looking at how much the means differ relative to the variability of individual observations within each group
+
+]
+
+
+.pull-right[
+* Look at data below; does it look like the differences in group means could come from random chance? Compare I vs II vs III, then compare IV vs V vs VI
+* For groups I/II/III, random chance seems plausible
+* For groups IV/V/VI, difference in group centers seem very large relative to variability within each group - possibly due to true differences across groups
+]
+
+
+&lt;img src="lec22-inference-many-means_files/figure-html/fig-toyANOVA-1.png" width="432" /&gt;
+
+---
+
+.pull-left[
+#### F distribution
+* We saw previously that for comparing two means, or looking at one mean, we had `\(t\)` distribution/statistic as relevant
+* For comparing many means, we will use `\(F\)` distribution/statistic
+* **Goal**: assess whether or not the variability we see in sample means is so large that it is unlikely to be due to random chance
+* To do this, we compute the **sum of squares between groups**.
+* For each group, we can calculate a sample mean `\(\bar x_i\)`, `\(i=1, ..., k\)` if you have `\(k\)` groups (each group has `\(n_i\)` people)
+* We can also calculate the sample mean across *all* observations, `\(\bar x\)`
+
+`$$\begin{align*}\text{sum of squares btwn groups}&amp;=SSG \newline\\
+&amp;= \sum_{j=1}^k n_j (\bar x_j - \bar x)^2\end{align*}$$`
+
+]
+
+.pull-right[
+* We want to compare this to the total variability of all samples to the total mean across all samples using **sum of squared errors**
+
+`$$\begin{align*}SSE&amp;= \sum_{i=1}^n ( x_i - \bar x)^2\end{align*}$$`
+* The **mean square between groups** is normalized version of SSG, and **mean squared errors** is normalized version of SSE:
+
+`$$\begin{align*} MSG &amp;= \frac{1}{\mathsf{df}_G} SSG = \frac{1}{k-1} SSG,\newline MSE&amp;=\frac{1}{\mathsf{df}_E} SSE =\frac{1}{n-k} SSE.\end{align*}$$`
+* The F-statistic is ratio of these two quantities:
+`$$F = \frac{MSG}{MSE}$$`
+* Under null hypothesis that all means are the same, and under conditions, F has `\(F\)` distribution with `\(df_1=k-1\)`, `\(df_2=n-k\)`. 
+]
+
+
+---
+
+### Test statistic for three or more means is an F
+
+.pull-left[ 
+The F statistic is a ratio of how the groups differ (MSG) as compared to how the observations within a group vary (MSE).
+
+`$$F = \frac{MSG}{MSE}$$`
+
+When the null hypothesis is true and the conditions are met, F has an F-distribution with `\(df_1 = k-1\)` and `\(df_2 = n-k.\)`
+
+Conditions:
+
+-   independent observations, both within and across groups\
+-   large samples and no extreme outliers
+]
+
+.pull-right[
+* F distribution is determined by two paramaters, `\(df_1\)` and `\(df_2\)`, representing two degrees of freedom
+* F distribution in general does NOT look like t distribution or normal distribution - it is always non-negative, so cannot be something which can take negative values
+&lt;img src="F.png" width="85%" /&gt;
+
+]
+
+.pull-left[
+### Example: Batting in MLB
+* Let's see whether batting performance of baseball players differs according to position
+  - Outfielder (OF)
+  - Infielder (OF)
+  - Catcher (C)
+* Dataset: 429 MLB players frmo 2018, each &gt;= 100 at bats
+* We are interested in whether or not the *on-base percentage* (OBP) differs across these 3 groups
+* First few rows: 
+
+
+&lt;table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; name &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; team &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; position &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; AB &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; H &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; HR &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; RBI &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; AVG &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; OBP &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Abreu, J &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; CWS &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 499 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 132 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 22 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 78 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.265 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.325 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Acuna Jr., R &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; ATL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; OF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 433 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 127 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 26 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 64 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.293 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.366 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adames, W &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; TB &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 288 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 80 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 34 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.278 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.348 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adams, M &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; STL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 306 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 73 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 21 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 57 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.239 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.309 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+]
+
+.pull-right[
+* Some variables and descriptions: 
+
+
+```
+#&gt; # A tibble: 6 × 2
+#&gt;   variable col1                                       
+#&gt;   &lt;chr&gt;    &lt;chr&gt;                                      
+#&gt; 1 name     Player name                                
+#&gt; 2 team     abbreviated name of the player's team      
+#&gt; 3 position player's primary field position (OF, IF, C)
+#&gt; 4 AB       Number of opportunities at bat             
+#&gt; 5 AVG      Batting average, H/AB                      
+#&gt; 6 OBP      On-base percentage
+```
+
+* Null and alternative hypotheses:
+  - `\(H_0: \mu_{OF} = \mu_{IF} = \mu_C\)`, the OBP for outfielders, in-fielders, and catchers is the same
+  - `\(H_A: \mu_{OF} \neq \mu_{IF}\)`, `\(\mu_{IF} \neq \mu_C\)`, or `\(\mu_{OF} \neq \mu_C\)` - there is some difference among these three groups 
+]
+
+---
+
+.pull-left[
+#### Example: class data
+* Recall the exams data from last lecture which demonstrated a two-sample randomization test for a comparison of means.
+* Suppose now that the teacher had had such an extremely large class that three different exams were given: A, B, and C.
+* We provide a summary of the data including exam C in table and boxplot to the right
+* Want to investigate whether the difficulty of the exams is the same across the three exams
+* Hypothesis test:
+
+  -   `\(H_0: \mu_A = \mu_B = \mu_C.\)` The inherent average difficulty is the same across the three exams.
+  -   `\(H_A:\)` not `\(H_0.\)` At least one of the exams is inherently more (or less) difficult than the others.
+
+
+
+]
+
+.pull-right[
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Exam &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Min &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Max &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; A &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 58 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 75.1 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 44 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; B &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 55 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 72.0 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.8 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 38 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; C &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 51 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 78.9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.1 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 45 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+&lt;img src="lec22-inference-many-means_files/figure-html/fig-boxplotThreeVersionsOfExams-1.png" width="432" /&gt;
+* Next: randomization test
+]
+
+
+---
+
+.pull-left[
+* Idea of the randomization test with many means is the same as in two means
+
+&lt;img src="randANOVA.png" width="100%" /&gt;
+
+* In each randomization test, we calculate SSG/SSE and use this to calculate F statistics
+* Since the groups are randomized, the population means under the randomization are the same, so we can see the types of outcomes that result from pure random sampling
+* We plot the outcome of 1,000 randomization trials to the right
+
+
+]
+
+.pull-right[
+
+&lt;img src="lec22-inference-many-means_files/figure-html/fig-rand3exams-1.png" width="90%" /&gt;
+* Our data's observed test statistic had `\(F = 3.48\)`
+* We see this is quite unlikely - in this randomization test, fewer than 3% of instances where means are equal result in this extreme of a value 
+]
+
+
+---
+
+.pull-left[ 
+#### Mathematical model, test for comparing 3+ means
+* Under null hypothesis that all means are equal and under conditions of (1) independence, (2) approximately normal (large sample size, no extreme outliers), and (3) nearly the same variance across groups, we know that
+
+$$ F = \frac{MSG}{MSE} \text{ has `\(F(df=n_1-1, df=n_2-1)\)` distribution}$$
+
+* We can thus use a mathematical approach for using `\(F\)` statistic to evaluate null hypothesis 
+
+* The right-tail area for the `\(F\)` statistic gives the `\(p\)`-value for the problem 
+
+* Similar functions in R can be used to calculate percentiles and areas for F statistics
+  - pnorm, pt, pf - percent of data to the left of a certain value
+  - qnorm, qt, qf - value corresponding to data at a certain percentile
+]
+
+.pull-right[
+* So if we return to the data here
+&lt;table class="table table-striped table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Exam &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Mean &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; SD &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Min &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Max &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; A &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 58 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 75.1 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 44 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; B &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 55 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 72.0 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.8 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 38 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 5em; "&gt; C &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 51 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 78.9 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 13.1 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 45 &lt;/td&gt;
+   &lt;td style="text-align:center;width: 5em; "&gt; 100 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+* The `\(F\)` statistic for this data was 3.48
+
+* We can use mathematical approach for calculating `\(p\)`-value:
+
+
+```r
+pf(3.48, df1 = 2, df2 = 297)
+#&gt; [1] 0.9679305
+```
+* Only 3.4% of data is to the right of 3.48 
+* `\(p\)`-value of 0.034 &lt; 0.05 - can reject the null hypothesis 
+
+]
+
+
+---
+
+.pull-left[
+#### ANOVA tables from R
+* Let's again look at the MLB data (note we are using a modified version of the `mlb_players_18` dataset)
+&lt;table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; name &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; team &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; position &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; OBP &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Abreu, J &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; CWS &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.325 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Acuna Jr., R &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; ATL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; OF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.366 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adames, W &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; TB &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.348 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adams, M &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; STL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.309 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+* `position` has three levels:
+
+```r
+unique(mlb_players_18$position)
+#&gt; [1] OF IF C 
+#&gt; Levels: OF IF C
+```
+
+]
+
+.pull-right[
+* In R, to do analysis of variance, we use `lm()` and `anova()`:
+
+```r
+(mod &lt;- lm(OBP ~ position, data = mlb_players_18))
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = OBP ~ position, data = mlb_players_18)
+#&gt; 
+#&gt; Coefficients:
+#&gt; (Intercept)   positionIF    positionC  
+#&gt;    0.319819    -0.001433    -0.017881
+
+anova(mod) %&gt;%
+  tidy()
+#&gt; # A tibble: 2 × 6
+#&gt;   term         df  sumsq  meansq statistic  p.value
+#&gt;   &lt;chr&gt;     &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 position      2 0.0161 0.00803      5.08  0.00662
+#&gt; 2 Residuals   426 0.674  0.00158     NA    NA
+```
+* Degrees of freedom `\(df_1, df_2\)` found in column `\(df\)`
+* F statistic and p value can be found in final two columns
+* We need to be sure that all of the conditions needed for F statistic / ANOVA analysis to hold actually do (conditions on next slide)
+]
+
+---
+.pull-left[
+* Conditions for F-statistic/ANOVA analysis
+  - Independence: if data comes from simple random sample, this holds.  For MLB we aren't sure, so this might present problems, but let's assume it's OK
+  - Approximate normality - when sample size is large and no extreme outliers, then this is ok
+  - Approximately constant variance - variance within each group is approximately the same across groups
+]
+.pull-right[
+&lt;img src="lec22-inference-many-means_files/figure-html/unnamed-chunk-14-1.png" width="432" /&gt;
+* Does appear to be approximately normal, no extreme outliers
+* We see that variability across the groups is quite similar
+* So our F statistic analysis can proceed
+
+]
+
+---
+### Practice 
+* IMS 22.9(a, b)
+* IMS 22.9c
+* IMS 22.12(a,b)
+* IMS 22.12c
+* IMS 22.13(a,b)
+* Take 3 minutes to think about the problem, discuss with your neighbors
+* I'll call on one of you and ask what your thoughts are for how to approach the problem
+* Not expecting you to have the right answer!  Just want to hear how you approach the problem, then help guide you through thinking about the next steps 
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
