@@ -406,10 +406,11 @@ classdata %>%
 * We can use mathematical approach for calculating $p$-value:
 
 ```{r}
-pf(3.48, df1 = 2, df2 = 297)
+df2 <- 58+55+51 - 3
+pf(3.48, df1 = 2, df2 = df2)
 ```
-* Only 3.4% of data is to the right of 3.48 
-* $p$-value of 0.034 < 0.05 - can reject the null hypothesis 
+* Only 3.3% of data is to the right of 3.48 
+* $p$-value of 0.033 < 0.05 - can reject the null hypothesis 
 
 ]
 
