@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inference for comparing many means, and inference for linear regression</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Spencer Frei   Figures taken from [IMS], Cetinkaya-Rundel and Hardin text" />
+    <script src="lec23-inference-regression_files/header-attrs-2.25/header-attrs.js"></script>
+    <script src="lec23-inference-regression_files/kePrint-0.0.1/kePrint.js"></script>
+    <link href="lec23-inference-regression_files/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inference for comparing many means, and inference for linear regression
+]
+.subtitle[
+## <br><br> STA35B: Statistical Data Science 2
+]
+.author[
+### Spencer Frei <br> Figures taken from [IMS], Cetinkaya-Rundel and Hardin text
+]
+
+---
+
+  
+
+
+  
+
+.pull-left[
+#### F distribution
+* For comparing many means, we use `\(F\)` distribution/statistic
+* **Goal**: assess whether or not the variability we see in sample means is so large that it is unlikely to be due to random chance
+* To do this, we compute the **sum of squares between groups**.
+* For each group, we can calculate a sample mean `\(\bar x_i\)`, `\(i=1, ..., k\)` if you have `\(k\)` groups (each group has `\(n_i\)` people)
+* We can also calculate the sample mean across *all* observations, `\(\bar x\)`
+
+`$$\begin{align*}\text{sum of squares btwn groups}&amp;=SSG \newline\\
+&amp;= \sum_{j=1}^k n_j (\bar x_j - \bar x)^2\end{align*}$$`
+
+]
+
+.pull-right[
+* We want to compare this to the total variability of all samples to the total mean across all samples using **sum of squared errors**
+
+`$$\begin{align*}SSE&amp;= \sum_{i=1}^n ( x_i - \bar x)^2\end{align*}$$`
+* The **mean square between groups** is normalized version of SSG, and **mean squared errors** is normalized version of SSE:
+
+`$$\begin{align*} MSG &amp;= \frac{1}{\mathsf{df}_G} SSG = \frac{1}{k-1} SSG,\newline MSE&amp;=\frac{1}{\mathsf{df}_E} SSE =\frac{1}{n-k} SSE.\end{align*}$$`
+* The F-statistic is ratio of these two quantities:
+`$$F = \frac{MSG}{MSE}$$`
+* Under null hypothesis that all means are the same, and under conditions, F has `\(F\)` distribution with `\(df_1=k-1\)`, `\(df_2=n-k\)`. 
+]
+
+---
+
+#### ANOVA tables from R
+* Let's again look at the MLB data (note we are using a modified version of the `mlb_players_18` dataset)
+&lt;table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; name &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; team &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; position &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; OBP &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Abreu, J &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; CWS &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.325 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Acuna Jr., R &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; ATL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; OF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.366 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adames, W &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; TB &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.348 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adams, M &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; STL &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IF &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.309 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+* We checked last time that all of the conditions needed for applying F statistic hold, except possibly independence which we couldn't check (let's assume it does hold)
+
+* Output of ANOVA and lm in R:
+
+```r
+mod &lt;- lm(OBP ~ position, data = mlb_players_18)
+anova(mod) %&gt;%
+  tidy() %&gt;% kable() 
+```
+
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+
+---
+#### Understanding the ANOVA output in R
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+
+* You can derive this entire tibble by using just `df` and `sumsq` (and `pf()` to calc p-value from the statistic)
+
+
+|term      |  df|     sumsq|meansq |statistic |p.value |
+|:---------|---:|---------:|:------|:---------|:-------|
+|position  |   2| 0.0160627|X      |X         |X       |
+|Residuals | 426| 0.6739500|X      |X         |NA      |
+
+
+* For `position` = independent variable, `df` `\(=k-1\)` if `\(k\)` groups; `sumsq` &lt;-&gt; SSG, `meansq` &lt;-&gt; MSG
+* For `Residuals`, `df`$=n-k$; `sumsq` &lt;-&gt; SSE, `meansq` &lt;-&gt; MSE
+* `statistics` is the F statistic, `\(F = MSG/MSE\)`
+
+
+
+---
+#### Understanding the ANOVA output in R
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+
+* You can derive this entire tibble by using just `df` and `sumsq` (and `pf()` to calc p-value from the statistic)
+
+
+|term      |  df|     sumsq|    meansq|statistic |p.value |
+|:---------|---:|---------:|---------:|:---------|:-------|
+|position  |   2| 0.0160627| 0.0080314|X         |X       |
+|Residuals | 426| 0.6739500| 0.0015820|X         |NA      |
+
+
+* For `position` = independent variable, `df` `\(=k-1\)` if `\(k\)` groups; `sumsq` &lt;-&gt; SSG, `meansq` &lt;-&gt; MSG
+* For `Residuals`, `df`$=n-k$; `sumsq` &lt;-&gt; SSE, `meansq` &lt;-&gt; MSE
+* `statistics` is the F statistic, `\(F = MSG/MSE\)`
+
+.pull-left[ 
+* For `position`, `meansq` `\(\approx 0.016 / 2 = 0.008\)`
+* For `Residuals`, `meansq` `\(\approx 0.674 / 426 = 0.00158\)`
+]
+
+---
+#### Understanding the ANOVA output in R
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+
+* You can derive this entire tibble by using just `df` and `sumsq` (and `pf()` to calc p-value from the statistic)
+
+
+|term      |  df|     sumsq|    meansq| statistic|p.value |
+|:---------|---:|---------:|---------:|---------:|:-------|
+|position  |   2| 0.0160627| 0.0080314|  5.076574|X       |
+|Residuals | 426| 0.6739500| 0.0015820|        NA|NA      |
+
+
+* For `position` = independent variable, `df` `\(=k-1\)` if `\(k\)` groups; `sumsq` &lt;-&gt; SSG, `meansq` &lt;-&gt; MSG
+* For `Residuals`, `df`$=n-k$; `sumsq` &lt;-&gt; SSE, `meansq` &lt;-&gt; MSE
+* `statistics` is the F statistic, `\(F = MSG/MSE\)`
+
+.pull-left[ 
+* For `position`, `meansq` `\(\approx 0.016 / 2 = 0.008\)`
+* For `Residuals`, `meansq` `\(\approx 0.674 / 426 = 0.00158\)`
+* `statistic`: MSG/MSE `\(\approx 0.008/0.00158 \approx 5.07\)`
+]
+
+---
+#### Understanding the ANOVA output in R
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+
+* You can derive this entire tibble by using just `df` and `sumsq` (and `pf()` to calc p-value from the statistic)
+
+
+|term      |  df|     sumsq|    meansq| statistic|   p.value|
+|:---------|---:|---------:|---------:|---------:|---------:|
+|position  |   2| 0.0160627| 0.0080314|  5.076574| 0.0066242|
+|Residuals | 426| 0.6739500| 0.0015820|        NA|        NA|
+
+
+* For `position` = independent variable, `df` `\(=k-1\)` if `\(k\)` groups; `sumsq` &lt;-&gt; SSG, `meansq` &lt;-&gt; MSG
+* For `Residuals`, `df` `\(=n-k\)`; `sumsq` &lt;-&gt; SSE, `meansq` &lt;-&gt; MSE
+* `statistics` is the F statistic, `\(F = MSG/MSE\)`
+
+.pull-left[ 
+* For `position`, `meansq` `\(\approx 0.016 / 2 = 0.008\)`
+* For `Residuals`, `meansq` `\(\approx 0.674 / 426 = 0.00158\)`
+]
+
+.pull-right[
+* `statistic`: MSG/MSE `\(\approx 0.008/0.00158 \approx 5.07\)`
+* For `p.value`, can use `pf`:
+
+```r
+1 - pf(5.08, df1 = 2, df2 = 426)
+#&gt; [1] 0.006602098
+```
+
+]
+
+---
+
+.pull-left[
+### Inference for linear regression with a single variable 
+* Let's think about linear regression again
+* We'll consider setting where we have chain sandwich stores which spent different amounts on advertising and then the amount of revenue they received
+* Let's imagine we had access to **all** data, for all chain sandwich stores and amount spent on advertising, and it looked like this 
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/unnamed-chunk-12-1.png" width="80%" /&gt;
+
+]
+
+.pull-right[
+
+The population model is: `$$y = \beta_0 + \beta_1 x + \varepsilon.$$`
+
+If we had full information of all data in the true population, model would be: `$$\texttt{expected revenue} = 11.23 + 4.8 \times \texttt{advertising}.$$`
+* For every \$1,000 spent on advertising, revenue increases by \$4,800 on average
+* If we spent nothing on advertising, we expect \$11,230 revenue on average 
+* However, unrealistic to expect that we can have knowledge of **all** data---more realistically, we have knowledge of a sample. 
+]
+
+---
+
+.pull-left[
+* When we take samples, our estimates for the slope of the line in linear regression change from sample to sample
+
+
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-sand-samp1-1.png" width="432" /&gt;
+
+
+]
+
+--
+
+.pull-right[
+&lt;img src="lec23-inference-regression_files/figure-html/fig-sand-samp2-1.png" width="80%" /&gt;
+
+If we did this on many different samples of 20 stores, we would get varied lines:
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-slopes-1.png" width="80%" /&gt;
+]
+
+---
+.pull-left[
+* The relevant hypotheses for a linear model are about whether or not the population slope parameter is zero.
+  - `\(H_0\)`: `\(\beta_1 = 0\)`, no linear relationship between response and independent variable
+  - `\(H_A\)`: `\(\beta_1 \neq 0\)`, some linear relationship between response and independent variable
+
+* We can perform similar analyses that we used before:
+  - Randomization test
+  - Bootstrap confidence interval
+  - Mathematical approach
+
+]
+
+--
+
+.pull-right[
+#### Randomization test
+* In the randomization test, we randomly permute the responses 
+* Then any structure which existed in original dataset (for independent variable --&gt; response) disappears
+* This gives us a baseline for what types of variability we should expect under null hypothesis
+* E.g. let's consider **births14** dataset as before, which has baby birth weight and number of weeks of gestation
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-permweightScatter-1.png" width="432" /&gt;
+]
+
+---
+
+.pull-left[
+* When we do repeated randomizations, we see what types of slopes we would get when there is no relationship between the response and the independent variable.
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-permweekslm-1.png" width="432" /&gt;
+]
+
+--
+
+.pull-right[
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-nulldistBirths-1.png" width="432" /&gt;
+
+
+* If there were no linear relationship between `weight` and `weeks`, the natural variability of the slopes would produce estimates between approximately -0.15 and +0.15.
+ * We reject the null hypothesis.
+* We believe that the slope observed on the original data is not just due to natural variability---rather, we believe there is a linear relationship between `weight` of baby and `weeks` gestation 
+
+]
+
+---
+
+.pull-left[
+#### Bootstrap for confidence interval for the slope
+* Let's now consider looking at predicting weight of the baby as a function of mother's age
+* When we run the following code, we get
+
+```r
+model &lt;- lm(weight ~ mage, data = births14_100) 
+```
+
+
+
+
+&lt;table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; estimate &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; std.error &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; statistic &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; p.value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 10em; font-family: monospace;"&gt; (Intercept) &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 7.34 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 0.60 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 12.29 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;width: 10em; font-family: monospace;"&gt; mage &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 0.00 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 0.02 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; -0.11 &lt;/td&gt;
+   &lt;td style="text-align:right;width: 5em; "&gt; 0.915 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+* For bootstrap-, we will take bootstrap samples of the data (sampling with replacement) 
+* We will sometimes get the same sample in the resulting bootstrap, sometimes will not, sometimes get it twice
+]
+
+--
+
+.pull-right[
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-birth2BS-1.png" width="85%" /&gt;&lt;img src="lec23-inference-regression_files/figure-html/fig-birth2BS-2.png" width="85%" /&gt;
+
+]
+
+---
+
+.pull-left[
+* For each bootstrap sample, we compute a linear model on the data
+* We then plot a histogram of all of the different slopes we get
+* This gives us a sense of the variability of the slopes across random samples
+* Suppose all of the bootstrap slopes are given in the vector `slopes`
+* The following code would provide allow for calculating the bootstrap 95% confidence interval
+
+```r
+quantile(x, probs = c(0.025, 0.975))
+```
+
+]
+
+--
+
+.pull-right[
+
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-mageBSslopes-1.png" width="85%" /&gt;
+* From this we say that we are 95% confident that, for the model of weight of a baby described by mother's age, a one unit increase in mother's age will be associated with an increase in predicted average baby weight of between -0.01 and 0.081 pounds
+* This includes 0, so it is possible mother's age does not have meaningful linear relationship with baby's weight 
+]
+
+
+---
+
+.pull-left[
+### Mathematical model for testing a slope
+* Under certain conditions, can use the `\(t\)`-distribution to test and estimate the slope parameter in linear regression.  Conditions:
+
+-   **Linearity.** The data should show a linear trend.
+
+-   **Independent observations.** Be cautious about applying regression to data that are sequential observations in time, e.g. stock prices/day
+
+-   **Nearly normal residuals.** Generally, the residuals should be nearly normal.   When this condition is found to be unreasonable, it is often because of outliers or concerns about influential points
+    
+-   **Constant or equal variability.** The variability of points around the least squares line remains roughly constant.
+
+
+]
+
+--
+
+.pull-right[
+
+&lt;img src="lec23-inference-regression_files/figure-html/unnamed-chunk-26-1.png" width="100%" /&gt;
+
+
+]
+
+---
+
+.pull-left[
+### Example
+* Let's consider dataset that has info on elections, with unemployment rate and election outcomes in midterm elections
+* The question is whether higher unmployment rate entails worse performance for the current President's party
+* `midterms_house` data in *openintro* 
+
+```
+#&gt; tibble [31 × 5] (S3: tbl_df/tbl/data.frame)
+#&gt;  $ year        : int [1:31] 1899 1903 1907 1911 1915 1919 1923 1927 1931 1935 ...
+#&gt;  $ potus       : Factor w/ 19 levels "Barack Obama",..: 18 16 16 17 19 19 3 3 11 6 ...
+#&gt;  $ party       : Factor w/ 2 levels "Democrat","Republican": 2 2 2 2 1 1 2 2 2 1 ...
+#&gt;  $ unemp       : num [1:31] 11.62 4.3 3.29 5.86 6.63 ...
+#&gt;  $ house_change: num [1:31] -9.22 -4.28 -12.29 -26.59 -20.96 ...
+```
+
+]
+
+--
+
+.pull-right[
+* Let's build a linear model for the change in house seats for a president's party as a function of unemployment rate
+* Let's restrict to election years OUTSIDE of the Great Depression (i.e., not year 1935 or 1939)
+* First check that there are no substantial outliers, no clear nonlinearity
+
+
+```r
+midterms_house %&gt;%
+  filter(!(year %in% c(1935, 1939))) %&gt;%
+  ggplot(aes(x = unemp, y = house_change)) +
+  geom_point(aes(color = party, shape = party), size = 3, alpha = 0.7) +
+  theme(legend.position = c(0.8, 0.8), legend.background = element_rect(color = "white")
+  )
+```
+
+&lt;img src="lec23-inference-regression_files/figure-html/fig-unemploymentAndChangeInHouse-1.png" width="65%" /&gt;
+]
+
+---
+Let's investigate the residuals:
+
+.pull-left[
+
+&lt;img src="lec23-inference-regression_files/figure-html/unnamed-chunk-29-1.png" width="432" /&gt;
+]
+
+.pull-right[
+&lt;img src="lec23-inference-regression_files/figure-html/unnamed-chunk-30-1.png" width="432" /&gt;
+* No clear problems with the residuals
+* Does appear the linear model might not be the best fit, but let's investigate 
+]
+---
+
+
+.pull-left[ 
+* Let's build the linear model for the non-Great Depression data
+
+```r
+not_gd_data &lt;- midterms_house %&gt;% 
+  filter(! ( year %in% c(1935, 1939)))
+
+lm(house_change ~ unemp, data = not_gd_data) %&gt;% tidy()
+#&gt; # A tibble: 2 × 5
+#&gt;   term        estimate std.error statistic p.value
+#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 (Intercept)   -7.36      5.16      -1.43   0.165
+#&gt; 2 unemp         -0.890     0.835     -1.07   0.296
+```
+* From this we see the following predictive model:
+
+
+$$
+`\begin{aligned}
+&amp;\texttt{% change House seats for President's party}  \newline \\
+&amp;\qquad\qquad= -7.36 - 0.89 \times \texttt{(unemployment rate)}
+\end{aligned}`
+$$
+* Predicts greater unemployment rate implies worse performance in House midterm election
+* Is there significant evidence that the "true" linear model has a negative slope?
+]
+
+--
+
+.pull-right[
+* We can frame this as hypothesis test:
+  - `\(H_0:\ \beta_1 = 0\)`, true linear model has slope zero
+  - `\(H_A:\ \beta_1 \neq 0\)`, true linear model has slope different than zero; unmployment rate is predcitve of change in seats after midterm election
+* To reject the null, we use the following test statistic
+
+$$ T = \frac{\text{estimate} - \text{null}}{SE}.$$
+
+* This will follow a `\(t\)` distribution with `\(n-2\)` degrees of freedom.  The 2 comes from the linear model having two parameters: `\(\beta_0\)`, intercept, and `\(\beta_1\)`, slope.  
+
+* In this course we will not teach how to compute SE - just use the R table output.
+
+* We can thus compute `\(T = \frac{-0.890-0}{0.835 } = -1.0659\)`. 
+]
+
+---
+
+.pull-left[
+#### P value for vote vs. unemployment
+
+```r
+not_gd_data &lt;- midterms_house %&gt;% 
+  filter(! ( year %in% c(1935, 1939)))
+nrow(not_gd_data)
+#&gt; [1] 29
+lm(house_change ~ unemp, data = not_gd_data) %&gt;% tidy()
+#&gt; # A tibble: 2 × 5
+#&gt;   term        estimate std.error statistic p.value
+#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 (Intercept)   -7.36      5.16      -1.43   0.165
+#&gt; 2 unemp         -0.890     0.835     -1.07   0.296
+```
+
+* We can frame this as hypothesis test:
+  - `\(H_0:\ \beta_1 = 0\)`, true linear model has slope zero
+  - `\(H_A:\ \beta_1 \neq 0\)`, true linear model has slope different than zero; unmployment rate is predcitve of change in seats after midterm election
+]
+
+--
+
+.pull-right[
+* To reject the null, we use the following test statistic
+
+$$ T = \frac{\text{estimate} - \text{null}}{SE} = -1.0659.$$
+* We can use R to compute a p-value for this (although lm() does it already) - we have t distribution, we are testing two-sided alternative `\((\beta_1 \neq 0)\)`, so we need to double the left-side area 
+
+```r
+2* pt(-1.0659, df = nrow(not_gd_data) -2)
+#&gt; [1] 0.2959081
+```
+
+
+]
+
+
+---
+### Practice 
+* IMS 22.12(a,b)
+* IMS 22.13(a,b)
+* IMS 24.3(a,b)
+
+* Take 3 minutes to think about the problem, discuss with your neighbors
+* I'll call on one of you and ask what your thoughts are for how to approach the problem
+* Not expecting you to have the right answer!  Just want to hear how you approach the problem, then help guide you through thinking about the next steps 
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
