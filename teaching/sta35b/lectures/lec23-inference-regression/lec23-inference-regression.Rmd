@@ -925,7 +925,7 @@ lm(house_change ~ unemp, data = not_gd_data) %>% tidy()
 
 $$
 \begin{aligned}
-&\texttt{% change House seats for President's party}  \newline \\
+&\texttt{Percent change House seats for President's party}  \newline \\
 &\qquad\qquad= -7.36 - 0.89 \times \texttt{(unemployment rate)}
 \end{aligned}
 $$
