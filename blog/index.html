@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog — Spencer Frei</title>
+    <meta name="description" content="Blog posts by Spencer Frei">
+
+    <link rel="stylesheet" href="/blog/blog.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="site-nav">
+            <a href="/">Home</a>
+            <span class="nav-sep">|</span>
+            <a href="/#news">News</a>
+            <span class="nav-sep">|</span>
+            <a href="/#publications">Publications</a>
+            <span class="nav-sep">|</span>
+            <a href="/#teaching">Teaching</a>
+            <span class="nav-sep">|</span>
+            <a href="/blog/" class="active">Blog</a>
+        </nav>
+
+        <header class="blog-header">
+            <h1>Blog</h1>
+        </header>
+
+        <main class="post-list">
+        <article class="post-preview">
+            <h2><a href="/blog/2026-08-17_pretraining_variance/">Quantifying Pretraining Variance: Data, Initialization, and Floating Point Arithmetic</a></h2>
+            <time class="post-date" datetime="2026-08-17">August 17, 2026</time>
+            <p class="post-description">We train paired 184M-parameter language models varying one factor at a time—initialization seed, data seed, floating point arithmetic order, and optimizer hyperparameters—and find that the variance induced by the ordering of floating point operations is within 20% of that from changing the data or initialization seed.</p>
+        </article>
+        </main>
+
+        <footer class="site-footer">
+            <p>&copy; Spencer Frei</p>
+        </footer>
+    </div>
+</body>
+</html>

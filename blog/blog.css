@@ -1,0 +1,419 @@
+/* ==========================================================================
+   Blog CSS — spencerfrei.github.io
+   Extends the base site aesthetic: Georgia, warm beige, 700px container.
+   ========================================================================== */
+
+/* ---------- Reset & Base ---------- */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    /* Must match main.css exactly: a different fallback chain resolves to a
+       different face (e.g. Tinos vs DejaVu Serif) where Georgia is absent. */
+    font-family: "Georgia", Georgia, serif;
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #212121;
+    background-color: rgb(242, 223, 206);
+}
+
+strong, b {
+    font-weight: 700;
+}
+
+/* ---------- Container ---------- */
+
+.container {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+}
+
+/* ---------- Navigation ---------- */
+
+.site-nav {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.site-nav a {
+    color: #0D7680;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.15s ease;
+}
+
+.site-nav a:hover,
+.site-nav a.active {
+    color: #095258;
+    text-decoration: underline;
+}
+
+.nav-sep {
+    color: rgba(0, 0, 0, 0.3);
+    margin: 0 0.5rem;
+}
+
+/* ---------- Headings ---------- */
+
+h1, h2, h3, h4 {
+    font-weight: 400;
+    line-height: 1.3;
+    color: #212121;
+}
+
+h1 { font-size: 1.8rem; margin: 0 0 0.5rem; }
+h2 { font-size: 1.4rem; margin: 1.8rem 0 0.6rem; }
+h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
+h4 { font-size: 1rem; margin: 1.2rem 0 0.4rem; font-style: italic; }
+
+/* ---------- Post Header ---------- */
+
+.post-header {
+    margin-bottom: 2rem;
+}
+
+.post-title {
+    margin-bottom: 0.3rem;
+}
+
+.post-meta {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.post-meta .post-date::after {
+    content: " · ";
+}
+
+.post-meta .post-author:empty {
+    display: none;
+}
+
+.post-meta .post-date:empty + .post-author::before {
+    content: none;
+}
+
+/* ---------- Post Content ---------- */
+
+.post-content p {
+    margin: 0 0 1.2rem;
+}
+
+.post-content a {
+    color: #0D7680;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.post-content a:hover {
+    color: #095258;
+}
+
+/* ---------- Figures & Images ---------- */
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5rem auto;
+    border-radius: 3px;
+}
+
+.post-content figure {
+    margin: 1.8rem 0;
+    padding: 0;
+}
+
+.post-content figure img {
+    margin: 0 auto;
+}
+
+.post-content figcaption,
+.post-content .caption {
+    text-align: center;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #666;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Breakout wide display on desktop/laptop */
+@media (min-width: 860px) {
+    .post-content img,
+    .post-content .figure-toggle {
+        width: 960px;
+        max-width: 92vw;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+/* ---------- Code ---------- */
+
+.post-content code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.88em;
+    background-color: rgb(255, 241, 224);
+    padding: 0.15em 0.35em;
+    border-radius: 3px;
+}
+
+.post-content pre {
+    background-color: rgb(255, 241, 224);
+    padding: 1rem 1.25rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    line-height: 1.5;
+}
+
+.post-content pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.85em;
+}
+
+/* codehilite (Pygments) wrapper */
+.codehilite {
+    background-color: rgb(255, 241, 224);
+    padding: 1rem 1.25rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.codehilite pre {
+    margin: 0;
+    padding: 0;
+    background: none;
+}
+
+/* ---------- Blockquotes ---------- */
+
+.post-content blockquote {
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    border-left: 3px solid #0D7680;
+    background-color: rgb(255, 241, 224);
+    color: #444;
+    font-style: italic;
+}
+
+.post-content blockquote p {
+    margin: 0 0 0.5rem;
+}
+
+.post-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- Tables ---------- */
+
+.post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.92rem;
+}
+
+.post-content th,
+.post-content td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    text-align: left;
+}
+
+.post-content th {
+    background-color: rgb(255, 241, 224);
+    font-weight: 600;
+}
+
+.post-content tr:nth-child(even) {
+    background-color: rgba(255, 241, 224, 0.4);
+}
+
+/* ---------- Lists ---------- */
+
+.post-content ul,
+.post-content ol {
+    margin: 0 0 1.2rem;
+    padding-left: 1.5rem;
+}
+
+.post-content li {
+    margin-bottom: 0.3rem;
+}
+
+/* ---------- Math (MathJax) ---------- */
+
+.MathJax {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+mjx-container[jax="CHTML"][display="true"] {
+    margin: 1.5rem 0 !important;
+}
+
+/* ---------- Horizontal Rules ---------- */
+
+.post-content hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    margin: 2rem 0;
+}
+
+/* ---------- Post Footer Nav ---------- */
+
+.post-nav {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.95rem;
+}
+
+.post-nav a {
+    color: #0D7680;
+    text-decoration: none;
+}
+
+.post-nav a:hover {
+    color: #095258;
+    text-decoration: underline;
+}
+
+/* ---------- Blog Index ---------- */
+
+.blog-header {
+    margin-bottom: 2rem;
+}
+
+.blog-header h1 {
+    margin-bottom: 0.25rem;
+}
+
+.post-list {
+    margin-bottom: 2rem;
+}
+
+.post-preview {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.post-preview:last-child {
+    border-bottom: none;
+}
+
+.post-preview h2 {
+    margin: 0 0 0.2rem;
+    font-size: 1.3rem;
+}
+
+.post-preview h2 a {
+    color: #0D7680;
+    text-decoration: none;
+}
+
+.post-preview h2 a:hover {
+    text-decoration: underline;
+}
+
+.post-preview .post-date {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 0.4rem;
+}
+
+.post-preview .post-description {
+    margin: 0;
+    color: #444;
+    font-size: 0.95rem;
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 740px) {
+    .container {
+        padding: 1.5rem 1rem;
+    }
+
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.25rem; }
+
+    .post-content pre,
+    .codehilite {
+        padding: 0.75rem 1rem;
+        font-size: 0.82em;
+    }
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+    body {
+        background: white;
+        color: black;
+        font-size: 12pt;
+    }
+
+    .site-nav,
+    .site-footer {
+        display: none;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .post-content a {
+        color: black;
+        text-decoration: underline;
+    }
+
+    .post-content a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #555;
+    }
+
+    .post-content pre,
+    .codehilite,
+    .post-content code {
+        background: #f5f5f5;
+    }
+
+    .post-content img {
+        max-width: 100%;
+    }
+}
