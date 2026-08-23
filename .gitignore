@@ -1,0 +1,29 @@
+# This repository is PUBLIC (github.com/spencerfrei/spencerfrei.github.io).
+# Anything committed here is world-readable and permanent in git history.
+#
+# The rules below cover files that were sitting untracked in this working tree
+# and would have been published by a single `git add .`. None were ever
+# committed, so ignoring them is fully effective.
+
+# ---- Student records: names and grades. Never publish. ----
+grades/
+**/grades/
+roster*.csv
+*_gradescope.csv
+
+# ---- Files explicitly marked as not for publication ----
+PRIVATE_*
+**/PRIVATE_*
+*dontupload*
+
+# ---- LaTeX build artifacts ----
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.bcf
+*.run.xml
+texput.log
+
+# ---- Editor/office lock files ----
+.~lock.*#
